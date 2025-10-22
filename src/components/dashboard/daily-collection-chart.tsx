@@ -1,6 +1,13 @@
 'use client';
 
-import {dailyCollectionData} from '@/lib/data';
+import {
+  collection,
+} from 'firebase/firestore';
+import {
+  useCollection,
+  useFirestore,
+  useMemoFirebase
+} from '@/firebase';
 import {
   CartesianGrid,
   Line,
@@ -36,7 +43,7 @@ import {es} from 'date-fns/locale';
 import {Calendar} from '@/components/ui/calendar';
 
 const chartConfig = {
-  recaudacion: {
+  dailyCollectionAmount: {
     label: 'Recaudación',
     color: 'hsl(var(--chart-1))',
   },
@@ -44,6 +51,18 @@ const chartConfig = {
 
 export function DailyCollectionChart() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const firestore = useFirestore();
+  const dailyCollectionsRef = useMemoFirebase(
+    () => collection(firestore, 'daily_collections'),
+    [firestore]
+  );
+  const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
+
+  const chartData = (dailyCollectionData || []).map(item => ({
+    ...item,
+    date: new Date(item.date).toLocaleDateString('es-PE', { month: 'short', day: 'numeric' }),
+  })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
 
   return (
     <Card>
@@ -88,10 +107,13 @@ export function DailyCollectionChart() {
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[300px]">Cargando...</div>
+        ): (
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <LineChart
             accessibilityLayer
-            data={dailyCollectionData}
+            data={chartData}
             margin={{
               left: 12,
               right: 12,
@@ -114,14 +136,16 @@ export function DailyCollectionChart() {
             />
             <Tooltip content={<ChartTooltipContent />} />
             <Line
-              dataKey="recaudacion"
+              dataKey="dailyCollectionAmount"
               type="monotone"
               stroke="hsl(var(--primary))"
               strokeWidth={2}
               dot={true}
+              name="Recaudación"
             />
           </LineChart>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

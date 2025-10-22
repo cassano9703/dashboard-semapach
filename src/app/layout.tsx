@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sidebar';
 import {MainNav} from '@/components/layout/main-nav';
 import {UserNav} from '@/components/layout/user-nav';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Panel Estadístico SEMAPACH',
@@ -35,29 +36,31 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <Toaster />
-        <SidebarProvider>
-          <Sidebar>
-            <MainNav />
-          </Sidebar>
-          <SidebarInset>
-            <div className="flex flex-col min-h-screen">
-              <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-                <SidebarTrigger className="md:hidden" />
-                <div className="flex-1">
-                  {/* Page Title or Breadcrumbs can go here */}
+        <FirebaseClientProvider>
+          <Toaster />
+          <SidebarProvider>
+            <Sidebar>
+              <MainNav />
+            </Sidebar>
+            <SidebarInset>
+              <div className="flex flex-col min-h-screen">
+                <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+                  <SidebarTrigger className="md:hidden" />
+                  <div className="flex-1">
+                    {/* Page Title or Breadcrumbs can go here */}
+                  </div>
+                  <UserNav />
+                </header>
+                <div className="flex-1 overflow-y-auto">
+                  <main className="p-4 md:p-6 lg:p-8">{children}</main>
+                  <footer className="py-4 px-8 text-center text-sm text-muted-foreground border-t">
+                    © 2025 SEMAPACH - Sistema de monitoreo de recaudación y metas
+                  </footer>
                 </div>
-                <UserNav />
-              </header>
-              <div className="flex-1 overflow-y-auto">
-                <main className="p-4 md:p-6 lg:p-8">{children}</main>
-                <footer className="py-4 px-8 text-center text-sm text-muted-foreground border-t">
-                  © 2025 SEMAPACH - Sistema de monitoreo de recaudación y metas
-                </footer>
               </div>
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
+            </SidebarInset>
+          </SidebarProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

@@ -7,9 +7,11 @@ import {
   FileText,
   Home,
   Settings,
+  Shield,
 } from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
+import { useUser } from '@/firebase';
 
 import {
   SidebarContent,
@@ -27,8 +29,13 @@ const navItems = [
   {href: '/configuracion', label: 'Configuración', icon: Settings},
 ];
 
+const adminNavItem = { href: '/admin', label: 'Admin', icon: Shield };
+
 export function MainNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+
+  const allNavItems = user ? [...navItems, adminNavItem] : navItems;
 
   return (
     <>
@@ -40,7 +47,7 @@ export function MainNav() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {allNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton
