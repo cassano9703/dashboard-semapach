@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import Link from "next/link"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -534,31 +535,32 @@ const sidebarMenuButtonVariants = cva(
 )
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button"> & {
-    asChild?: boolean
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement> &
+  VariantProps<typeof sidebarMenuButtonVariants> & {
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  } & VariantProps<typeof sidebarMenuButtonVariants>
+    href: string
+  }
 >(
   (
     {
-      asChild = false,
-      isActive = false,
       variant = "default",
       size = "default",
+      isActive = false,
       tooltip,
       className,
+      href,
       ...props
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
 
     const button = (
-      <Comp
+      <Link
         ref={ref}
+        href={href}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}

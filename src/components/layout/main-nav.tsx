@@ -50,7 +50,7 @@ export function MainNav() {
           {allNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                asChild
+                href={item.href}
                 isActive={
                   item.href === '/'
                     ? pathname === item.href
@@ -58,10 +58,8 @@ export function MainNav() {
                 }
                 tooltip={item.label}
               >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
+                <item.icon />
+                <span>{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
