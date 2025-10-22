@@ -1,49 +1,64 @@
 /**
- * @fileoverview Firestore Security Rules for the SEMAPACH dashboard application.
+ * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
  *
  * Core Philosophy:
- * This ruleset provides open read access (get, list) to all collections to facilitate data visualization.
- * Write access (create, update, delete) is disabled to prevent unauthorized data modification, since the application is read-only.
+ * This ruleset provides public read access to all data while restricting write access to authenticated users.
  *
  * Data Structure:
- * The Firestore database consists of two top-level collections: `daily_collections` and `district_progress`.
- * Each collection contains documents representing daily collection records and district progress records, respectively.
+ * The database stores daily collection data and district progress in separate top-level collections.
+ * - /daily_collections/{dailyCollectionId}
+ * - /district_progress/{districtProgressId}
  *
  * Key Security Decisions:
- * - Public read access is granted to both `daily_collections` and `district_progress` collections.
- * - All write operations (create, update, delete) are explicitly denied.
- * - No user-specific authorization is enforced since the data is intended for public reporting and visualization.
+ * - Public read access is granted to facilitate data visualization and reporting.
+ * - Write access is restricted to authenticated users to prevent unauthorized data modification.
+ * - No user-specific data exists, so the rules do not rely on user-ownership patterns.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants public read access to daily collection records while denying all write operations.
+     * @description Allows public read access to daily collection records. Write access is restricted to authenticated users.
      * @path /daily_collections/{dailyCollectionId}
-     * @allow (get, list): Any user can read daily collection data.
-     * @deny (create, update, delete): No user can create, update, or delete daily collection data.
-     * @principle Allows public read access for reporting and visualization while preventing unauthorized data modification.
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn(); // Only authenticated users can create
+     * @allow update: if isSignedIn() && resource != null; // Only authenticated users can update, and the document must exist
+     * @allow delete: if isSignedIn() && resource != null; // Only authenticated users can delete, and the document must exist
+     * @deny create: if false;
+     * @deny update: if false;
+     * @deny delete: if false;
+     * @principle Allows public data retrieval while restricting modifications to authenticated users.
      */
     match /daily_collections/{dailyCollectionId} {
       allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Grants public read access to district progress records while denying all write operations.
+     * @description Allows public read access to district progress records. Write access is restricted to authenticated users.
      * @path /district_progress/{districtProgressId}
-     * @allow (get, list): Any user can read district progress data.
-     * @deny (create, update, delete): No user can create, update, or delete district progress data.
-     * @principle Allows public read access for reporting and visualization while preventing unauthorized data modification.
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn(); // Only authenticated users can create
+     * @allow update: if isSignedIn() && resource != null; // Only authenticated users can update, and the document must exist
+     * @allow delete: if isSignedIn() && resource != null; // Only authenticated users can delete, and the document must exist
+     * @deny create: if false;
+     * @deny update: if false;
+     * @deny delete: if false;
+     * @principle Allows public data retrieval while restricting modifications to authenticated users.
      */
     match /district_progress/{districtProgressId} {
       allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    // Helper function to determine if a user is signed in
+    function isSignedIn() {
+      return request.auth != null;
     }
   }
 }

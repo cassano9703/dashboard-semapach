@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   collection,
   doc,
@@ -38,35 +38,34 @@ export function DailyCollectionManager() {
   } = useCollection(dailyCollectionsRef);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formState, setFormState] = useState({
-    date: '',
-    dailyCollectionAmount: '',
-    accumulatedMonthlyTotal: '',
-    monthlyGoal: '',
-  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
+  // Use refs for form inputs
+  const dateRef = useRef<HTMLInputElement>(null);
+  const dailyCollectionAmountRef = useRef<HTMLInputElement>(null);
+  const accumulatedMonthlyTotalRef = useRef<HTMLInputElement>(null);
+  const monthlyGoalRef = useRef<HTMLInputElement>(null);
 
   const clearForm = () => {
     setEditingId(null);
-    setFormState({
-      date: '',
-      dailyCollectionAmount: '',
-      accumulatedMonthlyTotal: '',
-      monthlyGoal: '',
-    });
+    if (dateRef.current) dateRef.current.value = '';
+    if (dailyCollectionAmountRef.current) dailyCollectionAmountRef.current.value = '';
+    if (accumulatedMonthlyTotalRef.current) accumulatedMonthlyTotalRef.current.value = '';
+    if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
   };
 
   const handleSave = () => {
     const data = {
-      date: formState.date,
-      dailyCollectionAmount: Number(formState.dailyCollectionAmount),
-      accumulatedMonthlyTotal: Number(formState.accumulatedMonthlyTotal),
-      monthlyGoal: Number(formState.monthlyGoal),
+      date: dateRef.current?.value || '',
+      dailyCollectionAmount: Number(dailyCollectionAmountRef.current?.value || 0),
+      accumulatedMonthlyTotal: Number(accumulatedMonthlyTotalRef.current?.value || 0),
+      monthlyGoal: Number(monthlyGoalRef.current?.value || 0),
     };
+
+    if (!data.date) {
+        // Optional: Add user feedback for required fields
+        alert('La fecha es obligatoria.');
+        return;
+    }
 
     if (editingId) {
       const docRef = doc(firestore, 'daily_collections', editingId);
@@ -79,12 +78,13 @@ export function DailyCollectionManager() {
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
-    setFormState({
-      date: item.date,
-      dailyCollectionAmount: item.dailyCollectionAmount.toString(),
-      accumulatedMonthlyTotal: item.accumulatedMonthlyTotal.toString(),
-      monthlyGoal: item.monthlyGoal.toString(),
-    });
+    // Set initial values for the refs when editing
+    setTimeout(() => {
+        if (dateRef.current) dateRef.current.value = item.date;
+        if (dailyCollectionAmountRef.current) dailyCollectionAmountRef.current.value = item.dailyCollectionAmount.toString();
+        if (accumulatedMonthlyTotalRef.current) accumulatedMonthlyTotalRef.current.value = item.accumulatedMonthlyTotal.toString();
+        if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
+    }, 0);
   };
 
   const handleDelete = (id: string) => {
@@ -103,31 +103,28 @@ export function DailyCollectionManager() {
         <div className="grid gap-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Input
+              ref={dateRef}
               name="date"
               type="date"
-              value={formState.date}
-              onChange={handleInputChange}
               placeholder="Fecha"
+              defaultValue={editingId ? undefined : new Date().toISOString().split('T')[0]}
             />
             <Input
+              ref={dailyCollectionAmountRef}
               name="dailyCollectionAmount"
               type="number"
-              value={formState.dailyCollectionAmount}
-              onChange={handleInputChange}
               placeholder="Recaudación Diaria"
             />
             <Input
+              ref={accumulatedMonthlyTotalRef}
               name="accumulatedMonthlyTotal"
               type="number"
-              value={formState.accumulatedMonthlyTotal}
-              onChange={handleInputChange}
               placeholder="Acumulado Mensual"
             />
             <Input
+              ref={monthlyGoalRef}
               name="monthlyGoal"
               type="number"
-              value={formState.monthlyGoal}
-              onChange={handleInputChange}
               placeholder="Meta Mensual"
             />
             <div className="flex gap-2">

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   collection,
   doc,
@@ -38,35 +38,34 @@ export function DistrictProgressManager() {
   } = useCollection(districtProgressRef);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formState, setFormState] = useState({
-    date: '',
-    district: '',
-    dailyGoal: '',
-    recovered: '',
-  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
+  // Use refs for form inputs
+  const dateRef = useRef<HTMLInputElement>(null);
+  const districtRef = useRef<HTMLInputElement>(null);
+  const dailyGoalRef = useRef<HTMLInputElement>(null);
+  const recoveredRef = useRef<HTMLInputElement>(null);
+
 
   const clearForm = () => {
     setEditingId(null);
-    setFormState({
-      date: '',
-      district: '',
-      dailyGoal: '',
-      recovered: '',
-    });
+    if (dateRef.current) dateRef.current.value = '';
+    if (districtRef.current) districtRef.current.value = '';
+    if (dailyGoalRef.current) dailyGoalRef.current.value = '';
+    if (recoveredRef.current) recoveredRef.current.value = '';
   };
 
   const handleSave = () => {
     const data = {
-      date: formState.date,
-      district: formState.district,
-      dailyGoal: Number(formState.dailyGoal),
-      recovered: Number(formState.recovered),
+      date: dateRef.current?.value || '',
+      district: districtRef.current?.value || '',
+      dailyGoal: Number(dailyGoalRef.current?.value || 0),
+      recovered: Number(recoveredRef.current?.value || 0),
     };
+
+    if (!data.date || !data.district) {
+        alert('La fecha y el distrito son obligatorios.');
+        return;
+    }
 
     if (editingId) {
       const docRef = doc(firestore, 'district_progress', editingId);
@@ -79,12 +78,12 @@ export function DistrictProgressManager() {
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
-    setFormState({
-      date: item.date,
-      district: item.district,
-      dailyGoal: item.dailyGoal.toString(),
-      recovered: item.recovered.toString(),
-    });
+    setTimeout(() => {
+        if (dateRef.current) dateRef.current.value = item.date;
+        if (districtRef.current) districtRef.current.value = item.district;
+        if (dailyGoalRef.current) dailyGoalRef.current.value = item.dailyGoal.toString();
+        if (recoveredRef.current) recoveredRef.current.value = item.recovered.toString();
+    }, 0);
   };
 
   const handleDelete = (id: string) => {
@@ -103,31 +102,28 @@ export function DistrictProgressManager() {
         <div className="grid gap-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Input
+              ref={dateRef}
               name="date"
               type="date"
-              value={formState.date}
-              onChange={handleInputChange}
               placeholder="Fecha"
+              defaultValue={editingId ? undefined : new Date().toISOString().split('T')[0]}
             />
             <Input
+              ref={districtRef}
               name="district"
               type="text"
-              value={formState.district}
-              onChange={handleInputChange}
               placeholder="Distrito"
             />
             <Input
+              ref={dailyGoalRef}
               name="dailyGoal"
               type="number"
-              value={formState.dailyGoal}
-              onChange={handleInputChange}
               placeholder="Meta Diaria"
             />
             <Input
+              ref={recoveredRef}
               name="recovered"
               type="number"
-              value={formState.recovered}
-              onChange={handleInputChange}
               placeholder="Recuperado"
             />
              <div className="flex gap-2">
