@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "DailyCollection": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyCollection",
+      "type": "object",
+      "description": "Represents the daily collection data for the SEMAPACH dashboard.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the daily collection record."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the collection.",
+          "format": "date"
+        },
+        "dailyCollectionAmount": {
+          "type": "number",
+          "description": "The total collection amount for the day."
+        },
+        "accumulatedMonthlyTotal": {
+          "type": "number",
+          "description": "The total collection amount accumulated for the month up to this day."
+        },
+        "monthlyGoal": {
+          "type": "number",
+          "description": "The target collection amount for the entire month."
+        }
+      },
+      "required": [
+        "id",
+        "date",
+        "dailyCollectionAmount",
+        "accumulatedMonthlyTotal",
+        "monthlyGoal"
+      ]
+    },
+    "DistrictProgress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DistrictProgress",
+      "type": "object",
+      "description": "Represents the daily progress of each district towards their collection goals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the district progress record."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date the progress was measured.",
+          "format": "date"
+        },
+        "district": {
+          "type": "string",
+          "description": "The name of the district (e.g., Chincha Alta, Tambo de Mora)."
+        },
+        "dailyGoal": {
+          "type": "number",
+          "description": "The daily collection goal for the district."
+        },
+        "recovered": {
+          "type": "number",
+          "description": "The amount recovered by the district on the given day."
+        }
+      },
+      "required": [
+        "id",
+        "date",
+        "district",
+        "dailyGoal",
+        "recovered"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/daily_collections/{dailyCollectionId}",
+        "definition": {
+          "entityName": "DailyCollection",
+          "schema": {
+            "$ref": "#/backend/entities/DailyCollection"
+          },
+          "description": "Stores daily collection records. Includes `id` as the document ID.",
+          "params": [
+            {
+              "name": "dailyCollectionId",
+              "description": "The unique ID of the daily collection document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/district_progress/{districtProgressId}",
+        "definition": {
+          "entityName": "DistrictProgress",
+          "schema": {
+            "$ref": "#/backend/entities/DistrictProgress"
+          },
+          "description": "Stores daily progress records for each district. Includes `id` as the document ID.",
+          "params": [
+            {
+              "name": "districtProgressId",
+              "description": "The unique ID of the district progress document."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to store daily collection data and district progress for the SEMAPACH dashboard.  Authorization Independence is not a major concern in this case as there is no user specific data, and the security rules will likely be based on roles. The collections are segregated to avoid mixing different data types.  The structure prioritizes ease of querying and reporting, given the application's focus on data visualization.  The paths are straightforward to facilitate easy data access and manipulation. The design focuses on clarity and simplicity for future integration with front-end components and reporting tools. The structure uses separate collections for `daily_collections` and `district_progress` to facilitate secure `list` operations (QAPs).  This segregation ensures that listing daily collections doesn't inadvertently expose district progress data, and vice versa."
+  }
+}
