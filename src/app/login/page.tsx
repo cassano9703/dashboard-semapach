@@ -12,9 +12,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,6 +24,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -29,9 +32,29 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-
-  const handleLogin = () => {
-    initiateEmailSignIn(auth, email, password);
+  const handleLogin = async () => {
+    try {
+      // First, try to sign in
+      await signInWithEmailAndPassword(auth, email, password);
+      // The onAuthStateChanged listener in useUser will handle the redirect
+    } catch (error: any) {
+      // If sign-in fails because the user is not found, try to sign them up.
+      if (error.code === 'auth/user-not-found') {
+        initiateEmailSignUp(auth, email, password);
+        toast({
+          title: "Creando nueva cuenta",
+          description: "El usuario no existía y se ha creado una nueva cuenta.",
+        });
+      } else {
+        // Handle other errors (e.g., wrong password)
+        console.error("Login Error:", error);
+        toast({
+          variant: "destructive",
+          title: "Error al iniciar sesión",
+          description: "Contraseña incorrecta o error de red.",
+        });
+      }
+    }
   };
 
   return (
