@@ -24,6 +24,7 @@ export function UserNav() {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    if (!auth) return;
     await auth.signOut();
     router.push('/login');
   };
@@ -65,12 +66,12 @@ export function UserNav() {
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Facturación</span>
               </DropdownMenuItem>
-              <Link href="/admin" passHref>
-                <DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin">
                   <Shield className="mr-2 h-4 w-4" />
                   <span>Admin</span>
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
@@ -79,12 +80,12 @@ export function UserNav() {
             </DropdownMenuItem>
           </>
         ) : (
-          <Link href="/login" passHref>
-            <DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/login">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Iniciar Sesión</span>
-            </DropdownMenuItem>
-          </Link>
+            </Link>
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
