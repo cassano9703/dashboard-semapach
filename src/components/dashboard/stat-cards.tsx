@@ -9,6 +9,7 @@ import {
 } from '@/firebase';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
+import { useMemo } from 'react';
 
 const formatCurrency = (value: number) =>
   `S/ ${value.toLocaleString('es-PE', {
@@ -24,25 +25,32 @@ export function StatCards() {
   );
   const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
 
-  const stats = (dailyCollectionData || []).reduce(
-    (acc, item: any) => {
-      const today = new Date().toISOString().split('T')[0];
-      if (item.date === today) {
-        acc.dailyCollection = item.dailyCollectionAmount;
-      }
-      acc.monthlyAccumulated += item.dailyCollectionAmount;
-      // Assuming monthlyGoal is the same for all entries in a month
-      if (item.monthlyGoal) {
-        acc.monthlyGoal = item.monthlyGoal;
-      }
-      return acc;
-    },
-    {
-      dailyCollection: 0,
-      monthlyAccumulated: 0,
-      monthlyGoal: 300000, // Default goal
+  const stats = useMemo(() => {
+    if (!dailyCollectionData) {
+      return {
+        dailyCollection: 0,
+        monthlyAccumulated: 0,
+        monthlyGoal: 0,
+      };
     }
-  );
+    
+    const today = new Date().toISOString().split('T')[0];
+    const currentMonth = today.substring(0, 7);
+
+    const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(currentMonth));
+    const latestCollectionForMonth = collectionsForMonth.sort((a,b) => b.date.localeCompare(a.date))[0];
+
+    const dailyCollection = latestCollectionForMonth?.date === today ? latestCollectionForMonth.dailyCollectionAmount : 0;
+    const monthlyAccumulated = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
+    const monthlyGoal = latestCollectionForMonth?.monthlyGoal || 0;
+
+    return {
+      dailyCollection,
+      monthlyAccumulated,
+      monthlyGoal,
+    };
+  }, [dailyCollectionData]);
+
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
 

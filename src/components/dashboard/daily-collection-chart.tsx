@@ -15,6 +15,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Legend,
+  ReferenceLine
 } from 'recharts';
 
 import {Button} from '@/components/ui/button';
@@ -31,22 +33,26 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import {Calendar as CalendarIcon, Download} from 'lucide-react';
-import {useState} from 'react';
+import {useState, useMemo} from 'react';
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover';
 import {cn} from '@/lib/utils';
-import {format} from 'date-fns';
+import {format, startOfMonth, endOfMonth} from 'date-fns';
 import {es} from 'date-fns/locale';
 import {Calendar} from '@/components/ui/calendar';
 
 const chartConfig = {
   dailyCollectionAmount: {
-    label: 'Recaudación',
+    label: 'Recaudación Diaria',
     color: 'hsl(var(--chart-1))',
   },
+  accumulatedMonthlyTotal: {
+    label: 'Acumulado Mensual',
+    color: 'hsl(var(--chart-2))'
+  }
 } satisfies ChartConfig;
 
 export function DailyCollectionChart() {
@@ -58,11 +64,26 @@ export function DailyCollectionChart() {
   );
   const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
 
-  const chartData = (dailyCollectionData || []).map(item => ({
-    ...item,
-    date: new Date(item.date).toLocaleDateString('es-PE', { month: 'short', day: 'numeric' }),
-  })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const filteredData = useMemo(() => {
+    if (!dailyCollectionData || !date) return [];
+    
+    const start = startOfMonth(date);
+    const end = endOfMonth(date);
 
+    return dailyCollectionData
+      .filter(item => {
+        const itemDate = new Date(item.date + 'T00:00:00'); // Ensure date is parsed as local
+        return itemDate >= start && itemDate <= end;
+      })
+      .map(item => ({
+        ...item,
+        // Format for display in chart
+        date: format(new Date(item.date + 'T00:00:00'), 'd MMM', { locale: es }),
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [dailyCollectionData, date]);
+
+  const monthlyGoal = filteredData.length > 0 ? filteredData[0].monthlyGoal : 0;
 
   return (
     <Card>
@@ -70,7 +91,7 @@ export function DailyCollectionChart() {
         <div className="grid gap-1">
           <CardTitle>Recaudación Diaria del Mes</CardTitle>
           <CardDescription>
-            Análisis de la recaudación diaria durante el mes actual.
+            Análisis de la recaudación diaria y acumulada durante el mes seleccionado.
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -85,7 +106,7 @@ export function DailyCollectionChart() {
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date ? (
-                  format(date, 'MMMM yyyy', {locale: es})
+                  format(date, "LLLL 'de' yyyy", {locale: es})
                 ) : (
                   <span>Seleccione un mes</span>
                 )}
@@ -113,7 +134,7 @@ export function DailyCollectionChart() {
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <LineChart
             accessibilityLayer
-            data={chartData}
+            data={filteredData}
             margin={{
               left: 12,
               right: 12,
@@ -126,7 +147,6 @@ export function DailyCollectionChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value}
             />
             <YAxis
               tickLine={false}
@@ -135,13 +155,25 @@ export function DailyCollectionChart() {
               tickFormatter={(value) => `S/ ${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip content={<ChartTooltipContent />} />
+            <Legend />
+            {monthlyGoal > 0 && (
+              <ReferenceLine y={monthlyGoal} label={{ value: 'Meta', position: 'insideTopLeft' }} stroke="red" strokeDasharray="3 3" />
+            )}
             <Line
               dataKey="dailyCollectionAmount"
               type="monotone"
-              stroke="hsl(var(--primary))"
+              stroke="hsl(var(--chart-1))"
               strokeWidth={2}
               dot={true}
-              name="Recaudación"
+              name="Recaudación Diaria"
+            />
+             <Line
+              dataKey="accumulatedMonthlyTotal"
+              type="monotone"
+              stroke="hsl(var(--chart-2))"
+              strokeWidth={2}
+              dot={true}
+              name="Acumulado Mensual"
             />
           </LineChart>
         </ChartContainer>

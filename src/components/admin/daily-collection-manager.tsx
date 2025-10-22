@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   collection,
   doc,
@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
+import { Label } from '../ui/label';
 
 export function DailyCollectionManager() {
   const firestore = useFirestore();
@@ -38,34 +39,63 @@ export function DailyCollectionManager() {
   } = useCollection(dailyCollectionsRef);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isMonthGoalEditable, setIsMonthGoalEditable] = useState(false);
 
-  // Use refs for form inputs
-  const dateRef = useRef<HTMLInputElement>(null);
   const dailyCollectionAmountRef = useRef<HTMLInputElement>(null);
-  const accumulatedMonthlyTotalRef = useRef<HTMLInputElement>(null);
   const monthlyGoalRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (dailyCollections && currentDate) {
+      const selectedMonth = currentDate.substring(0, 7);
+      const collectionsForMonth = dailyCollections.filter(item => item.date.startsWith(selectedMonth));
+      
+      if (collectionsForMonth.length > 0) {
+        setIsMonthGoalEditable(false);
+        if (monthlyGoalRef.current) {
+          monthlyGoalRef.current.value = collectionsForMonth[0].monthlyGoal.toString();
+        }
+      } else {
+        setIsMonthGoalEditable(true);
+        if (monthlyGoalRef.current) {
+          monthlyGoalRef.current.value = ''; // Clear for new month
+        }
+      }
+    }
+  }, [currentDate, dailyCollections]);
+
 
   const clearForm = () => {
     setEditingId(null);
-    if (dateRef.current) dateRef.current.value = '';
+    setCurrentDate(new Date().toISOString().split('T')[0]);
     if (dailyCollectionAmountRef.current) dailyCollectionAmountRef.current.value = '';
-    if (accumulatedMonthlyTotalRef.current) accumulatedMonthlyTotalRef.current.value = '';
-    if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
+    // monthlyGoalRef is handled by useEffect
   };
 
   const handleSave = () => {
-    const data = {
-      date: dateRef.current?.value || '',
-      dailyCollectionAmount: Number(dailyCollectionAmountRef.current?.value || 0),
-      accumulatedMonthlyTotal: Number(accumulatedMonthlyTotalRef.current?.value || 0),
-      monthlyGoal: Number(monthlyGoalRef.current?.value || 0),
-    };
-
-    if (!data.date) {
-        // Optional: Add user feedback for required fields
+    const dailyAmount = Number(dailyCollectionAmountRef.current?.value || 0);
+    const monthlyGoal = Number(monthlyGoalRef.current?.value || 0);
+    
+    if (!currentDate) {
         alert('La fecha es obligatoria.');
         return;
     }
+    if (isMonthGoalEditable && monthlyGoal <= 0) {
+        alert('Debe establecer una meta para el nuevo mes.');
+        return;
+    }
+
+    // Calculate accumulated monthly total
+    const selectedMonth = currentDate.substring(0, 7);
+    const collectionsForMonth = (dailyCollections || []).filter(item => item.date.startsWith(selectedMonth) && item.id !== editingId);
+    const accumulatedMonthlyTotal = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0) + dailyAmount;
+
+    const data = {
+      date: currentDate,
+      dailyCollectionAmount: dailyAmount,
+      accumulatedMonthlyTotal: accumulatedMonthlyTotal,
+      monthlyGoal: monthlyGoal,
+    };
 
     if (editingId) {
       const docRef = doc(firestore, 'daily_collections', editingId);
@@ -78,11 +108,9 @@ export function DailyCollectionManager() {
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
-    // Set initial values for the refs when editing
+    setCurrentDate(item.date);
     setTimeout(() => {
-        if (dateRef.current) dateRef.current.value = item.date;
         if (dailyCollectionAmountRef.current) dailyCollectionAmountRef.current.value = item.dailyCollectionAmount.toString();
-        if (accumulatedMonthlyTotalRef.current) accumulatedMonthlyTotalRef.current.value = item.accumulatedMonthlyTotal.toString();
         if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
     }, 0);
   };
@@ -101,32 +129,39 @@ export function DailyCollectionManager() {
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <Input
-              ref={dateRef}
-              name="date"
-              type="date"
-              placeholder="Fecha"
-              defaultValue={editingId ? undefined : new Date().toISOString().split('T')[0]}
-            />
-            <Input
-              ref={dailyCollectionAmountRef}
-              name="dailyCollectionAmount"
-              type="number"
-              placeholder="Recaudación Diaria"
-            />
-            <Input
-              ref={accumulatedMonthlyTotalRef}
-              name="accumulatedMonthlyTotal"
-              type="number"
-              placeholder="Acumulado Mensual"
-            />
-            <Input
-              ref={monthlyGoalRef}
-              name="monthlyGoal"
-              type="number"
-              placeholder="Meta Mensual"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="grid gap-1.5">
+              <Label htmlFor="date">Fecha</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                value={currentDate}
+                onChange={(e) => setCurrentDate(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dailyCollectionAmount">Recaudación Diaria</Label>
+              <Input
+                id="dailyCollectionAmount"
+                ref={dailyCollectionAmountRef}
+                name="dailyCollectionAmount"
+                type="number"
+                placeholder="S/ 0.00"
+              />
+            </div>
+            <div className="grid gap-1.5">
+               <Label htmlFor="monthlyGoal">Meta Mensual</Label>
+              <Input
+                id="monthlyGoal"
+                ref={monthlyGoalRef}
+                name="monthlyGoal"
+                type="number"
+                placeholder="S/ 0.00"
+                readOnly={!isMonthGoalEditable && !editingId}
+                className={!isMonthGoalEditable && !editingId ? 'bg-muted/50' : ''}
+              />
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleSave} className="w-full">
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -155,7 +190,7 @@ export function DailyCollectionManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dailyCollections?.map((item) => (
+                {dailyCollections?.sort((a, b) => b.date.localeCompare(a.date)).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.date}</TableCell>
                     <TableCell>S/ {item.dailyCollectionAmount.toFixed(2)}</TableCell>
