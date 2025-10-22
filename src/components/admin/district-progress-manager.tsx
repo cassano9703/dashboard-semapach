@@ -22,6 +22,21 @@ import {
 } from '@/components/ui/table';
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const districts = [
+  'Tambo de Mora',
+  'Chincha Baja',
+  'Alto Laran',
+  'Grocio Prado',
+  'Sunampe',
+];
 
 export function DistrictProgressManager() {
   const firestore = useFirestore();
@@ -64,7 +79,7 @@ export function DistrictProgressManager() {
         }
       }
     } else {
-        setIsDailyGoalEditable(true);
+      setIsDailyGoalEditable(true);
     }
   }, [currentDate, currentDistrict, districtProgress]);
 
@@ -145,14 +160,21 @@ export function DistrictProgressManager() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="district">Distrito</Label>
-              <Input
-                id="district"
-                name="district"
-                type="text"
-                placeholder="Distrito"
+              <Select
                 value={currentDistrict}
-                onChange={(e) => setCurrentDistrict(e.target.value)}
-              />
+                onValueChange={setCurrentDistrict}
+              >
+                <SelectTrigger id="district">
+                  <SelectValue placeholder="Seleccione un distrito" />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="dailyGoal">Meta Diaria</Label>
@@ -163,7 +185,9 @@ export function DistrictProgressManager() {
                 type="number"
                 placeholder="S/ 0.00"
                 readOnly={!isDailyGoalEditable && !editingId}
-                className={!isDailyGoalEditable && !editingId ? 'bg-muted/50' : ''}
+                className={
+                  !isDailyGoalEditable && !editingId ? 'bg-muted/50' : ''
+                }
               />
             </div>
             <div className="grid gap-1.5">
@@ -182,7 +206,11 @@ export function DistrictProgressManager() {
                 {editingId ? 'Actualizar' : 'Agregar'}
               </Button>
               {editingId && (
-                <Button onClick={clearForm} variant="outline" className="w-full">
+                <Button
+                  onClick={clearForm}
+                  variant="outline"
+                  className="w-full"
+                >
                   Cancelar
                 </Button>
               )}
