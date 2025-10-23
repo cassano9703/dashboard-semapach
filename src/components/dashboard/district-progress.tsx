@@ -66,7 +66,7 @@ export function DistrictProgress() {
       .filter((item: any) => item.month === currentMonthStr)
       .map((item: any) => ({
         ...item,
-        progress: (item.recovered / item.monthlyGoal) * 100,
+        progress: item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
       }));
   }, [districtProgressData]);
 
@@ -145,7 +145,7 @@ export function DistrictProgress() {
                       className="fill-foreground text-sm"
                       formatter={(value: number) => {
                         const item = dataForCurrentMonth.find(d => d.recovered === value);
-                        return item ? `${value} (${((value / item.monthlyGoal) * 100).toFixed(0)}%)` : '';
+                        return item ? `${value} (${item.monthlyGoal > 0 ? ((value / item.monthlyGoal) * 100).toFixed(0) : 0}%)` : '';
                       }}
                     />
                   </Bar>
