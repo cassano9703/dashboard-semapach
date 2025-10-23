@@ -79,10 +79,15 @@ export function DistrictProgressManager() {
           monthlyGoalRef.current.value = '';
         }
       }
-    } else {
+    } else if (!currentDistrict) {
+      // If no district is selected, reset the goal field
       setIsMonthlyGoalEditable(true);
+      if (monthlyGoalRef.current) {
+        monthlyGoalRef.current.value = '';
+      }
     }
   }, [currentDate, currentDistrict, districtProgress]);
+
 
   const clearForm = () => {
     setEditingId(null);
@@ -105,17 +110,35 @@ export function DistrictProgressManager() {
       alert('Debe establecer una meta mensual.');
       return;
     }
+    
+    // Recalculate monthly goal if editing the first entry of the month
+    const selectedMonth = currentDate.substring(0, 7);
+    const entriesForMonthAndDistrict = (districtProgress || []).filter(
+      item => item.date.startsWith(selectedMonth) && item.district === currentDistrict && item.id !== editingId
+    );
+
+    let finalMonthlyGoal = monthlyGoal;
+    if (entriesForMonthAndDistrict.length > 0) {
+      finalMonthlyGoal = entriesForMonthAndDistrict[0].monthlyGoal;
+    }
+    
 
     const data = {
       date: currentDate,
       district: currentDistrict,
-      monthlyGoal: monthlyGoal,
+      monthlyGoal: finalMonthlyGoal,
       recovered: recovered,
     };
 
     if (editingId) {
+      // When editing, we need to ensure the goal is consistent
       const docRef = doc(firestore, 'district_progress', editingId);
-      updateDocumentNonBlocking(docRef, data);
+      updateDocumentNonBlocking(docRef, {
+        date: currentDate,
+        district: currentDistrict,
+        monthlyGoal: isMonthlyGoalEditable ? monthlyGoal : finalMonthlyGoal, // Only update goal if it was editable
+        recovered: recovered,
+      });
     } else {
       addDocumentNonBlocking(districtProgressRef, data);
     }
@@ -126,13 +149,25 @@ export function DistrictProgressManager() {
     setEditingId(item.id);
     setCurrentDate(item.date);
     setCurrentDistrict(item.district);
+    
+    // Use timeout to ensure state updates before refs are set
     setTimeout(() => {
-      if (recoveredRef.current)
-        recoveredRef.current.value = item.recovered.toString();
-      if (monthlyGoalRef.current)
-        monthlyGoalRef.current.value = item.monthlyGoal.toString();
+        const selectedMonth = item.date.substring(0, 7);
+        const entriesForMonthAndDistrict = (districtProgress || []).filter(
+            (i) => i.date.startsWith(selectedMonth) && i.district === item.district
+        );
+        
+        // The goal is editable only if this is the only entry for the month
+        const canEditGoal = entriesForMonthAndDistrict.length <= 1 && entriesForMonthAndDistrict[0]?.id === item.id;
+        setIsMonthlyGoalEditable(canEditGoal);
+
+        if (recoveredRef.current)
+            recoveredRef.current.value = item.recovered.toString();
+        if (monthlyGoalRef.current)
+            monthlyGoalRef.current.value = item.monthlyGoal.toString();
     }, 0);
   };
+
 
   const handleDelete = (id: string) => {
     if (window.confirm('¿Está seguro de que desea eliminar este registro?')) {
@@ -163,7 +198,11 @@ export function DistrictProgressManager() {
               <Label htmlFor="district">Distrito</Label>
               <Select
                 value={currentDistrict}
-                onValueChange={setCurrentDistrict}
+                onValueChange={(value) => {
+                  setCurrentDistrict(value);
+                  setEditingId(null); // Reset editing when district changes
+                  if (recoveredRef.current) recoveredRef.current.value = '';
+                }}
               >
                 <SelectTrigger id="district">
                   <SelectValue placeholder="Seleccione un distrito" />
@@ -185,9 +224,9 @@ export function DistrictProgressManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!isMonthlyGoalEditable}
+                readOnly={!isMonthlyGoalEditable && !editingId}
                 className={
-                  !isMonthlyGoalEditable ? 'bg-muted/50' : ''
+                  !isMonthlyGoalEditable && !editingId ? 'bg-muted/50' : ''
                 }
               />
             </div>
