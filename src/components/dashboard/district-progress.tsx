@@ -40,8 +40,7 @@ import {
 } from '@/components/ui/table';
 import {Progress} from '../ui/progress';
 import { useMemo } from 'react';
-import { format, getMonth, getYear, startOfMonth } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 const chartConfig = {
   recovered: {
@@ -63,24 +62,11 @@ export function DistrictProgress() {
     
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
-    const aggregatedData: {[key: string]: {district: string, recovered: number, monthlyGoal: number}} = {};
-
-    districtProgressData
+    return districtProgressData
       .filter((item: any) => item.month === currentMonthStr)
-      .forEach((item: any) => {
-        if (!aggregatedData[item.district]) {
-          aggregatedData[item.district] = {
-            district: item.district,
-            recovered: 0,
-            monthlyGoal: item.monthlyGoal, // Assume goal is the same for the month
-          };
-        }
-        aggregatedData[item.district].recovered += item.recovered;
-      });
-
-    return Object.values(aggregatedData).map(d => ({
-        ...d,
-        progress: (d.recovered / d.monthlyGoal) * 100,
+      .map((item: any) => ({
+        ...item,
+        progress: (item.recovered / item.monthlyGoal) * 100,
       }));
   }, [districtProgressData]);
 
@@ -110,7 +96,7 @@ export function DistrictProgress() {
                 </TableHeader>
                 <TableBody>
                   {dataForCurrentMonth.map((item) => (
-                    <TableRow key={item.district}>
+                    <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.district}</TableCell>
                       <TableCell className="text-right">
                         {item.recovered}
