@@ -151,11 +151,14 @@ export function DistrictProgressManager() {
   // Filtered and sorted data for display
   const sortedProgress = useMemo(() => {
     if (!districtProgress) return [];
-    return districtProgress.sort((a, b) => {
-      if (a.date === b.date) {
-        return a.district.localeCompare(b.district);
+    return [...districtProgress].sort((a, b) => {
+      if (a.date && b.date) {
+        if (a.date === b.date) {
+            return a.district.localeCompare(b.district);
+        }
+        return b.date.localeCompare(a.date);
       }
-      return b.date.localeCompare(a.date);
+      return 0; // Don't sort if dates are missing
     });
   }, [districtProgress]);
 
