@@ -62,15 +62,16 @@ export function DistrictProgressManager() {
 
   useEffect(() => {
     if (districtProgress && currentDate && currentDistrict) {
-      const entriesForDayAndDistrict = districtProgress.filter(
-        (item) => item.date === currentDate && item.district === currentDistrict
+      const selectedMonth = currentDate.substring(0, 7); // YYYY-MM
+      
+      const entriesForMonthAndDistrict = districtProgress.filter(
+        (item) => item.date.startsWith(selectedMonth) && item.district === currentDistrict
       );
 
-      if (entriesForDayAndDistrict.length > 0) {
+      if (entriesForMonthAndDistrict.length > 0) {
         setIsMonthlyGoalEditable(false);
         if (monthlyGoalRef.current) {
-          monthlyGoalRef.current.value =
-            entriesForDayAndDistrict[0].monthlyGoal.toString();
+          monthlyGoalRef.current.value = entriesForMonthAndDistrict[0].monthlyGoal.toString();
         }
       } else {
         setIsMonthlyGoalEditable(true);
@@ -184,9 +185,9 @@ export function DistrictProgressManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!isMonthlyGoalEditable && !editingId}
+                readOnly={!isMonthlyGoalEditable}
                 className={
-                  !isMonthlyGoalEditable && !editingId ? 'bg-muted/50' : ''
+                  !isMonthlyGoalEditable ? 'bg-muted/50' : ''
                 }
               />
             </div>
