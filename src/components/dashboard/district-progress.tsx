@@ -62,24 +62,11 @@ export function DistrictProgress() {
     
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
-    const monthlyData = districtProgressData
+    return districtProgressData
       .filter((item: any) => item.month === currentMonthStr)
-      .reduce((acc, item) => {
-        if (!acc[item.district]) {
-          acc[item.district] = {
-            district: item.district,
-            monthlyGoal: item.monthlyGoal,
-            recovered: 0,
-            id: item.district // Use district as a key
-          };
-        }
-        acc[item.district].recovered += item.recovered;
-        return acc;
-      }, {} as any);
-
-    return Object.values(monthlyData).map((item: any) => ({
-      ...item,
-      progress: item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
+      .map((item: any) => ({
+        ...item,
+        progress: item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
     }));
   }, [districtProgressData]);
 
@@ -112,9 +99,9 @@ export function DistrictProgress() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.district}</TableCell>
                       <TableCell className="text-right">
-                        {item.recovered}
+                        S/ {item.recovered.toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-right">{item.monthlyGoal}</TableCell>
+                      <TableCell className="text-right">S/ {item.monthlyGoal.toFixed(2)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Progress value={item.progress} className="h-2" />
@@ -150,7 +137,7 @@ export function DistrictProgress() {
                     className="text-xs"
                   />
                   <XAxis dataKey="recovered" type="number" hide />
-                  <Tooltip cursor={false} content={<ChartTooltipContent />} />
+                  <Tooltip cursor={false} content={<ChartTooltipContent formatter={(value, name, props) => `S/ ${Number(value).toFixed(2)}`}/>} />
                   <Bar dataKey="recovered" fill="hsl(var(--primary))" radius={5}>
                     <LabelList
                       position="right"
@@ -158,7 +145,7 @@ export function DistrictProgress() {
                       className="fill-foreground text-sm"
                       formatter={(value: number) => {
                         const item = dataForCurrentMonth.find(d => d.recovered === value);
-                        return item ? `${value} (${item.monthlyGoal > 0 ? ((value / item.monthlyGoal) * 100).toFixed(0) : 0}%)` : '';
+                        return item ? `${(value / 1000).toFixed(1)}k (${item.monthlyGoal > 0 ? ((value / item.monthlyGoal) * 100).toFixed(0) : 0}%)` : '';
                       }}
                     />
                   </Bar>
