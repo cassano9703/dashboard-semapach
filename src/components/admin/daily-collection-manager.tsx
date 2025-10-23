@@ -193,9 +193,9 @@ export function DailyCollectionManager() {
                 {dailyCollections?.sort((a, b) => b.date.localeCompare(a.date)).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.date}</TableCell>
-                    <TableCell>S/ {item.dailyCollectionAmount.toFixed(2)}</TableCell>
-                    <TableCell>S/ {item.accumulatedMonthlyTotal.toFixed(2)}</TableCell>
-                    <TableCell>S/ {item.monthlyGoal.toFixed(2)}</TableCell>
+                    <TableCell>{item.dailyCollectionAmount.toFixed(2)}</TableCell>
+                    <TableCell>{item.accumulatedMonthlyTotal.toFixed(2)}</TableCell>
+                    <TableCell>{item.monthlyGoal.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />

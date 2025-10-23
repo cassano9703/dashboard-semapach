@@ -248,8 +248,8 @@ export function DistrictProgressManager() {
                   <TableRow key={item.id}>
                     <TableCell>{item.month}</TableCell>
                     <TableCell>{item.district}</TableCell>
-                    <TableCell>S/ {item.monthlyGoal?.toFixed(2)}</TableCell>
-                    <TableCell>S/ {item.recovered?.toFixed(2)}</TableCell>
+                    <TableCell>{item.monthlyGoal?.toFixed(2)}</TableCell>
+                    <TableCell>{item.recovered?.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />
