@@ -58,7 +58,7 @@ export function DistrictProgress() {
   const { data: districtProgressData, isLoading } = useCollection(districtProgressRef);
 
   const dataForCurrentMonth = useMemo(() => {
-    if (!districtProgressData) return [];
+    if (isLoading || !districtProgressData) return [];
     
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
@@ -68,7 +68,7 @@ export function DistrictProgress() {
         ...item,
         progress: item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
       }));
-  }, [districtProgressData]);
+  }, [districtProgressData, isLoading]);
 
 
   return (
