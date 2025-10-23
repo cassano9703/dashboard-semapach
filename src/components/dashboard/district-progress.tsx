@@ -39,6 +39,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {Progress} from '../ui/progress';
+import { useMemo } from 'react';
+import { format, getMonth, getYear, startOfMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const chartConfig = {
   recovered: {
@@ -55,17 +58,26 @@ export function DistrictProgress() {
   );
   const { data: districtProgressData, isLoading } = useCollection(districtProgressRef);
 
-  const dataWithProgress = (districtProgressData || []).map((d: any) => ({
-    ...d,
-    progress: (d.recovered / d.monthlyGoal) * 100,
-  }));
+  const dataForCurrentMonth = useMemo(() => {
+    if (!districtProgressData) return [];
+    
+    const currentMonthStr = format(new Date(), 'yyyy-MM');
+
+    return districtProgressData
+      .filter((item: any) => item.month === currentMonthStr)
+      .map((d: any) => ({
+        ...d,
+        progress: (d.recovered / d.monthlyGoal) * 100,
+      }));
+  }, [districtProgressData]);
+
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
         <CardDescription>
-          Unidades recuperadas por distrito vs. la meta mensual.
+          Unidades recuperadas por distrito vs. la meta mensual para el mes actual.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-8 md:grid-cols-2">
@@ -84,7 +96,7 @@ export function DistrictProgress() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dataWithProgress.map((item) => (
+                  {dataForCurrentMonth.map((item) => (
                     <TableRow key={item.district}>
                       <TableCell className="font-medium">{item.district}</TableCell>
                       <TableCell className="text-right">
@@ -108,7 +120,7 @@ export function DistrictProgress() {
               <ChartContainer config={chartConfig}>
                 <BarChart
                   accessibilityLayer
-                  data={dataWithProgress}
+                  data={dataForCurrentMonth}
                   layout="vertical"
                   margin={{
                     left: 10,
@@ -133,7 +145,7 @@ export function DistrictProgress() {
                       offset={10}
                       className="fill-foreground text-sm"
                       formatter={(value: number) => {
-                        const item = dataWithProgress.find(d => d.recovered === value);
+                        const item = dataForCurrentMonth.find(d => d.recovered === value);
                         return item ? `${value} (${((value / item.monthlyGoal) * 100).toFixed(0)}%)` : '';
                       }}
                     />
