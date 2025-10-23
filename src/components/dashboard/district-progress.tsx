@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/table';
 import {Progress} from '../ui/progress';
 import { useMemo } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 const chartConfig = {
   recovered: {
