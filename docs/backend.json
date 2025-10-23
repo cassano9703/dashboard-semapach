@@ -55,9 +55,9 @@
           "type": "string",
           "description": "The name of the district (e.g., Chincha Alta, Tambo de Mora)."
         },
-        "dailyGoal": {
+        "monthlyGoal": {
           "type": "number",
-          "description": "The daily collection goal for the district."
+          "description": "The monthly collection goal for the district."
         },
         "recovered": {
           "type": "number",
@@ -68,7 +68,7 @@
         "id",
         "date",
         "district",
-        "dailyGoal",
+        "monthlyGoal",
         "recovered"
       ]
     }

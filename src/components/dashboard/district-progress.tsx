@@ -57,15 +57,15 @@ export function DistrictProgress() {
 
   const dataWithProgress = (districtProgressData || []).map((d: any) => ({
     ...d,
-    progress: (d.recovered / d.dailyGoal) * 100,
+    progress: (d.recovered / d.monthlyGoal) * 100,
   }));
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Avance de Meta Diaria por Distrito</CardTitle>
+        <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
         <CardDescription>
-          Unidades recuperadas por distrito vs. la meta diaria.
+          Unidades recuperadas por distrito vs. la meta mensual.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-8 md:grid-cols-2">
@@ -90,7 +90,7 @@ export function DistrictProgress() {
                       <TableCell className="text-right">
                         {item.recovered}
                       </TableCell>
-                      <TableCell className="text-right">{item.dailyGoal}</TableCell>
+                      <TableCell className="text-right">{item.monthlyGoal}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Progress value={item.progress} className="h-2" />
@@ -134,7 +134,7 @@ export function DistrictProgress() {
                       className="fill-foreground text-sm"
                       formatter={(value: number) => {
                         const item = dataWithProgress.find(d => d.recovered === value);
-                        return item ? `${value} (${((value / item.dailyGoal) * 100).toFixed(0)}%)` : '';
+                        return item ? `${value} (${((value / item.monthlyGoal) * 100).toFixed(0)}%)` : '';
                       }}
                     />
                   </Bar>

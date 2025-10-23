@@ -55,9 +55,9 @@ export function DistrictProgressManager() {
     new Date().toISOString().split('T')[0]
   );
   const [currentDistrict, setCurrentDistrict] = useState('');
-  const [isDailyGoalEditable, setIsDailyGoalEditable] = useState(true);
+  const [isMonthlyGoalEditable, setIsMonthlyGoalEditable] = useState(true);
 
-  const dailyGoalRef = useRef<HTMLInputElement>(null);
+  const monthlyGoalRef = useRef<HTMLInputElement>(null);
   const recoveredRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,19 +67,19 @@ export function DistrictProgressManager() {
       );
 
       if (entriesForDayAndDistrict.length > 0) {
-        setIsDailyGoalEditable(false);
-        if (dailyGoalRef.current) {
-          dailyGoalRef.current.value =
-            entriesForDayAndDistrict[0].dailyGoal.toString();
+        setIsMonthlyGoalEditable(false);
+        if (monthlyGoalRef.current) {
+          monthlyGoalRef.current.value =
+            entriesForDayAndDistrict[0].monthlyGoal.toString();
         }
       } else {
-        setIsDailyGoalEditable(true);
-        if (dailyGoalRef.current) {
-          dailyGoalRef.current.value = '';
+        setIsMonthlyGoalEditable(true);
+        if (monthlyGoalRef.current) {
+          monthlyGoalRef.current.value = '';
         }
       }
     } else {
-      setIsDailyGoalEditable(true);
+      setIsMonthlyGoalEditable(true);
     }
   }, [currentDate, currentDistrict, districtProgress]);
 
@@ -88,11 +88,11 @@ export function DistrictProgressManager() {
     setCurrentDate(new Date().toISOString().split('T')[0]);
     setCurrentDistrict('');
     if (recoveredRef.current) recoveredRef.current.value = '';
-    // dailyGoalRef is handled by useEffect
+    // monthlyGoalRef is handled by useEffect
   };
 
   const handleSave = () => {
-    const dailyGoal = Number(dailyGoalRef.current?.value || 0);
+    const monthlyGoal = Number(monthlyGoalRef.current?.value || 0);
     const recovered = Number(recoveredRef.current?.value || 0);
 
     if (!currentDate || !currentDistrict) {
@@ -100,15 +100,15 @@ export function DistrictProgressManager() {
       return;
     }
 
-    if (isDailyGoalEditable && dailyGoal <= 0) {
-      alert('Debe establecer una meta diaria.');
+    if (isMonthlyGoalEditable && monthlyGoal <= 0) {
+      alert('Debe establecer una meta mensual.');
       return;
     }
 
     const data = {
       date: currentDate,
       district: currentDistrict,
-      dailyGoal: dailyGoal,
+      monthlyGoal: monthlyGoal,
       recovered: recovered,
     };
 
@@ -128,8 +128,8 @@ export function DistrictProgressManager() {
     setTimeout(() => {
       if (recoveredRef.current)
         recoveredRef.current.value = item.recovered.toString();
-      if (dailyGoalRef.current)
-        dailyGoalRef.current.value = item.dailyGoal.toString();
+      if (monthlyGoalRef.current)
+        monthlyGoalRef.current.value = item.monthlyGoal.toString();
     }, 0);
   };
 
@@ -177,16 +177,16 @@ export function DistrictProgressManager() {
               </Select>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="dailyGoal">Meta Diaria</Label>
+              <Label htmlFor="monthlyGoal">Meta Mensual</Label>
               <Input
-                id="dailyGoal"
-                ref={dailyGoalRef}
-                name="dailyGoal"
+                id="monthlyGoal"
+                ref={monthlyGoalRef}
+                name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!isDailyGoalEditable && !editingId}
+                readOnly={!isMonthlyGoalEditable && !editingId}
                 className={
-                  !isDailyGoalEditable && !editingId ? 'bg-muted/50' : ''
+                  !isMonthlyGoalEditable && !editingId ? 'bg-muted/50' : ''
                 }
               />
             </div>
@@ -226,7 +226,7 @@ export function DistrictProgressManager() {
                 <TableRow>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Distrito</TableHead>
-                  <TableHead>Meta Diaria</TableHead>
+                  <TableHead>Meta Mensual</TableHead>
                   <TableHead>Recuperado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -238,7 +238,7 @@ export function DistrictProgressManager() {
                     <TableRow key={item.id}>
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{item.district}</TableCell>
-                      <TableCell>{item.dailyGoal}</TableCell>
+                      <TableCell>{item.monthlyGoal}</TableCell>
                       <TableCell>{item.recovered}</TableCell>
                       <TableCell className="text-right">
                         <Button
