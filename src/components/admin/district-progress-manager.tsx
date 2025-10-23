@@ -183,7 +183,7 @@ export function DistrictProgressManager() {
                 ref={dailyGoalRef}
                 name="dailyGoal"
                 type="number"
-                placeholder="S/ 0.00"
+                placeholder="0"
                 readOnly={!isDailyGoalEditable && !editingId}
                 className={
                   !isDailyGoalEditable && !editingId ? 'bg-muted/50' : ''
@@ -197,7 +197,7 @@ export function DistrictProgressManager() {
                 ref={recoveredRef}
                 name="recovered"
                 type="number"
-                placeholder="S/ 0.00"
+                placeholder="0"
               />
             </div>
             <div className="flex gap-2">
@@ -238,8 +238,8 @@ export function DistrictProgressManager() {
                     <TableRow key={item.id}>
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{item.district}</TableCell>
-                      <TableCell>S/ {item.dailyGoal.toFixed(2)}</TableCell>
-                      <TableCell>S/ {item.recovered.toFixed(2)}</TableCell>
+                      <TableCell>{item.dailyGoal}</TableCell>
+                      <TableCell>{item.recovered}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
