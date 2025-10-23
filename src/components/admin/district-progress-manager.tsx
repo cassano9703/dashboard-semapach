@@ -62,26 +62,25 @@ export function DistrictProgressManager() {
   const recoveredRef = useRef<HTMLInputElement>(null);
 
   const isMonthlyGoalEditable = useMemo(() => {
-    if (!districtProgress) return true;
+    if (!districtProgress || !currentDate || !currentDistrict) return true;
     const month = currentDate.substring(0, 7);
     
-    // Check if there is any record for this district in the current month
-    const existingRecordForMonthAndDistrict = districtProgress.find(item => item.month === month && item.district === currentDistrict);
-
-    // If no record exists for this district in this month, the goal is editable.
-    return !existingRecordForMonthAndDistrict;
+    // The goal is editable only if no record for this district exists in the current month AT ALL.
+    const existingRecordForMonth = districtProgress.find(item => item.month === month && item.district === currentDistrict);
+    
+    return !existingRecordForMonth;
   }, [districtProgress, currentDate, currentDistrict]);
 
   useEffect(() => {
-    if (!currentDate || !currentDistrict) return;
+    if (!currentDate || !currentDistrict || !districtProgress) return;
 
     const month = currentDate.substring(0, 7);
-    const existingRecordForMonthAndDistrict = districtProgress?.find(item => item.month === month && item.district === currentDistrict);
+    const existingRecordForMonth = districtProgress.find(item => item.month === month && item.district === currentDistrict);
     
-    if (existingRecordForMonthAndDistrict) {
-      // A record exists, use its goal and disable editing.
+    if (existingRecordForMonth) {
+      // A record exists, use its goal.
       if (monthlyGoalRef.current) {
-        monthlyGoalRef.current.value = existingRecordForMonthAndDistrict.monthlyGoal.toString();
+        monthlyGoalRef.current.value = existingRecordForMonth.monthlyGoal.toString();
       }
     } else {
       // No record for this district in this month yet. Clear the goal.
