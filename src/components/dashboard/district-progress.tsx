@@ -63,9 +63,22 @@ export function DistrictProgress() {
     
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
-    return districtProgressData
+    const aggregatedData: {[key: string]: {district: string, recovered: number, monthlyGoal: number}} = {};
+
+    districtProgressData
       .filter((item: any) => item.month === currentMonthStr)
-      .map((d: any) => ({
+      .forEach((item: any) => {
+        if (!aggregatedData[item.district]) {
+          aggregatedData[item.district] = {
+            district: item.district,
+            recovered: 0,
+            monthlyGoal: item.monthlyGoal, // Assume goal is the same for the month
+          };
+        }
+        aggregatedData[item.district].recovered += item.recovered;
+      });
+
+    return Object.values(aggregatedData).map(d => ({
         ...d,
         progress: (d.recovered / d.monthlyGoal) * 100,
       }));

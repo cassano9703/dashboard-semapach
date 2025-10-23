@@ -1,7 +1,13 @@
 'use client';
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { collection, doc, getDoc } from 'firebase/firestore';
 import {
+  collection,
+  doc,
+} from 'firebase/firestore';
+import {
+  addDocumentNonBlocking,
+  deleteDocumentNonBlocking,
+  updateDocumentNonBlocking,
   useCollection,
   useFirestore,
   useMemoFirebase,
@@ -26,9 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 const districts = [
   'Tambo de Mora',
@@ -52,109 +55,87 @@ export function DistrictProgressManager() {
   } = useCollection(districtProgressRef);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentDistrict, setCurrentDistrict] = useState('');
   
   const monthlyGoalRef = useRef<HTMLInputElement>(null);
   const recoveredRef = useRef<HTMLInputElement>(null);
 
-  const existingRecordForMonth = useMemo(() => {
-    if (!districtProgress || !currentMonth || !currentDistrict) return null;
-    return districtProgress.find(item => item.month === currentMonth && item.district === currentDistrict);
-  }, [districtProgress, currentMonth, currentDistrict]);
+  const isMonthlyGoalEditable = useMemo(() => {
+    if (!districtProgress || !currentDate || !currentDistrict) return true;
+    
+    const currentMonth = currentDate.substring(0, 7);
+    const existingRecordForMonthAndDistrict = districtProgress.find(item => item.month === currentMonth && item.district === currentDistrict);
+
+    return !existingRecordForMonthAndDistrict;
+  }, [districtProgress, currentDate, currentDistrict]);
 
   useEffect(() => {
-    if (editingId) {
-      // In editing mode, just fill the fields, don't clear them
-      const recordToEdit = districtProgress?.find(item => item.id === editingId);
-      if (recordToEdit) {
-        if (monthlyGoalRef.current) monthlyGoalRef.current.value = recordToEdit.monthlyGoal.toString();
-        if (recoveredRef.current) recoveredRef.current.value = recordToEdit.recovered.toString();
-      }
+    if (!currentDate || !currentDistrict) {
+      if(monthlyGoalRef.current) monthlyGoalRef.current.value = '';
       return;
-    }
-    
-    // In new-entry mode
-    if (existingRecordForMonth) {
-      if (monthlyGoalRef.current) monthlyGoalRef.current.value = existingRecordForMonth.monthlyGoal.toString();
-    } else {
-      if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
-    }
-    if (recoveredRef.current) recoveredRef.current.value = '';
+    };
 
-  }, [existingRecordForMonth, editingId, districtProgress]);
+    const currentMonth = currentDate.substring(0, 7);
+    const existingRecordForMonthAndDistrict = districtProgress?.find(item => item.month === currentMonth && item.district === currentDistrict);
+    
+    if (existingRecordForMonthAndDistrict) {
+      if (monthlyGoalRef.current) {
+        monthlyGoalRef.current.value = existingRecordForMonthAndDistrict.monthlyGoal.toString();
+      }
+    } else {
+      if (monthlyGoalRef.current) {
+        monthlyGoalRef.current.value = '';
+      }
+    }
+  }, [currentDate, currentDistrict, districtProgress]);
 
 
   const clearForm = () => {
     setEditingId(null);
+    setCurrentDate(new Date().toISOString().split('T')[0]);
     setCurrentDistrict('');
-    setCurrentMonth(format(new Date(), 'yyyy-MM'));
     if (recoveredRef.current) recoveredRef.current.value = '';
-    // useEffect will handle the monthly goal field
+    if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
   };
 
-  const handleSave = async () => {
-    const newRecoveredAmount = Number(recoveredRef.current?.value || 0);
+  const handleSave = () => {
+    const recovered = Number(recoveredRef.current?.value || 0);
     const monthlyGoal = Number(monthlyGoalRef.current?.value || 0);
-
-    if (!currentMonth || !currentDistrict) {
-      alert('El mes y el distrito son obligatorios.');
-      return;
-    }
-
-    if (!existingRecordForMonth && !editingId && monthlyGoal <= 0) {
-      alert('Debe establecer una meta mensual para el nuevo registro.');
-      return;
-    }
     
-    const docId = editingId || `${currentMonth}-${currentDistrict.replace(/\s+/g, '-')}`;
-    const docRef = doc(firestore, 'district_progress', docId);
+    if (!currentDate || !currentDistrict) {
+        alert('La fecha y el distrito son obligatorios.');
+        return;
+    }
+    if (isMonthlyGoalEditable && monthlyGoal <= 0) {
+        alert('Debe establecer una meta para el nuevo mes y distrito.');
+        return;
+    }
 
-    let finalData;
+    const data = {
+      date: currentDate,
+      month: currentDate.substring(0, 7),
+      district: currentDistrict,
+      monthlyGoal: monthlyGoal,
+      recovered: recovered
+    };
 
     if (editingId) {
-        // When editing, we overwrite the values
-        finalData = {
-            id: docId,
-            month: currentMonth,
-            district: currentDistrict,
-            monthlyGoal: monthlyGoal,
-            recovered: newRecoveredAmount
-        };
+      const docRef = doc(firestore, 'district_progress', editingId);
+      updateDocumentNonBlocking(docRef, data);
     } else {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            // Document exists, sum the recovered amount
-            const existingData = docSnap.data();
-            finalData = {
-                ...existingData,
-                recovered: (existingData.recovered || 0) + newRecoveredAmount,
-            };
-        } else {
-            // Document doesn't exist, create a new one
-            finalData = {
-                id: docId,
-                month: currentMonth,
-                district: currentDistrict,
-                monthlyGoal: monthlyGoal,
-                recovered: newRecoveredAmount
-            };
-        }
+      addDocumentNonBlocking(districtProgressRef, data);
     }
-
-    setDocumentNonBlocking(docRef, finalData, { merge: true });
     clearForm();
   };
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
-    setCurrentMonth(item.month);
+    setCurrentDate(item.date);
     setCurrentDistrict(item.district);
-    
-    // Use setTimeout to ensure the fields are enabled before setting the value
     setTimeout(() => {
-        if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
         if (recoveredRef.current) recoveredRef.current.value = item.recovered.toString();
+        if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
     }, 0);
   };
 
@@ -164,12 +145,6 @@ export function DistrictProgressManager() {
       deleteDocumentNonBlocking(docRef);
     }
   };
-  
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setCurrentDistrict(''); // Reset selection to force re-evaluation
-    setCurrentMonth(format(new Date(), 'yyyy-MM'));
-  }
 
   return (
     <Card>
@@ -179,32 +154,19 @@ export function DistrictProgressManager() {
       <CardContent>
         <div className="grid gap-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            <div className="grid gap-1.5">
-              <Label htmlFor="month">Mes</Label>
+             <div className="grid gap-1.5">
+              <Label htmlFor="date">Fecha</Label>
               <Input
-                id="month"
-                name="month"
-                type="month"
-                value={currentMonth}
-                onChange={(e) => {
-                  if (!editingId) {
-                    setCurrentMonth(e.target.value)
-                  }
-                }}
-                disabled={!!editingId}
+                id="date"
+                name="date"
+                type="date"
+                value={currentDate}
+                onChange={(e) => setCurrentDate(e.target.value)}
               />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="district">Distrito</Label>
-              <Select
-                value={currentDistrict}
-                onValueChange={(value) => {
-                   if (!editingId) {
-                    setCurrentDistrict(value)
-                   }
-                }}
-                disabled={!!editingId}
-              >
+              <Select value={currentDistrict} onValueChange={setCurrentDistrict}>
                 <SelectTrigger id="district">
                   <SelectValue placeholder="Seleccione un distrito" />
                 </SelectTrigger>
@@ -225,12 +187,12 @@ export function DistrictProgressManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!!existingRecordForMonth && !editingId}
-                className={(!!existingRecordForMonth && !editingId) ? 'bg-muted/50' : ''}
+                readOnly={!isMonthlyGoalEditable && !editingId}
+                className={(!isMonthlyGoalEditable && !editingId) ? 'bg-muted/50' : ''}
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="recovered">{editingId ? 'Total Recuperado' : 'Añadir Recuperado'}</Label>
+              <Label htmlFor="recovered">Recuperado</Label>
               <Input
                 id="recovered"
                 ref={recoveredRef}
@@ -242,14 +204,10 @@ export function DistrictProgressManager() {
             <div className="flex gap-2">
               <Button onClick={handleSave} className="w-full">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                {editingId ? 'Actualizar' : 'Guardar'}
+                {editingId ? 'Actualizar' : 'Agregar'}
               </Button>
               {editingId && (
-                <Button
-                  onClick={handleCancelEdit}
-                  variant="outline"
-                  className="w-full"
-                >
+                <Button onClick={clearForm} variant="outline" className="w-full">
                   Cancelar
                 </Button>
               )}
@@ -263,7 +221,7 @@ export function DistrictProgressManager() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mes</TableHead>
+                  <TableHead>Fecha</TableHead>
                   <TableHead>Distrito</TableHead>
                   <TableHead>Meta Mensual</TableHead>
                   <TableHead>Recuperado</TableHead>
@@ -271,32 +229,22 @@ export function DistrictProgressManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {districtProgress
-                  ?.sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
-                  .map((item) => (
-                    <TableRow key={item.id}>
-                       <TableCell>{format(new Date(`${item.month}-02`), "LLLL yyyy", { locale: es })}</TableCell>
-                      <TableCell>{item.district}</TableCell>
-                      <TableCell>{item.monthlyGoal}</TableCell>
-                      <TableCell>{item.recovered}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {districtProgress?.sort((a, b) => b.date.localeCompare(a.date)).map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.date}</TableCell>
+                    <TableCell>{item.district}</TableCell>
+                    <TableCell>{item.monthlyGoal}</TableCell>
+                    <TableCell>{item.recovered}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
