@@ -1,6 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { collection, doc, getDoc } from 'firebase/firestore';
 import {
   useCollection,
   useFirestore,
@@ -65,23 +65,26 @@ export function DistrictProgressManager() {
   }, [districtProgress, currentMonth, currentDistrict]);
 
   useEffect(() => {
+    if (editingId) {
+      // Editing mode, don't auto-clear
+      return;
+    }
+    
     if (existingRecord) {
       if (monthlyGoalRef.current) monthlyGoalRef.current.value = existingRecord.monthlyGoal.toString();
-      // Don't set recovered value, as it's an additive field now
     } else {
       if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
     }
      if (recoveredRef.current) recoveredRef.current.value = '';
 
-  }, [existingRecord, currentDistrict, currentMonth]);
+  }, [existingRecord, currentDistrict, currentMonth, editingId]);
 
 
   const clearForm = () => {
     setEditingId(null);
+    setCurrentDistrict('');
     if (recoveredRef.current) recoveredRef.current.value = '';
-    if (!existingRecord && monthlyGoalRef.current) {
-        monthlyGoalRef.current.value = '';
-    }
+    // Let useEffect handle the monthly goal field
   };
 
   const handleSave = async () => {
@@ -93,7 +96,7 @@ export function DistrictProgressManager() {
       return;
     }
 
-    if (!existingRecord && monthlyGoal <= 0) {
+    if (!existingRecord && !editingId && monthlyGoal <= 0) {
       alert('Debe establecer una meta mensual para el nuevo registro.');
       return;
     }
@@ -178,8 +181,9 @@ export function DistrictProgressManager() {
                 type="month"
                 value={currentMonth}
                 onChange={(e) => {
-                  setCurrentMonth(e.target.value);
-                  setEditingId(null);
+                  if (!editingId) {
+                    setCurrentMonth(e.target.value)
+                  }
                 }}
                 disabled={!!editingId}
               />
@@ -189,8 +193,9 @@ export function DistrictProgressManager() {
               <Select
                 value={currentDistrict}
                 onValueChange={(value) => {
-                  setCurrentDistrict(value);
-                  setEditingId(null); 
+                   if (!editingId) {
+                    setCurrentDistrict(value)
+                   }
                 }}
                 disabled={!!editingId}
               >
@@ -215,7 +220,7 @@ export function DistrictProgressManager() {
                 type="number"
                 placeholder="0"
                 readOnly={!!existingRecord && !editingId}
-                className={!!existingRecord && !editingId ? 'bg-muted/50' : ''}
+                className={(!!existingRecord && !editingId) ? 'bg-muted/50' : ''}
               />
             </div>
             <div className="grid gap-1.5">
@@ -261,7 +266,7 @@ export function DistrictProgressManager() {
               </TableHeader>
               <TableBody>
                 {districtProgress
-                  ?.sort((a, b) => b.month.localeCompare(a.month))
+                  ?.sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
                   .map((item) => (
                     <TableRow key={item.id}>
                        <TableCell>{format(new Date(`${item.month}-02`), "LLLL yyyy", { locale: es })}</TableCell>
