@@ -68,17 +68,16 @@ export function DistrictProgressManager() {
   const recoveredRef = useRef<HTMLInputElement>(null);
 
   const isMonthlyGoalEditable = useMemo(() => {
-    if (editingId) return true; // Always editable when editing a specific record.
     if (!districtProgress || !currentMonth || !currentDistrict) return true;
     
     const existingRecordForMonthAndDistrict = districtProgress.find(item => item.month === currentMonth && item.district === currentDistrict);
 
     return !existingRecordForMonthAndDistrict;
-  }, [districtProgress, currentMonth, currentDistrict, editingId]);
+  }, [districtProgress, currentMonth, currentDistrict]);
 
   useEffect(() => {
-    if (!currentMonth || !currentDistrict || editingId) {
-      if(monthlyGoalRef.current && !editingId) monthlyGoalRef.current.value = '';
+    if (!currentMonth || !currentDistrict) {
+      if(monthlyGoalRef.current) monthlyGoalRef.current.value = '';
       return;
     };
 
@@ -93,14 +92,14 @@ export function DistrictProgressManager() {
         monthlyGoalRef.current.value = '';
       }
     }
-  }, [currentMonth, currentDistrict, districtProgress, editingId]);
+  }, [currentMonth, currentDistrict, districtProgress]);
 
 
   const clearForm = () => {
     setEditingId(null);
     setCurrentDistrict('');
     if (recoveredRef.current) recoveredRef.current.value = '';
-    if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
+    // Do not clear monthly goal automatically, it's driven by state
   };
 
   const handleSave = async () => {
@@ -117,7 +116,7 @@ export function DistrictProgressManager() {
       return;
     }
     
-    if (isMonthlyGoalEditable && monthlyGoal <= 0 && !editingId) {
+    if (isMonthlyGoalEditable && monthlyGoal <= 0) {
         alert('Debe establecer una meta para el nuevo mes y distrito.');
         return;
     }
@@ -127,30 +126,28 @@ export function DistrictProgressManager() {
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Document exists, update it
+        // Document exists, update it by incrementing the recovered amount
         const docToUpdate = querySnapshot.docs[0];
         const docRef = doc(firestore, 'district_progress', docToUpdate.id);
-        const updateData: { recovered: any; monthlyGoal?: number } = {
-          recovered: increment(recoveredAmountToAdd)
-        };
-        // Only update the goal if the form allows it (and it's a new goal)
-        if(isMonthlyGoalEditable) {
-          updateData.monthlyGoal = monthlyGoal;
-        }
-        updateDocumentNonBlocking(docRef, updateData);
+        updateDocumentNonBlocking(docRef, { recovered: increment(recoveredAmountToAdd) });
       } else {
-        // Document doesn't exist, create it
+        // Document doesn't exist, create it with the initial recovered amount
         const data = {
           month: currentMonth,
           district: currentDistrict,
           monthlyGoal: monthlyGoal,
-          recovered: recoveredAmountToAdd
+          recovered: recoveredAmountToAdd,
+          id: `${currentMonth}-${currentDistrict}` // Set a predictable ID
         };
+        const newDocRef = doc(firestore, 'district_progress', data.id);
+        // Use setDocumentNonBlocking to create a doc with a specific ID
         addDocumentNonBlocking(districtProgressRef, data);
+
       }
     }
 
-    clearForm();
+    // Clear only the recovered amount field after saving
+    if (recoveredRef.current) recoveredRef.current.value = '';
   };
 
   const handleEdit = (item: any) => {
@@ -195,7 +192,7 @@ export function DistrictProgressManager() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="district">Distrito</Label>
-              <Select value={currentDistrict} onValueChange={setCurrentDistrict} disabled={!!editingId}>
+              <Select value={currentDistrict} onValueChange={setCurrentDistrict} >
                 <SelectTrigger id="district">
                   <SelectValue placeholder="Seleccione un distrito" />
                 </SelectTrigger>
@@ -260,7 +257,7 @@ export function DistrictProgressManager() {
                     <TableCell>{item.monthlyGoal}</TableCell>
                     <TableCell>{item.recovered}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} disabled>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
