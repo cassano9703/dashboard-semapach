@@ -58,33 +58,39 @@ export function DistrictProgressManager() {
   const monthlyGoalRef = useRef<HTMLInputElement>(null);
   const recoveredRef = useRef<HTMLInputElement>(null);
 
-  const existingRecord = useMemo(() => {
+  const existingRecordForMonth = useMemo(() => {
     if (!districtProgress || !currentMonth || !currentDistrict) return null;
-    const docId = `${currentMonth}-${currentDistrict.replace(/\s+/g, '-')}`;
-    return districtProgress.find(item => item.id === docId);
+    return districtProgress.find(item => item.month === currentMonth && item.district === currentDistrict);
   }, [districtProgress, currentMonth, currentDistrict]);
 
   useEffect(() => {
     if (editingId) {
-      // Editing mode, don't auto-clear
+      // In editing mode, just fill the fields, don't clear them
+      const recordToEdit = districtProgress?.find(item => item.id === editingId);
+      if (recordToEdit) {
+        if (monthlyGoalRef.current) monthlyGoalRef.current.value = recordToEdit.monthlyGoal.toString();
+        if (recoveredRef.current) recoveredRef.current.value = recordToEdit.recovered.toString();
+      }
       return;
     }
     
-    if (existingRecord) {
-      if (monthlyGoalRef.current) monthlyGoalRef.current.value = existingRecord.monthlyGoal.toString();
+    // In new-entry mode
+    if (existingRecordForMonth) {
+      if (monthlyGoalRef.current) monthlyGoalRef.current.value = existingRecordForMonth.monthlyGoal.toString();
     } else {
       if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
     }
-     if (recoveredRef.current) recoveredRef.current.value = '';
+    if (recoveredRef.current) recoveredRef.current.value = '';
 
-  }, [existingRecord, currentDistrict, currentMonth, editingId]);
+  }, [existingRecordForMonth, editingId, districtProgress]);
 
 
   const clearForm = () => {
     setEditingId(null);
     setCurrentDistrict('');
+    setCurrentMonth(format(new Date(), 'yyyy-MM'));
     if (recoveredRef.current) recoveredRef.current.value = '';
-    // Let useEffect handle the monthly goal field
+    // useEffect will handle the monthly goal field
   };
 
   const handleSave = async () => {
@@ -96,7 +102,7 @@ export function DistrictProgressManager() {
       return;
     }
 
-    if (!existingRecord && !editingId && monthlyGoal <= 0) {
+    if (!existingRecordForMonth && !editingId && monthlyGoal <= 0) {
       alert('Debe establecer una meta mensual para el nuevo registro.');
       return;
     }
@@ -107,7 +113,7 @@ export function DistrictProgressManager() {
     let finalData;
 
     if (editingId) {
-        // When editing, we just update the values, not sum them
+        // When editing, we overwrite the values
         finalData = {
             id: docId,
             month: currentMonth,
@@ -122,7 +128,7 @@ export function DistrictProgressManager() {
             const existingData = docSnap.data();
             finalData = {
                 ...existingData,
-                recovered: existingData.recovered + newRecoveredAmount,
+                recovered: (existingData.recovered || 0) + newRecoveredAmount,
             };
         } else {
             // Document doesn't exist, create a new one
@@ -136,7 +142,6 @@ export function DistrictProgressManager() {
         }
     }
 
-
     setDocumentNonBlocking(docRef, finalData, { merge: true });
     clearForm();
   };
@@ -146,6 +151,7 @@ export function DistrictProgressManager() {
     setCurrentMonth(item.month);
     setCurrentDistrict(item.district);
     
+    // Use setTimeout to ensure the fields are enabled before setting the value
     setTimeout(() => {
         if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
         if (recoveredRef.current) recoveredRef.current.value = item.recovered.toString();
@@ -219,8 +225,8 @@ export function DistrictProgressManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!!existingRecord && !editingId}
-                className={(!!existingRecord && !editingId) ? 'bg-muted/50' : ''}
+                readOnly={!!existingRecordForMonth && !editingId}
+                className={(!!existingRecordForMonth && !editingId) ? 'bg-muted/50' : ''}
               />
             </div>
             <div className="grid gap-1.5">
