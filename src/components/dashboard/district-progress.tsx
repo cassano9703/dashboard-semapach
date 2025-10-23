@@ -42,7 +42,7 @@ import {Progress} from '../ui/progress';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, CheckCircle2 } from 'lucide-react';
 
 const chartConfig = {
   recovered: {
@@ -110,12 +110,19 @@ export function DistrictProgress() {
                         </TableCell>
                         <TableCell className="text-right">{item.monthlyGoal.toFixed(2)}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={item.progress} className="h-2" />
-                            <span className="text-xs text-muted-foreground">
-                              {Math.round(item.progress)}%
-                            </span>
-                          </div>
+                          {goalReached ? (
+                             <div className="flex items-center justify-center gap-2 text-green-600">
+                                <CheckCircle2 className="h-5 w-5" />
+                                <span className="text-xs font-semibold">Cumplido</span>
+                              </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Progress value={item.progress} className="h-2" />
+                              <span className="text-xs text-muted-foreground">
+                                {Math.round(item.progress)}%
+                              </span>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
