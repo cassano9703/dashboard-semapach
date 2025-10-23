@@ -42,6 +42,7 @@ import {Progress} from '../ui/progress';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
 
 const chartConfig = {
   recovered: {
@@ -96,23 +97,29 @@ export function DistrictProgress() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dataForCurrentMonth.map((item) => (
-                    <TableRow key={item.id} className={cn(item.recovered >= item.monthlyGoal && item.monthlyGoal > 0 && "bg-green-100 dark:bg-green-900/50")}>
-                      <TableCell className="font-medium">{item.district}</TableCell>
-                      <TableCell className="text-right">
-                        S/ {item.recovered.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">S/ {item.monthlyGoal.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Progress value={item.progress} className="h-2" />
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(item.progress)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {dataForCurrentMonth.map((item) => {
+                    const goalReached = item.recovered >= item.monthlyGoal && item.monthlyGoal > 0;
+                    return (
+                      <TableRow key={item.id} className={cn(goalReached && "bg-green-100 dark:bg-green-900/50")}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          {goalReached && <Check className="h-4 w-4 text-green-600" />}
+                          {item.district}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {item.recovered.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">{item.monthlyGoal.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Progress value={item.progress} className="h-2" />
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(item.progress)}%
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -138,7 +145,7 @@ export function DistrictProgress() {
                     className="text-xs"
                   />
                   <XAxis dataKey="recovered" type="number" hide />
-                  <Tooltip cursor={false} content={<ChartTooltipContent formatter={(value, name, props) => `S/ ${Number(value).toFixed(2)}`}/>} />
+                  <Tooltip cursor={false} content={<ChartTooltipContent formatter={(value) => `${Number(value).toFixed(2)}`}/>} />
                   <Bar dataKey="recovered" fill="hsl(var(--primary))" radius={5}>
                     <LabelList
                       position="right"
