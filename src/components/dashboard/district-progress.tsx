@@ -63,13 +63,7 @@ export function DistrictProgress() {
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
     return districtProgressData
-      .filter((item: any) => {
-        // Asegurarse que item.date exista y sea una cadena válida antes de parsear
-        if (typeof item.date !== 'string') return false;
-        // La fecha de Firestore viene como 'YYYY-MM-DD', la parseamos
-        const itemMonthStr = item.date.substring(0, 7);
-        return itemMonthStr === currentMonthStr;
-      })
+      .filter((item: any) => item.month === currentMonthStr)
       .map((item: any) => ({
         ...item,
         progress: (item.recovered / item.monthlyGoal) * 100,

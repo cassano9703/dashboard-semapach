@@ -3,6 +3,11 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   collection,
   doc,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  increment,
 } from 'firebase/firestore';
 import {
   addDocumentNonBlocking,
@@ -32,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { format } from 'date-fns';
 
 const districts = [
   'Tambo de Mora',
@@ -39,7 +45,7 @@ const districts = [
   'Alto Laran',
   'Grocio Prado',
   'Sunampe',
-  'Chincha Alta'
+  'Chincha Alta',
 ];
 
 export function DistrictProgressManager() {
@@ -55,28 +61,27 @@ export function DistrictProgressManager() {
   } = useCollection(districtProgressRef);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [currentDistrict, setCurrentDistrict] = useState('');
   
   const monthlyGoalRef = useRef<HTMLInputElement>(null);
   const recoveredRef = useRef<HTMLInputElement>(null);
 
   const isMonthlyGoalEditable = useMemo(() => {
-    if (!districtProgress || !currentDate || !currentDistrict) return true;
+    if (editingId) return true; // Always editable when editing a specific record.
+    if (!districtProgress || !currentMonth || !currentDistrict) return true;
     
-    const currentMonth = currentDate.substring(0, 7);
     const existingRecordForMonthAndDistrict = districtProgress.find(item => item.month === currentMonth && item.district === currentDistrict);
 
     return !existingRecordForMonthAndDistrict;
-  }, [districtProgress, currentDate, currentDistrict]);
+  }, [districtProgress, currentMonth, currentDistrict, editingId]);
 
   useEffect(() => {
-    if (!currentDate || !currentDistrict) {
-      if(monthlyGoalRef.current) monthlyGoalRef.current.value = '';
+    if (!currentMonth || !currentDistrict || editingId) {
+      if(monthlyGoalRef.current && !editingId) monthlyGoalRef.current.value = '';
       return;
     };
 
-    const currentMonth = currentDate.substring(0, 7);
     const existingRecordForMonthAndDistrict = districtProgress?.find(item => item.month === currentMonth && item.district === currentDistrict);
     
     if (existingRecordForMonthAndDistrict) {
@@ -88,63 +93,87 @@ export function DistrictProgressManager() {
         monthlyGoalRef.current.value = '';
       }
     }
-  }, [currentDate, currentDistrict, districtProgress]);
+  }, [currentMonth, currentDistrict, districtProgress, editingId]);
 
 
   const clearForm = () => {
     setEditingId(null);
-    setCurrentDate(new Date().toISOString().split('T')[0]);
     setCurrentDistrict('');
     if (recoveredRef.current) recoveredRef.current.value = '';
     if (monthlyGoalRef.current) monthlyGoalRef.current.value = '';
   };
 
-  const handleSave = () => {
-    const recovered = Number(recoveredRef.current?.value || 0);
+  const handleSave = async () => {
+    const recoveredAmountToAdd = Number(recoveredRef.current?.value || 0);
     const monthlyGoal = Number(monthlyGoalRef.current?.value || 0);
     
-    if (!currentDate || !currentDistrict) {
-        alert('La fecha y el distrito son obligatorios.');
+    if (!currentMonth || !currentDistrict) {
+        alert('El mes y el distrito son obligatorios.');
         return;
     }
-    if (isMonthlyGoalEditable && monthlyGoal <= 0) {
+
+    if (recoveredAmountToAdd <= 0) {
+      alert('El monto a recuperar debe ser mayor que cero.');
+      return;
+    }
+    
+    if (isMonthlyGoalEditable && monthlyGoal <= 0 && !editingId) {
         alert('Debe establecer una meta para el nuevo mes y distrito.');
         return;
     }
 
-    const data = {
-      date: currentDate,
-      month: currentDate.substring(0, 7),
-      district: currentDistrict,
-      monthlyGoal: monthlyGoal,
-      recovered: recovered
-    };
+    if (firestore) {
+      const q = query(districtProgressRef, where('month', '==', currentMonth), where('district', '==', currentDistrict));
+      const querySnapshot = await getDocs(q);
 
-    if (editingId) {
-      const docRef = doc(firestore, 'district_progress', editingId);
-      updateDocumentNonBlocking(docRef, data);
-    } else {
-      addDocumentNonBlocking(districtProgressRef, data);
+      if (!querySnapshot.empty) {
+        // Document exists, update it
+        const docToUpdate = querySnapshot.docs[0];
+        const docRef = doc(firestore, 'district_progress', docToUpdate.id);
+        const updateData: { recovered: any; monthlyGoal?: number } = {
+          recovered: increment(recoveredAmountToAdd)
+        };
+        // Only update the goal if the form allows it (and it's a new goal)
+        if(isMonthlyGoalEditable) {
+          updateData.monthlyGoal = monthlyGoal;
+        }
+        updateDocumentNonBlocking(docRef, updateData);
+      } else {
+        // Document doesn't exist, create it
+        const data = {
+          month: currentMonth,
+          district: currentDistrict,
+          monthlyGoal: monthlyGoal,
+          recovered: recoveredAmountToAdd
+        };
+        addDocumentNonBlocking(districtProgressRef, data);
+      }
     }
+
     clearForm();
   };
 
   const handleEdit = (item: any) => {
-    setEditingId(item.id);
-    setCurrentDate(item.date);
-    setCurrentDistrict(item.district);
-    setTimeout(() => {
-        if (recoveredRef.current) recoveredRef.current.value = item.recovered.toString();
-        if (monthlyGoalRef.current) monthlyGoalRef.current.value = item.monthlyGoal.toString();
-    }, 0);
+    alert("La edición directa ha sido deshabilitada. Para corregir un valor, elimine el registro mensual y créelo de nuevo con los valores correctos.");
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('¿Está seguro de que desea eliminar este registro?')) {
+    if (window.confirm('¿Está seguro de que desea eliminar este registro mensual? Esta acción no se puede deshacer.')) {
       const docRef = doc(firestore, 'district_progress', id);
       deleteDocumentNonBlocking(docRef);
     }
   };
+
+  // Filtered and sorted data for display
+  const sortedProgress = useMemo(() => {
+    if (!districtProgress) return [];
+    return districtProgress.sort((a, b) => {
+      if (a.month === b.month) {
+        return a.district.localeCompare(b.district);
+      }
+      return b.month.localeCompare(a.month);
+    });
+  }, [districtProgress]);
 
   return (
     <Card>
@@ -155,18 +184,18 @@ export function DistrictProgressManager() {
         <div className="grid gap-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
              <div className="grid gap-1.5">
-              <Label htmlFor="date">Fecha</Label>
+              <Label htmlFor="month">Mes</Label>
               <Input
-                id="date"
-                name="date"
-                type="date"
-                value={currentDate}
-                onChange={(e) => setCurrentDate(e.target.value)}
+                id="month"
+                name="month"
+                type="month"
+                value={currentMonth}
+                onChange={(e) => setCurrentMonth(e.target.value)}
               />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="district">Distrito</Label>
-              <Select value={currentDistrict} onValueChange={setCurrentDistrict}>
+              <Select value={currentDistrict} onValueChange={setCurrentDistrict} disabled={!!editingId}>
                 <SelectTrigger id="district">
                   <SelectValue placeholder="Seleccione un distrito" />
                 </SelectTrigger>
@@ -187,12 +216,12 @@ export function DistrictProgressManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="0"
-                readOnly={!isMonthlyGoalEditable && !editingId}
-                className={(!isMonthlyGoalEditable && !editingId) ? 'bg-muted/50' : ''}
+                readOnly={!isMonthlyGoalEditable}
+                className={!isMonthlyGoalEditable ? 'bg-muted/50' : ''}
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="recovered">Recuperado</Label>
+              <Label htmlFor="recovered">Recuperado (a sumar)</Label>
               <Input
                 id="recovered"
                 ref={recoveredRef}
@@ -204,13 +233,8 @@ export function DistrictProgressManager() {
             <div className="flex gap-2">
               <Button onClick={handleSave} className="w-full">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                {editingId ? 'Actualizar' : 'Agregar'}
+                Agregar Avance
               </Button>
-              {editingId && (
-                <Button onClick={clearForm} variant="outline" className="w-full">
-                  Cancelar
-                </Button>
-              )}
             </div>
           </div>
 
@@ -221,17 +245,17 @@ export function DistrictProgressManager() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
+                  <TableHead>Mes</TableHead>
                   <TableHead>Distrito</TableHead>
                   <TableHead>Meta Mensual</TableHead>
-                  <TableHead>Recuperado</TableHead>
+                  <TableHead>Recuperado Total</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {districtProgress?.sort((a, b) => b.date.localeCompare(a.date)).map((item) => (
+                {sortedProgress.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.date}</TableCell>
+                    <TableCell>{item.month}</TableCell>
                     <TableCell>{item.district}</TableCell>
                     <TableCell>{item.monthlyGoal}</TableCell>
                     <TableCell>{item.recovered}</TableCell>
