@@ -41,6 +41,7 @@ import {
 import {Progress} from '../ui/progress';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const chartConfig = {
   recovered: {
@@ -96,7 +97,7 @@ export function DistrictProgress() {
                 </TableHeader>
                 <TableBody>
                   {dataForCurrentMonth.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={cn(item.recovered >= item.monthlyGoal && item.monthlyGoal > 0 && "bg-green-100 dark:bg-green-900/50")}>
                       <TableCell className="font-medium">{item.district}</TableCell>
                       <TableCell className="text-right">
                         S/ {item.recovered.toFixed(2)}
