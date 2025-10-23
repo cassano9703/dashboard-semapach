@@ -158,8 +158,8 @@ export function DailyCollectionManager() {
                 name="monthlyGoal"
                 type="number"
                 placeholder="S/ 0.00"
-                readOnly={!isMonthGoalEditable && !editingId}
-                className={!isMonthGoalEditable && !editingId ? 'bg-muted/50' : ''}
+                readOnly={!isMonthGoalEditable}
+                className={!isMonthGoalEditable ? 'bg-muted/50' : ''}
               />
             </div>
             <div className="flex gap-2">
