@@ -1,12 +1,9 @@
 'use client';
-import {
-  collection,
-} from 'firebase/firestore';
-import {
-  useCollection,
-  useFirestore,
-  useMemoFirebase,
-} from '@/firebase';
+import { useRef } from 'react';
+import { collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import {
   Bar,
@@ -38,11 +35,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {Progress} from '../ui/progress';
+import { Progress } from '../ui/progress';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Check, CheckCircle2 } from 'lucide-react';
+import { Check, CheckCircle2, Download } from 'lucide-react';
+import { Button } from '../ui/button';
 
 const chartConfig = {
   recovered: {
@@ -57,33 +55,79 @@ export function DistrictProgress() {
     () => collection(firestore, 'district_progress'),
     [firestore]
   );
-  const { data: districtProgressData, isLoading } = useCollection(districtProgressRef);
+  const { data: districtProgressData, isLoading } =
+    useCollection(districtProgressRef);
+
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const dataForCurrentMonth = useMemo(() => {
     if (!districtProgressData) return [];
-    
+
     const currentMonthStr = format(new Date(), 'yyyy-MM');
 
     return districtProgressData
       .filter((item: any) => item.month === currentMonthStr)
       .map((item: any) => ({
         ...item,
-        progress: item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
-    }));
+        progress:
+          item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
+      }));
   }, [districtProgressData]);
 
+  const handleDownloadPdf = () => {
+    const input = pdfRef.current;
+    if (!input) return;
+
+    // Remove the download button from the capture
+    const button = input.querySelector('#download-pdf-button');
+    if (button) {
+      (button as HTMLElement).style.display = 'none';
+    }
+    
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4', true);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        const imgY = 15; // Margin top
+        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        
+        const month = format(new Date(), 'yyyy-MM');
+        pdf.save(`reporte-avance-distritos-${month}.pdf`);
+        
+        // Show the button again
+        if (button) {
+          (button as HTMLElement).style.display = 'flex';
+        }
+    });
+  };
 
   return (
-    <Card>
+    <Card ref={pdfRef}>
       <CardHeader>
-        <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
-        <CardDescription>
-          Unidades recuperadas por distrito vs. la meta mensual para el mes actual.
-        </CardDescription>
+        <div className="flex justify-between items-start">
+            <div>
+                <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
+                <CardDescription>
+                Unidades recuperadas por distrito vs. la meta mensual para el mes
+                actual.
+                </CardDescription>
+            </div>
+            <Button id="download-pdf-button" onClick={handleDownloadPdf} size="sm" variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Descargar PDF
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="grid gap-8 md:grid-cols-2">
         {isLoading ? (
-          <div className="col-span-2 flex justify-center items-center h-[280px]">Cargando...</div>
+          <div className="col-span-2 flex justify-center items-center h-[280px]">
+            Cargando...
+          </div>
         ) : (
           <>
             <div className="flex flex-col">
@@ -98,23 +142,35 @@ export function DistrictProgress() {
                 </TableHeader>
                 <TableBody>
                   {dataForCurrentMonth.map((item) => {
-                    const goalReached = item.recovered >= item.monthlyGoal && item.monthlyGoal > 0;
+                    const goalReached =
+                      item.recovered >= item.monthlyGoal && item.monthlyGoal > 0;
                     return (
-                      <TableRow key={item.id} className={cn(goalReached && "bg-green-100 dark:bg-green-900/50")}>
+                      <TableRow
+                        key={item.id}
+                        className={cn(
+                          goalReached && 'bg-green-100 dark:bg-green-900/50'
+                        )}
+                      >
                         <TableCell className="font-medium flex items-center gap-2">
-                          {goalReached && <Check className="h-4 w-4 text-green-600" />}
+                          {goalReached && (
+                            <Check className="h-4 w-4 text-green-600" />
+                          )}
                           {item.district}
                         </TableCell>
                         <TableCell className="text-right">
                           {item.recovered.toFixed(2)}
                         </TableCell>
-                        <TableCell className="text-right">{item.monthlyGoal.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          {item.monthlyGoal.toFixed(2)}
+                        </TableCell>
                         <TableCell>
                           {goalReached ? (
-                             <div className="flex items-center justify-center gap-2 text-green-600">
-                                <CheckCircle2 className="h-5 w-5" />
-                                <span className="text-xs font-semibold">Cumplido</span>
-                              </div>
+                            <div className="flex items-center justify-center gap-2 text-green-600">
+                              <CheckCircle2 className="h-5 w-5" />
+                              <span className="text-xs font-semibold">
+                                Cumplido
+                              </span>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-2">
                               <Progress value={item.progress} className="h-2" />
@@ -152,15 +208,34 @@ export function DistrictProgress() {
                     className="text-xs"
                   />
                   <XAxis dataKey="recovered" type="number" hide />
-                  <Tooltip cursor={false} content={<ChartTooltipContent formatter={(value) => `${Number(value).toFixed(2)}`}/>} />
-                  <Bar dataKey="recovered" fill="hsl(var(--primary))" radius={5}>
+                  <Tooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value) => `${Number(value).toFixed(2)}`}
+                      />
+                    }
+                  />
+                  <Bar
+                    dataKey="recovered"
+                    fill="hsl(var(--primary))"
+                    radius={5}
+                  >
                     <LabelList
                       position="right"
                       offset={10}
                       className="fill-foreground text-sm"
                       formatter={(value: number) => {
-                        const item = dataForCurrentMonth.find(d => d.recovered === value);
-                        return item ? `${(value / 1000).toFixed(1)}k (${item.monthlyGoal > 0 ? ((value / item.monthlyGoal) * 100).toFixed(0) : 0}%)` : '';
+                        const item = dataForCurrentMonth.find(
+                          (d) => d.recovered === value
+                        );
+                        return item
+                          ? `${(value / 1000).toFixed(1)}k (${
+                              item.monthlyGoal > 0
+                                ? ((value / item.monthlyGoal) * 100).toFixed(0)
+                                : 0
+                            }%)`
+                          : '';
                       }}
                     />
                   </Bar>
