@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  BarChartHorizontal,
-  DollarSign,
-  Droplets,
-  FileText,
+  Book,
   Home,
   Settings,
   Shield,
+  Target,
+  TrendingUp,
+  Droplets,
 } from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -23,9 +23,9 @@ import {
 
 const navItems = [
   {href: '/', label: 'Inicio', icon: Home},
-  {href: '/recaudacion', label: 'Recaudación diaria', icon: DollarSign},
-  {href: '/avance-distritos', label: 'Avance de distritos', icon: BarChartHorizontal},
-  {href: '/reportes', label: 'Reportes', icon: FileText},
+  {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp},
+  {href: '/avance-distritos', label: 'Avance de distritos', icon: Target},
+  {href: '/reportes', label: 'Reportes', icon: Book},
   {href: '/configuracion', label: 'Configuración', icon: Settings},
 ];
 
