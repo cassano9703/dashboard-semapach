@@ -101,15 +101,28 @@ export function DailyCollectionChart() {
       alert('No hay datos para exportar.');
       return;
     }
-    
+
     const dataToExport = filteredData.map(item => ({
       'Fecha': item.date,
       'Monto Recaudado Diario': formatCurrency(item.dailyCollectionAmount),
-      'Total Recaudado': formatCurrency(item.accumulatedMonthlyTotal),
     }));
 
+    // Find the last entry to get the final accumulated total
+    const latestAccumulatedTotal = filteredData.length > 0
+      ? filteredData[filteredData.length - 1].accumulatedMonthlyTotal
+      : 0;
+    
+    const totalRow = {
+      'Fecha': 'Total Acumulado del Mes',
+      'Monto Recaudado Diario': formatCurrency(latestAccumulatedTotal),
+    };
+
     const csv = Papa.unparse(dataToExport);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const totalCsv = Papa.unparse([totalRow], { header: false });
+    
+    const finalCsv = `${csv}\n\n${totalCsv}`;
+
+    const blob = new Blob([finalCsv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
