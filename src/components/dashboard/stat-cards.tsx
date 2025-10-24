@@ -97,7 +97,7 @@ export function StatCards() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {cardData.map((card, index) => (
-        <Card key={index}>
+        <Card key={index} className="border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
             {card.icon}
