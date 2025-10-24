@@ -182,9 +182,13 @@ export function DailyCollectionChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => `S/ ${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => `S/ ${(Number(value) / 1000).toFixed(0)}k`}
             />
-            <Tooltip content={<ChartTooltipContent />} />
+            <Tooltip
+              content={<ChartTooltipContent 
+                formatter={(value) => `S/ ${Number(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              />}
+            />
             <Legend />
             {monthlyGoal > 0 && (
               <ReferenceLine y={monthlyGoal} label={{ value: 'Meta', position: 'insideTopLeft' }} stroke="red" strokeDasharray="3 3" />

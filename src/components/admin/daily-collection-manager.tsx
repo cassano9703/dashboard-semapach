@@ -26,6 +26,10 @@ import {
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Label } from '../ui/label';
 
+const formatCurrency = (value: number) => {
+  return `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function DailyCollectionManager() {
   const firestore = useFirestore();
   const dailyCollectionsRef = useMemoFirebase(
@@ -193,9 +197,9 @@ export function DailyCollectionManager() {
                 {dailyCollections?.sort((a, b) => b.date.localeCompare(a.date)).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.date}</TableCell>
-                    <TableCell>{item.dailyCollectionAmount.toFixed(2)}</TableCell>
-                    <TableCell>{item.accumulatedMonthlyTotal.toFixed(2)}</TableCell>
-                    <TableCell>{item.monthlyGoal.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(item.dailyCollectionAmount)}</TableCell>
+                    <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
+                    <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />

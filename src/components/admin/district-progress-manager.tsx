@@ -43,6 +43,10 @@ const districts = [
   'Chincha Alta',
 ];
 
+const formatCurrency = (value: number) => {
+  return `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function DistrictProgressManager() {
   const firestore = useFirestore();
   const districtProgressRef = useMemoFirebase(
@@ -201,7 +205,7 @@ export function DistrictProgressManager() {
                 ref={monthlyGoalRef}
                 name="monthlyGoal"
                 type="number"
-                placeholder="0"
+                placeholder="S/ 0.00"
                 readOnly={!isMonthlyGoalEditable && !editingId}
                 className={!isMonthlyGoalEditable && !editingId ? 'bg-muted/50' : ''}
               />
@@ -213,7 +217,7 @@ export function DistrictProgressManager() {
                 ref={recoveredRef}
                 name="recovered"
                 type="number"
-                placeholder="0"
+                placeholder="S/ 0.00"
               />
             </div>
             <div className="flex gap-2">
@@ -248,8 +252,8 @@ export function DistrictProgressManager() {
                   <TableRow key={item.id}>
                     <TableCell>{item.month}</TableCell>
                     <TableCell>{item.district}</TableCell>
-                    <TableCell>{item.monthlyGoal?.toFixed(2)}</TableCell>
-                    <TableCell>{item.recovered?.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(item.monthlyGoal || 0)}</TableCell>
+                    <TableCell>{formatCurrency(item.recovered || 0)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />

@@ -11,11 +11,11 @@ import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
 import { useMemo } from 'react';
 
-const formatNumber = (value: number) =>
-  value.toLocaleString('es-PE', {
+const formatCurrency = (value: number) =>
+  `S/ ${value.toLocaleString('es-PE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })}`;
 
 export function StatCards() {
   const firestore = useFirestore();
@@ -57,17 +57,17 @@ export function StatCards() {
   const cardData = [
     {
       title: 'Recaudación del Día',
-      value: formatNumber(stats.dailyCollection),
+      value: formatCurrency(stats.dailyCollection),
       icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
     },
     {
       title: 'Total Acumulado del Mes',
-      value: formatNumber(stats.monthlyAccumulated),
+      value: formatCurrency(stats.monthlyAccumulated),
       icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
     },
     {
       title: 'Meta Mensual',
-      value: formatNumber(stats.monthlyGoal),
+      value: formatCurrency(stats.monthlyGoal),
       icon: <Goal className="h-4 w-4 text-muted-foreground" />,
     },
     {
