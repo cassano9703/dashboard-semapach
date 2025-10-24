@@ -49,10 +49,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const formatCurrency = (value: number) => {
-  return `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 export function DistrictProgress() {
   const firestore = useFirestore();
   const districtProgressRef = useMemoFirebase(
@@ -162,10 +158,10 @@ export function DistrictProgress() {
                           {item.district}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(item.recovered)}
+                          {item.recovered.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(item.monthlyGoal)}
+                          {item.monthlyGoal.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell>
                           {goalReached ? (
@@ -216,7 +212,7 @@ export function DistrictProgress() {
                     cursor={false}
                     content={
                       <ChartTooltipContent
-                        formatter={(value) => formatCurrency(Number(value))}
+                        formatter={(value) => Number(value).toLocaleString('es-PE')}
                       />
                     }
                   />
