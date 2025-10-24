@@ -104,9 +104,8 @@ export function DailyCollectionChart() {
     
     const dataToExport = filteredData.map(item => ({
       'Fecha': item.date,
-      'Recaudación Diaria': formatCurrency(item.dailyCollectionAmount),
-      'Acumulado Mensual': formatCurrency(item.accumulatedMonthlyTotal),
-      'Meta Mensual': formatCurrency(item.monthlyGoal)
+      'Monto Recaudado Diario': formatCurrency(item.dailyCollectionAmount),
+      'Total Recaudado': formatCurrency(item.accumulatedMonthlyTotal),
     }));
 
     const csv = Papa.unparse(dataToExport);
