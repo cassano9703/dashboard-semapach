@@ -56,6 +56,12 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
+const formatCurrency = (value: number) =>
+  `S/ ${value.toLocaleString('es-PE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 export function DailyCollectionChart() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const firestore = useFirestore();
@@ -98,9 +104,9 @@ export function DailyCollectionChart() {
     
     const dataToExport = filteredData.map(item => ({
       'Fecha': item.date,
-      'Recaudación Diaria': item.dailyCollectionAmount,
-      'Acumulado Mensual': item.accumulatedMonthlyTotal,
-      'Meta Mensual': item.monthlyGoal
+      'Recaudación Diaria': formatCurrency(item.dailyCollectionAmount),
+      'Acumulado Mensual': formatCurrency(item.accumulatedMonthlyTotal),
+      'Meta Mensual': formatCurrency(item.monthlyGoal)
     }));
 
     const csv = Papa.unparse(dataToExport);
