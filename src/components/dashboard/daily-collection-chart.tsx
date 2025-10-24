@@ -43,6 +43,7 @@ import {cn} from '@/lib/utils';
 import {format, startOfMonth, endOfMonth} from 'date-fns';
 import {es} from 'date-fns/locale';
 import {Calendar} from '@/components/ui/calendar';
+import Papa from 'papaparse';
 
 const chartConfig = {
   dailyCollectionAmount: {
@@ -75,15 +76,44 @@ export function DailyCollectionChart() {
         const itemDate = new Date(item.date + 'T00:00:00'); // Ensure date is parsed as local
         return itemDate >= start && itemDate <= end;
       })
-      .map(item => ({
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [dailyCollectionData, date]);
+
+  const chartData = useMemo(() => {
+      return filteredData.map(item => ({
         ...item,
         // Format for display in chart
         date: format(new Date(item.date + 'T00:00:00'), 'd MMM', { locale: es }),
       }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [dailyCollectionData, date]);
+  }, [filteredData]);
+
 
   const monthlyGoal = filteredData.length > 0 ? filteredData[0].monthlyGoal : 0;
+
+  const handleExport = () => {
+    if (filteredData.length === 0) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    
+    const dataToExport = filteredData.map(item => ({
+      'Fecha': item.date,
+      'Recaudación Diaria': item.dailyCollectionAmount,
+      'Acumulado Mensual': item.accumulatedMonthlyTotal,
+      'Meta Mensual': item.monthlyGoal
+    }));
+
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const monthName = date ? format(date, "LLLL-yyyy", {locale: es}) : 'recaudacion';
+    link.setAttribute('download', `reporte-recaudacion-${monthName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return (
     <Card>
@@ -121,7 +151,7 @@ export function DailyCollectionChart() {
               />
             </PopoverContent>
           </Popover>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
@@ -134,7 +164,7 @@ export function DailyCollectionChart() {
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <LineChart
             accessibilityLayer
-            data={filteredData}
+            data={chartData}
             margin={{
               left: 12,
               right: 12,
