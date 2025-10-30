@@ -83,7 +83,7 @@ export function DistrictProgress() {
       if (!item.updatedAt) return latest;
       const itemTimestamp = item.updatedAt.toDate();
       return latest === null || itemTimestamp > latest ? itemTimestamp : latest;
-    }, null);
+    }, null as Date | null);
     
     return latestTimestamp;
   }, [dataForCurrentMonth]);
@@ -120,9 +120,8 @@ export function DistrictProgress() {
     });
   };
   
-  const lastUpdatedTime = lastUpdated ? format(lastUpdated, "'a las' hh:mm a", { locale: es }) : 'N/A';
   const lastUpdatedText = lastUpdated
-    ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL", { locale: es })} ${lastUpdatedTime}`
+    ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL 'a las' hh:mm a", { locale: es })}`
     : 'Datos para el mes actual.';
 
 
