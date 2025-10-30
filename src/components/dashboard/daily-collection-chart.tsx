@@ -16,7 +16,9 @@ import {
   XAxis,
   YAxis,
   Legend,
-  ReferenceLine
+  ReferenceLine,
+  BarChart,
+  Bar,
 } from 'recharts';
 
 import {Button} from '@/components/ui/button';
@@ -32,7 +34,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import {Calendar as CalendarIcon, Download} from 'lucide-react';
+import {Calendar as CalendarIcon, Download, TrendingUp, TrendingDown} from 'lucide-react';
 import {useState, useMemo} from 'react';
 import {
   Popover,
@@ -40,7 +42,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import {cn} from '@/lib/utils';
-import {format, startOfMonth, endOfMonth} from 'date-fns';
+import {format, startOfMonth, endOfMonth, subDays, addDays, differenceInDays} from 'date-fns';
+import { DateRange } from 'react-day-picker';
 import {es} from 'date-fns/locale';
 import {Calendar} from '@/components/ui/calendar';
 import Papa from 'papaparse';
@@ -63,7 +66,12 @@ const formatCurrency = (value: number) =>
   })}`;
 
 export function DailyCollectionChart() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const today = new Date();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(today),
+    to: endOfMonth(today),
+  });
+  
   const firestore = useFirestore();
   const dailyCollectionsRef = useMemoFirebase(
     () => collection(firestore, 'daily_collections'),
@@ -71,27 +79,54 @@ export function DailyCollectionChart() {
   );
   const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
 
-  const filteredData = useMemo(() => {
-    if (!dailyCollectionData || !date) return [];
-    
-    const start = startOfMonth(date);
-    const end = endOfMonth(date);
+  const { filteredData, previousPeriodData } = useMemo(() => {
+    if (!dailyCollectionData || !dateRange?.from) {
+      return { filteredData: [], previousPeriodData: [] };
+    }
+    const from = dateRange.from;
+    const to = dateRange.to ?? from;
 
-    return dailyCollectionData
-      .filter(item => {
-        const itemDate = new Date(item.date + 'T00:00:00'); // Ensure date is parsed as local
-        return itemDate >= start && itemDate <= end;
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [dailyCollectionData, date]);
+    const sortedCollection = [...dailyCollectionData].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const filtered = sortedCollection.filter(item => {
+      const itemDate = new Date(item.date + 'T00:00:00');
+      return itemDate >= from && itemDate <= to;
+    });
+
+    const diff = differenceInDays(to, from);
+    const prevFrom = subDays(from, diff + 1);
+    const prevTo = subDays(to, diff + 1);
+
+    const previousPeriod = sortedCollection.filter(item => {
+      const itemDate = new Date(item.date + 'T00:00:00');
+      return itemDate >= prevFrom && itemDate <= prevTo;
+    });
+    
+    return { filteredData: filtered, previousPeriodData: previousPeriod };
+  }, [dailyCollectionData, dateRange]);
+
 
   const chartData = useMemo(() => {
       return filteredData.map(item => ({
         ...item,
-        // Format for display in chart
         date: format(new Date(item.date + 'T00:00:00'), 'd MMM', { locale: es }),
       }))
   }, [filteredData]);
+
+  const totalCollection = useMemo(() => {
+    return filteredData.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
+  }, [filteredData]);
+  
+  const previousTotalCollection = useMemo(() => {
+    return previousPeriodData.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
+  }, [previousPeriodData]);
+
+  const percentageChange = useMemo(() => {
+    if (previousTotalCollection === 0) {
+      return totalCollection > 0 ? 100 : 0;
+    }
+    return ((totalCollection - previousTotalCollection) / previousTotalCollection) * 100;
+  }, [totalCollection, previousTotalCollection]);
 
 
   const monthlyGoal = filteredData.length > 0 ? filteredData[0].monthlyGoal : 0;
@@ -105,29 +140,18 @@ export function DailyCollectionChart() {
     const dataToExport = filteredData.map(item => ({
       'Fecha': item.date,
       'Monto Recaudado Diario': formatCurrency(item.dailyCollectionAmount),
+      'Acumulado Mensual': formatCurrency(item.accumulatedMonthlyTotal)
     }));
-
-    // Find the last entry to get the final accumulated total
-    const latestAccumulatedTotal = filteredData.length > 0
-      ? filteredData[filteredData.length - 1].accumulatedMonthlyTotal
-      : 0;
     
-    const totalRow = {
-      'Fecha': 'Total Acumulado del Mes',
-      'Monto Recaudado Diario': formatCurrency(latestAccumulatedTotal),
-    };
-
     const csv = Papa.unparse(dataToExport);
-    const totalCsv = Papa.unparse([totalRow], { header: false });
     
-    const finalCsv = `${csv}\n\n${totalCsv}`;
-
-    const blob = new Blob([finalCsv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    const monthName = date ? format(date, "LLLL-yyyy", {locale: es}) : 'recaudacion';
-    link.setAttribute('download', `reporte-recaudacion-${monthName}.csv`);
+    const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : 'inicio';
+    const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : 'fin';
+    link.setAttribute('download', `reporte-recaudacion-${fromDate}-a-${toDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -135,37 +159,48 @@ export function DailyCollectionChart() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col items-start gap-4 space-y-0 md:flex-row md:items-center md:justify-between">
-        <div className="grid gap-1">
-          <CardTitle>Recaudación Diaria del Mes</CardTitle>
+      <CardHeader className="flex flex-col items-start gap-4 space-y-0 md:flex-row md:items-center">
+        <div className="grid gap-1 flex-1">
+          <CardTitle>Análisis de Recaudación</CardTitle>
           <CardDescription>
-            Análisis de la recaudación diaria y acumulada durante el mes seleccionado.
+            Análisis de la recaudación diaria y acumulada para el periodo seleccionado.
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="date"
                 variant={'outline'}
                 className={cn(
-                  'w-[240px] justify-start text-left font-normal',
-                  !date && 'text-muted-foreground'
+                  'w-[300px] justify-start text-left font-normal',
+                  !dateRange && 'text-muted-foreground'
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? (
-                  format(date, "LLLL 'de' yyyy", {locale: es})
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, 'LLL dd, y', {locale: es})} -{' '}
+                      {format(dateRange.to, 'LLL dd, y', {locale: es})}
+                    </>
+                  ) : (
+                    format(dateRange.from, 'LLL dd, y', {locale: es})
+                  )
                 ) : (
-                  <span>Seleccione un mes</span>
+                  <span>Seleccione un rango</span>
                 )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
                 initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                locale={es}
               />
             </PopoverContent>
           </Popover>
@@ -175,61 +210,64 @@ export function DailyCollectionChart() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-[300px]">Cargando...</div>
-        ): (
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <LineChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-              top: 5,
-            }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) => `S/ ${(Number(value) / 1000).toFixed(0)}k`}
-            />
-            <Tooltip
-              content={<ChartTooltipContent 
-                formatter={(value) => `S/ ${Number(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              />}
-            />
-            <Legend />
-            {monthlyGoal > 0 && (
-              <ReferenceLine y={monthlyGoal} label={{ value: 'Meta', position: 'insideTopLeft' }} stroke="red" strokeDasharray="3 3" />
+      <CardContent className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-3">
+            {isLoading ? (
+            <div className="flex justify-center items-center h-[300px]">Cargando...</div>
+            ): (
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <BarChart accessibilityLayer data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                dataKey="date"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                />
+                <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) => `S/ ${(Number(value) / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                content={<ChartTooltipContent
+                    formatter={(value, name) => {
+                        return (
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium">{formatCurrency(Number(value))}</span>
+                            <span className="text-xs text-muted-foreground">{name}</span>
+                        </div>
+                        )
+                    }}
+                    />}
+                />
+                <Bar
+                dataKey="dailyCollectionAmount"
+                fill="hsl(var(--chart-1))"
+                radius={4}
+                name="Recaudación Diaria"
+                />
+            </BarChart>
+            </ChartContainer>
             )}
-            <Line
-              dataKey="dailyCollectionAmount"
-              type="monotone"
-              stroke="hsl(var(--chart-1))"
-              strokeWidth={2}
-              dot={true}
-              name="Recaudación Diaria"
-            />
-             <Line
-              dataKey="accumulatedMonthlyTotal"
-              type="monotone"
-              stroke="hsl(var(--chart-2))"
-              strokeWidth={2}
-              dot={true}
-              name="Acumulado Mensual"
-            />
-          </LineChart>
-        </ChartContainer>
-        )}
+        </div>
+        <div className="lg:col-span-1 flex flex-col justify-center">
+            <Card className="border-l-4 border-primary">
+                <CardHeader className="pb-2">
+                    <CardDescription>Total Recaudado (Periodo)</CardDescription>
+                    <CardTitle className="text-3xl">{formatCurrency(totalCollection)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {percentageChange !== 0 && (
+                        <div className={cn("text-xs text-muted-foreground flex items-center", percentageChange > 0 ? "text-green-600" : "text-red-600")}>
+                           {percentageChange > 0 ? <TrendingUp className="mr-1 h-4 w-4"/> : <TrendingDown className="mr-1 h-4 w-4"/>}
+                           {percentageChange.toFixed(2)}% vs periodo anterior
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
       </CardContent>
     </Card>
   );
