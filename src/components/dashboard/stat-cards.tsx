@@ -10,6 +10,8 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
 import { useMemo } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const formatCurrency = (value: number) =>
   `S/ ${value.toLocaleString('es-PE', {
@@ -53,11 +55,13 @@ export function StatCards() {
 
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
+  const lastUpdatedTime = format(new Date(), 'hh:mm a', { locale: es });
 
   const cardData = [
     {
       title: 'Recaudación del Día',
       value: formatCurrency(stats.dailyCollection),
+      description: `Actualizado a las ${lastUpdatedTime}`,
       icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
     },
     {
@@ -104,6 +108,11 @@ export function StatCards() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{card.value}</div>
+            {card.description && (
+              <p className="text-xs text-muted-foreground">
+                {card.description}
+              </p>
+            )}
           </CardContent>
         </Card>
       ))}
