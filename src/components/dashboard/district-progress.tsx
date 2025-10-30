@@ -38,6 +38,7 @@ import {
 import { Progress } from '../ui/progress';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Check, CheckCircle2, Download } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -74,6 +75,19 @@ export function DistrictProgress() {
       }));
   }, [districtProgressData]);
 
+  const lastUpdated = useMemo(() => {
+    if (!dataForCurrentMonth || dataForCurrentMonth.length === 0) return null;
+    
+    // Find the most recent updatedAt timestamp
+    const latestTimestamp = dataForCurrentMonth.reduce((latest, item) => {
+      if (!item.updatedAt) return latest;
+      const itemTimestamp = item.updatedAt.toDate();
+      return latest === null || itemTimestamp > latest ? itemTimestamp : latest;
+    }, null);
+    
+    return latestTimestamp;
+  }, [dataForCurrentMonth]);
+
   const handleDownloadPdf = () => {
     const input = pdfRef.current;
     if (!input) return;
@@ -105,6 +119,12 @@ export function DistrictProgress() {
         }
     });
   };
+  
+  const lastUpdatedTime = lastUpdated ? format(lastUpdated, "'a las' hh:mm a", { locale: es }) : 'N/A';
+  const lastUpdatedText = lastUpdated
+    ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL", { locale: es })} ${lastUpdatedTime}`
+    : 'Datos para el mes actual.';
+
 
   return (
     <Card ref={pdfRef}>
@@ -113,8 +133,7 @@ export function DistrictProgress() {
             <div>
                 <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
                 <CardDescription>
-                Unidades recuperadas por distrito vs. la meta mensual para el mes
-                actual.
+                  {lastUpdatedText}
                 </CardDescription>
             </div>
             <Button id="download-pdf-button" onClick={handleDownloadPdf} size="sm" variant="outline">

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   collection,
   doc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import {
   addDocumentNonBlocking,
@@ -108,12 +109,14 @@ export function DistrictProgressManager() {
     }
 
     const existingRecord = districtProgress?.find(item => item.month === currentMonth && item.district === currentDistrict);
+    const timestamp = serverTimestamp();
 
     if (editingId) { // Full edit mode
         const recoveredValue = Number(recoveredRef.current?.value || 0);
         const data = {
             monthlyGoal: monthlyGoal,
             recovered: recoveredValue,
+            updatedAt: timestamp
         };
         const docRef = doc(firestore, 'district_progress', editingId);
         updateDocumentNonBlocking(docRef, data);
@@ -121,13 +124,14 @@ export function DistrictProgressManager() {
     } else if (existingRecord) { // Add to existing record
       const newRecovered = existingRecord.recovered + amountToAdd;
       const docRef = doc(firestore, 'district_progress', existingRecord.id);
-      updateDocumentNonBlocking(docRef, { recovered: newRecovered });
+      updateDocumentNonBlocking(docRef, { recovered: newRecovered, updatedAt: timestamp });
     } else { // Create new record
       const data = {
         month: currentMonth,
         district: currentDistrict,
         monthlyGoal: monthlyGoal,
         recovered: amountToAdd,
+        updatedAt: timestamp,
       };
       addDocumentNonBlocking(districtProgressRef, data);
     }
