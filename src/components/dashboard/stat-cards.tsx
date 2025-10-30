@@ -33,6 +33,7 @@ export function StatCards() {
         dailyCollection: 0,
         monthlyAccumulated: 0,
         monthlyGoal: 0,
+        lastUpdated: null,
       };
     }
     
@@ -41,21 +42,29 @@ export function StatCards() {
 
     const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(currentMonth));
     const latestCollectionForMonth = collectionsForMonth.sort((a,b) => b.date.localeCompare(a.date))[0];
+    
+    const latestCollectionForToday = dailyCollectionData
+      .filter(item => item.date === today)
+      .sort((a, b) => b.updatedAt?.toMillis() - a.updatedAt?.toMillis())[0];
 
-    const dailyCollection = latestCollectionForMonth?.date === today ? latestCollectionForMonth.dailyCollectionAmount : 0;
+
+    const dailyCollection = latestCollectionForToday?.dailyCollectionAmount || 0;
     const monthlyAccumulated = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
     const monthlyGoal = latestCollectionForMonth?.monthlyGoal || 0;
+    const lastUpdated = latestCollectionForToday?.updatedAt || null;
+
 
     return {
       dailyCollection,
       monthlyAccumulated,
       monthlyGoal,
+      lastUpdated
     };
   }, [dailyCollectionData]);
 
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
-  const lastUpdatedTime = format(new Date(), 'hh:mm a', { locale: es });
+  const lastUpdatedTime = stats.lastUpdated ? format(stats.lastUpdated.toDate(), 'hh:mm a', { locale: es }) : 'N/A';
 
   const cardData = [
     {

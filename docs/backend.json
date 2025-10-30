@@ -26,6 +26,11 @@
         "monthlyGoal": {
           "type": "number",
           "description": "The target collection amount for the entire month."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the record was last updated.",
+          "format": "date-time"
         }
       },
       "required": [
@@ -33,7 +38,8 @@
         "date",
         "dailyCollectionAmount",
         "accumulatedMonthlyTotal",
-        "monthlyGoal"
+        "monthlyGoal",
+        "updatedAt"
       ]
     },
     "DistrictProgress": {

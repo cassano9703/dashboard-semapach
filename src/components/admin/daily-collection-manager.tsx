@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   collection,
   doc,
+  serverTimestamp
 } from 'firebase/firestore';
 import {
   addDocumentNonBlocking,
@@ -99,6 +100,7 @@ export function DailyCollectionManager() {
       dailyCollectionAmount: dailyAmount,
       accumulatedMonthlyTotal: accumulatedMonthlyTotal,
       monthlyGoal: monthlyGoal,
+      updatedAt: serverTimestamp(),
     };
 
     if (editingId) {
