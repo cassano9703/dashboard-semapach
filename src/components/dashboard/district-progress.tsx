@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react';
 import { collection } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -52,11 +52,9 @@ const chartConfig = {
 
 export function DistrictProgress() {
   const firestore = useFirestore();
-  const { user } = useUser(); // Get user status
-
   const districtProgressRef = useMemoFirebase(
-    () => user ? collection(firestore, 'district_progress') : null, // Only create ref if user exists
-    [firestore, user]
+    () => collection(firestore, 'district_progress'),
+    [firestore]
   );
   const { data: districtProgressData, isLoading } =
     useCollection(districtProgressRef);
@@ -144,7 +142,7 @@ export function DistrictProgress() {
         </div>
       </CardHeader>
       <CardContent className="grid gap-8 md:grid-cols-2">
-        {isLoading || !user ? (
+        {isLoading ? (
           <div className="col-span-2 flex justify-center items-center h-[280px]">
             Cargando datos...
           </div>

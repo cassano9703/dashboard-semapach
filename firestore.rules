@@ -2,8 +2,10 @@
  * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
  *
  * Core Philosophy:
- * This ruleset restricts both read and write access to authenticated users only,
- * ensuring that all sensitive dashboard data is protected.
+ * This ruleset starts with public read access for dashboard visibility
+ * and restricts write access to authenticated users only. This allows anyone
+ * to view the dashboard, but only authorized personnel to manage the data.
+ * As the application evolves, these rules can be tightened (e.g., role-based access).
  *
  * Data Structure:
  * The database stores daily collection data and district progress in separate top-level collections.
@@ -11,32 +13,36 @@
  * - /district_progress/{districtProgressId}
  *
  * Key Security Decisions:
- * - Read and write access is restricted to authenticated users to prevent unauthorized data access and modification.
- * - This change enhances security by moving from a public-read model to a fully authenticated model.
- * - No user-specific data exists, so the rules do not rely on user-ownership patterns.
+ * - Read access is public (`allow read;`) to allow for easy viewing of the dashboard by anyone with the link.
+ * - Write access is restricted to authenticated users (`allow write: if isSignedIn();`) to prevent unauthorized data modification.
+ * - No user-specific data exists yet, so rules do not rely on user-ownership patterns (`request.auth.uid == resource.data.userId`).
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Restricts read and write access to authenticated users.
+     * @description Allows public read access for viewing, but write access is restricted to authenticated users.
      * @path /daily_collections/{dailyCollectionId}
-     * @allow read, write: if isSignedIn();
-     * @principle Ensures only logged-in users can view or modify daily collection data.
+     * @allow read
+     * @allow write: if isSignedIn();
+     * @principle Separates read and write permissions for flexible public/private access.
      */
     match /daily_collections/{dailyCollectionId} {
-      allow read, write: if isSignedIn();
+      allow read;
+      allow write: if isSignedIn();
     }
 
     /**
-     * @description Restricts read and write access to authenticated users.
+     * @description Allows public read access for viewing, but write access is restricted to authenticated users.
      * @path /district_progress/{districtProgressId}
-     * @allow read, write: if isSignedIn();
-     * @principle Ensures only logged-in users can view or modify district progress data.
+     * @allow read
+     * @allow write: if isSignedIn();
+     * @principle Separates read and write permissions for flexible public/private access.
      */
     match /district_progress/{districtProgressId} {
-      allow read, write: if isSignedIn();
+      allow read;
+      allow write: if isSignedIn();
     }
 
     // Helper function to determine if a user is signed in
