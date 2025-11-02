@@ -15,7 +15,7 @@ import { useAuth, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -55,39 +55,14 @@ export default function LoginPage() {
         });
     }
   };
-  
-  const handleSignUp = async () => {
-    if (!auth) return;
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast({
-          title: "Cuenta creada",
-          description: "Se ha creado una nueva cuenta y se ha iniciado sesión.",
-      });
-      // The onAuthStateChanged listener will redirect to /admin
-    } catch (error: any) {
-        console.error("Sign Up Error:", error);
-        let description = "No se pudo crear la cuenta.";
-        if (error.code === 'auth/email-already-in-use') {
-          description = "Este correo electrónico ya está en uso.";
-        } else if (error.code === 'auth/weak-password') {
-          description = "La contraseña es demasiado débil. Debe tener al menos 6 caracteres.";
-        }
-        toast({
-          variant: "destructive",
-          title: "Error de registro",
-          description: description,
-        });
-    }
-  }
 
   return (
     <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Iniciar Sesión / Registrarse</CardTitle>
+          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
           <CardDescription>
-            Ingrese sus credenciales para acceder o crear una cuenta.
+            Ingrese sus credenciales para acceder al panel.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -116,9 +91,6 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col gap-4">
           <Button className="w-full" onClick={handleLogin}>
             Ingresar
-          </Button>
-          <Button variant="outline" className="w-full" onClick={handleSignUp}>
-            Registrar Nueva Cuenta
           </Button>
         </CardFooter>
       </Card>
