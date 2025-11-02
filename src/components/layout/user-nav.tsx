@@ -19,9 +19,10 @@ import Link from 'next/link';
 
 export function UserNav() {
   const userAvatar = placeholderImages.placeholderImages.find(p => p.id === 'user-avatar');
-  const { user, isUserLoading } = useUser();
+  const { user, claims, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const isAdmin = claims?.claims?.role === 'admin';
 
   const handleSignOut = async () => {
     if (!auth) return;
@@ -66,12 +67,14 @@ export function UserNav() {
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Facturación</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin">
-                  <Shield className="mr-2 h-4 w-4" />
-                  <span>Admin</span>
-                </Link>
-              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin">
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Admin</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>

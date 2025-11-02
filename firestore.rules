@@ -2,49 +2,53 @@
  * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
  *
  * Core Philosophy:
- * This ruleset restricts all data access (read and write) to authenticated
- * users only. This ensures that the dashboard and its underlying data are
-
- * private and protected from public access.
+ * This ruleset restricts data access based on user roles defined in custom claims.
+ * - 'admin' role: Can read and write all data.
+ * - Authenticated users (without admin role): Can only read data.
+ * - Unauthenticated users: Cannot access any data.
  *
  * Data Structure:
- * The database stores daily collection data and district progress in separate top-level collections.
  * - /daily_collections/{dailyCollectionId}
  * - /district_progress/{districtProgressId}
- *
- * Key Security Decisions:
- * - All access is restricted to authenticated users (`allow read, write: if isSignedIn();`).
- * - This provides a strong baseline of security, preventing any unauthorized data access.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Restricts read and write access to authenticated users only.
+     * @description Restricts write access to admin users only.
+     * Allows read access to any authenticated user.
      * @path /daily_collections/{dailyCollectionId}
      * @allow read: if isSignedIn();
-     * @allow write: if isSignedIn();
-     * @principle Enforces that only signed-in users can view or modify collection data.
+     * @allow write: if isAdmin();
+     * @principle Enforces role-based access control for collection data.
      */
     match /daily_collections/{dailyCollectionId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     /**
-     * @description Restricts read and write access to authenticated users only.
+     * @description Restricts write access to admin users only.
+     * Allows read access to any authenticated user.
      * @path /district_progress/{districtProgressId}
      * @allow read: if isSignedIn();
-     * @allow write: if isSignedIn();
-     * @principle Enforces that only signed-in users can view or modify district progress data.
+     * @allow write: if isAdmin();
+     * @principle Enforces role-based access control for district progress data.
      */
     match /district_progress/{districtProgressId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // Helper function to determine if a user is signed in
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    // Helper function to determine if a user has the 'admin' role
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
     }
   }
 }

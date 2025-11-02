@@ -33,9 +33,10 @@ const adminNavItem = { href: '/admin', label: 'Admin', icon: Shield };
 
 export function MainNav() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, claims } = useUser();
+  const isAdmin = claims?.claims?.role === 'admin';
 
-  const allNavItems = user ? [...navItems, adminNavItem] : navItems;
+  const allNavItems = isAdmin ? [...navItems, adminNavItem] : navItems;
 
   return (
     <>
