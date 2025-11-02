@@ -6,7 +6,8 @@ import {
 import {
   useCollection,
   useFirestore,
-  useMemoFirebase
+  useMemoFirebase,
+  useUser,
 } from '@/firebase';
 import {
   CartesianGrid,
@@ -54,9 +55,11 @@ const formatCurrency = (value: number) =>
 
 export function DailyCollectionChart() {
   const firestore = useFirestore();
+  const { user } = useUser(); // Get user status
+
   const dailyCollectionsRef = useMemoFirebase(
-    () => collection(firestore, 'daily_collections'),
-    [firestore]
+    () => user ? collection(firestore, 'daily_collections') : null, // Only create ref if user exists
+    [firestore, user]
   );
   const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
 
@@ -96,8 +99,8 @@ export function DailyCollectionChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-[250px]">Cargando...</div>
+        {isLoading || !user ? (
+          <div className="flex justify-center items-center h-[250px]">Cargando datos...</div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <LineChart
