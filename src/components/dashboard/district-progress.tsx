@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react';
 import { collection } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -52,11 +52,13 @@ const chartConfig = {
 
 export function DistrictProgress() {
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+
   const districtProgressRef = useMemoFirebase(
-    () => collection(firestore, 'district_progress'),
-    [firestore]
+    () => (user ? collection(firestore, 'district_progress') : null),
+    [user, firestore]
   );
-  const { data: districtProgressData, isLoading } =
+  const { data: districtProgressData, isLoading: isDataLoading } =
     useCollection(districtProgressRef);
 
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -124,6 +126,8 @@ export function DistrictProgress() {
     ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL 'a las' hh:mm a", { locale: es })}`
     : 'Datos para el mes actual.';
 
+  const isLoading = isUserLoading || (user && isDataLoading);
+
 
   return (
     <Card ref={pdfRef}>
@@ -145,6 +149,10 @@ export function DistrictProgress() {
         {isLoading ? (
           <div className="col-span-2 flex justify-center items-center h-[280px]">
             Cargando datos...
+          </div>
+        ) : !user ? (
+           <div className="col-span-2 flex justify-center items-center h-[280px]">
+            Por favor, inicie sesión para ver los datos.
           </div>
         ) : (
           <>

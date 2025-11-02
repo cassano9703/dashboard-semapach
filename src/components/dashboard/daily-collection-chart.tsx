@@ -7,6 +7,7 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
+  useUser,
 } from '@/firebase';
 import {
   CartesianGrid,
@@ -32,7 +33,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import {useMemo} from 'react';
-import {format, startOfMonth, endOfMonth} from 'date-fns';
+import {format} from 'date-fns';
 import {es} from 'date-fns/locale';
 
 const chartConfig = {
@@ -54,11 +55,13 @@ const formatCurrency = (value: number) =>
 
 export function DailyCollectionChart() {
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+
   const dailyCollectionsRef = useMemoFirebase(
-    () => collection(firestore, 'daily_collections'),
-    [firestore]
+    () => (user ? collection(firestore, 'daily_collections') : null),
+    [user, firestore]
   );
-  const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
+  const { data: dailyCollectionData, isLoading: isDataLoading } = useCollection(dailyCollectionsRef);
 
   const { chartData, monthlyGoal } = useMemo(() => {
     if (!dailyCollectionData) {
@@ -87,6 +90,8 @@ export function DailyCollectionChart() {
   }, [dailyCollectionData]);
 
 
+  const isLoading = isUserLoading || (user && isDataLoading);
+
   return (
     <Card>
       <CardHeader>
@@ -98,6 +103,8 @@ export function DailyCollectionChart() {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center h-[250px]">Cargando datos...</div>
+        ) : !user ? (
+          <div className="flex justify-center items-center h-[250px]">Por favor, inicie sesión para ver los datos.</div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <LineChart

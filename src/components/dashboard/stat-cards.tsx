@@ -6,6 +6,7 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
+  useUser,
 } from '@/firebase';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
@@ -21,12 +22,14 @@ const formatCurrency = (value: number) =>
 
 export function StatCards() {
   const firestore = useFirestore();
-  const dailyCollectionsRef = useMemoFirebase(
-    () => collection(firestore, 'daily_collections'),
-    [firestore]
-  );
-  const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
+  const { user, isUserLoading: isUserLoading } = useUser();
 
+  const dailyCollectionsRef = useMemoFirebase(
+    () => (user ? collection(firestore, 'daily_collections') : null),
+    [user, firestore]
+  );
+  const { data: dailyCollectionData, isLoading: isDataLoading } = useCollection(dailyCollectionsRef);
+  
   const stats = useMemo(() => {
     if (!dailyCollectionData) {
       return {
@@ -41,16 +44,18 @@ export function StatCards() {
     const currentMonth = today.substring(0, 7);
 
     const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(currentMonth));
-    const latestCollectionForMonth = collectionsForMonth.sort((a,b) => b.date.localeCompare(a.date))[0];
     
     const latestCollectionForToday = dailyCollectionData
       .filter(item => item.date === today)
-      .sort((a, b) => b.updatedAt?.toMillis() - a.updatedAt?.toMillis())[0];
-
+      .sort((a, b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
 
     const dailyCollection = latestCollectionForToday?.dailyCollectionAmount || 0;
     const monthlyAccumulated = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
-    const monthlyGoal = latestCollectionForMonth?.monthlyGoal || 0;
+
+    // Find the latest goal set for the month
+    const latestGoalEntry = [...collectionsForMonth].sort((a,b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
+    const monthlyGoal = latestGoalEntry?.monthlyGoal || 0;
+    
     const lastUpdated = latestCollectionForToday?.updatedAt || null;
 
 
@@ -64,13 +69,13 @@ export function StatCards() {
 
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
-  const lastUpdatedTime = stats.lastUpdated ? format(stats.lastUpdated.toDate(), 'hh:mm a', { locale: es }) : 'N/A';
+  const lastUpdatedTime = stats.lastUpdated ? format(stats.lastUpdated.toDate(), "'a las' hh:mm a", { locale: es }) : '';
 
   const cardData = [
     {
       title: 'Recaudación del Día',
       value: formatCurrency(stats.dailyCollection),
-      description: `Actualizado a las ${lastUpdatedTime}`,
+      description: `Actualizado ${lastUpdatedTime}`,
       icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
     },
     {
@@ -90,7 +95,7 @@ export function StatCards() {
     },
   ];
 
-  if (isLoading) {
+  if (isUserLoading || (user && isDataLoading)) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
