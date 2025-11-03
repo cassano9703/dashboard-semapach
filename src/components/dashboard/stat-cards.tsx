@@ -6,7 +6,6 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  useUser,
 } from '@/firebase';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
@@ -22,13 +21,12 @@ const formatCurrency = (value: number) =>
 
 export function StatCards() {
   const firestore = useFirestore();
-  const { user, isUserLoading: isUserLoading } = useUser();
 
   const dailyCollectionsRef = useMemoFirebase(
-    () => (user ? collection(firestore, 'daily_collections') : null),
-    [user, firestore]
+    () => collection(firestore, 'daily_collections'),
+    [firestore]
   );
-  const { data: dailyCollectionData, isLoading: isDataLoading } = useCollection(dailyCollectionsRef);
+  const { data: dailyCollectionData, isLoading } = useCollection(dailyCollectionsRef);
   
   const stats = useMemo(() => {
     if (!dailyCollectionData) {
@@ -95,7 +93,7 @@ export function StatCards() {
     },
   ];
 
-  if (isUserLoading || (user && isDataLoading)) {
+  if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
