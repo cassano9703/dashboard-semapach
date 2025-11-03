@@ -51,6 +51,7 @@ export function DistrictProgress() {
         ...item,
         progress:
           item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
+        difference: Math.max(0, item.monthlyGoal - item.recovered),
       }));
   }, [districtProgressData]);
 
@@ -121,7 +122,7 @@ export function DistrictProgress() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="col-span-2 flex justify-center items-center h-[280px]">
+          <div className="flex justify-center items-center h-[280px]">
             Cargando datos...
           </div>
         ) : (
@@ -132,6 +133,7 @@ export function DistrictProgress() {
                     <TableHead>Distrito</TableHead>
                     <TableHead className="text-right">Recuperados</TableHead>
                     <TableHead className="text-right">Meta</TableHead>
+                    <TableHead className="text-right">Faltante para Meta</TableHead>
                     <TableHead className="w-[120px]">Avance</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -157,6 +159,9 @@ export function DistrictProgress() {
                         </TableCell>
                         <TableCell className="text-right">
                           {item.monthlyGoal.toLocaleString('es-PE')}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {goalReached ? 'S/ 0' : item.difference.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell>
                           {goalReached ? (
