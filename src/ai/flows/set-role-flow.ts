@@ -13,13 +13,11 @@ const SetAdminRoleInputSchema = z.object({
 });
 export type SetAdminRoleInput = z.infer<typeof SetAdminRoleInputSchema>;
 
-
 // Esquema de salida para el flow
 const SetAdminRoleOutputSchema = z.object({
   message: z.string(),
 });
 export type SetAdminRoleOutput = z.infer<typeof SetAdminRoleOutputSchema>;
-
 
 /**
  * Asigna el custom claim 'role: admin' a un usuario de Firebase por su correo.
