@@ -81,11 +81,70 @@ export function DistrictProgressCRUD() {
     : [];
 
   const handleAddOrUpdate = async () => {
-    // This functionality is disabled to prevent permission errors.
+    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
+      toast({
+        variant: "destructive",
+        title: "Error de validación",
+        description: "Por favor, complete todos los campos.",
+      });
+      return;
+    }
+  
+    const month = format(date, "yyyy-MM");
+    const docId = `${month}-${selectedDistrict.replace(/\s+/g, '-')}`;
+    const docRef = doc(firestore, 'district_progress', docId);
+  
+    const data = {
+      month,
+      district: selectedDistrict,
+      monthlyGoal: parseFloat(monthlyGoal),
+      recovered: parseFloat(recoveredAmount),
+      updatedAt: new Date(),
+    };
+  
+    try {
+      // Use a write batch to perform an upsert (update if exists, create if not)
+      const batch = writeBatch(firestore);
+      batch.set(docRef, data, { merge: true }); // merge:true makes it an upsert
+      await batch.commit();
+  
+      toast({
+        title: "Operación exitosa",
+        description: `El progreso para ${selectedDistrict} ha sido guardado.`,
+      });
+  
+      // Clear form
+      setDate(undefined);
+      setSelectedDistrict('');
+      setMonthlyGoal('');
+      setRecoveredAmount('');
+    } catch (error) {
+      console.error("Error saving district progress: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error al guardar",
+        description: "No se pudo guardar el progreso. Verifique sus permisos.",
+      });
+    }
   };
 
   const handleDelete = async (docId: string) => {
-    // This functionality is disabled to prevent permission errors.
+    if (!firestore) return;
+    const docRef = doc(firestore, 'district_progress', docId);
+    try {
+        await deleteDoc(docRef);
+        toast({
+            title: "Registro eliminado",
+            description: "El progreso del distrito ha sido eliminado.",
+        });
+    } catch (error) {
+        console.error("Error deleting document: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error al eliminar",
+            description: "No se pudo eliminar el registro. Verifique sus permisos.",
+        });
+    }
   };
 
 
@@ -139,8 +198,7 @@ export function DistrictProgressCRUD() {
             <Input id="monthly-goal" placeholder="0" type="number" value={monthlyGoal} onChange={e => setMonthlyGoal(e.target.value)} />
           </div>
            <div className="grid gap-2">
-            <Label htmlFor="recovered">Recuperado</Label>
-            <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
+            <Label htmlFor="recovered">Recuperado</Label>            <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
           <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
             <Plus className="mr-2 h-4 w-4" />
