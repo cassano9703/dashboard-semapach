@@ -18,7 +18,7 @@ const SetAdminRoleOutputSchema = z.object({
 });
 
 // Inicializar Firebase Admin SDK (solo si no se ha inicializado)
-if (!admin.apps.length) {
+if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
