@@ -208,8 +208,9 @@ export function RecoveredServicesCRUD() {
                   onSelect={setDate} 
                   initialFocus 
                   locale={es} 
-                  disabled={{ before: fromDate }}
+                  disabled={{ before: fromDate, after: new Date() }}
                   fromMonth={fromDate}
+                  toMonth={new Date()}
                 />
               </PopoverContent>
             </Popover>

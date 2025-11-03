@@ -166,8 +166,9 @@ export default function SuspendidosRecuperadosPage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={{ before: fromDate }}
+                  disabled={{ before: fromDate, after: new Date() }}
                   fromMonth={fromDate}
+                  toMonth={new Date()}
                   initialFocus
                   locale={es}
                   defaultMonth={selectedDate}
