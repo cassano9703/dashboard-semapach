@@ -1,5 +1,6 @@
 import { DailyCollectionCRUD } from "@/components/admin/daily-collection-crud";
 import { DistrictProgressCRUD } from "@/components/admin/district-progress-crud";
+import { RecoveredServicesCRUD } from "@/components/admin/recovered-services-crud";
 
 export default function AdminPage() {
   return (
@@ -14,6 +15,7 @@ export default function AdminPage() {
       </div>
       <DailyCollectionCRUD />
       <DistrictProgressCRUD />
+      <RecoveredServicesCRUD />
     </div>
   );
 }
