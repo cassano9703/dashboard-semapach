@@ -24,7 +24,7 @@ import { useState } from "react";
 import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -135,18 +135,23 @@ export function DailyCollectionCRUD() {
         const newDocRef = doc(collection(firestore, 'daily_collections'));
         await runTransaction(firestore, async (transaction) => {
            const monthStr = format(date, 'yyyy-MM');
+           // Query for all documents in the same month, up to (but not including) the current date
            const monthQuery = query(
               collection(firestore, 'daily_collections'),
               where('date', '>=', `${monthStr}-01`),
-              where('date', '<=', `${monthStr}-31`)
+              where('date', '<', formattedDate),
+              orderBy('date', 'desc')
             );
             const monthSnapshot = await getDocs(monthQuery);
-            const accumulated = monthSnapshot.docs.reduce((acc, doc) => acc + doc.data().dailyCollectionAmount, 0) + newDailyAmount;
+            
+            // The accumulated amount is the sum of previous days + the new amount
+            const previousDaysTotal = monthSnapshot.docs.reduce((acc, doc) => acc + doc.data().dailyCollectionAmount, 0);
+            const accumulated = previousDaysTotal + newDailyAmount;
 
             transaction.set(newDocRef, {
                 date: formattedDate,
                 dailyCollectionAmount: newDailyAmount,
-                accumulatedMonthlyTotal: accumulated, // This will need recalculation logic for the whole month
+                accumulatedMonthlyTotal: accumulated, 
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
