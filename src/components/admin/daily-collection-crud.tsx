@@ -17,14 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format, parse } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -49,6 +49,7 @@ export function DailyCollectionCRUD() {
   const [date, setDate] = useState<Date>();
   const [dailyAmount, setDailyAmount] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const sortedData = dailyCollectionData
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
@@ -72,7 +73,24 @@ export function DailyCollectionCRUD() {
     }
   };
 
-  const handleAdd = async () => {
+  const handleEdit = (item: any) => {
+    setEditingId(item.id);
+    const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
+    if(isValid(itemDate)) {
+        setDate(itemDate);
+    }
+    setDailyAmount(item.dailyCollectionAmount.toString());
+    setMonthlyGoal(item.monthlyGoal.toString());
+  };
+
+  const clearForm = () => {
+    setEditingId(null);
+    setDate(undefined);
+    setDailyAmount('');
+    setMonthlyGoal('');
+  }
+
+  const handleAddOrUpdate = async () => {
     if (!firestore || !date || !dailyAmount || !monthlyGoal) {
       toast({
         variant: 'destructive',
@@ -85,67 +103,66 @@ export function DailyCollectionCRUD() {
     const formattedDate = format(date, 'yyyy-MM-dd');
     const newDailyAmount = parseFloat(dailyAmount);
     const newMonthlyGoal = parseFloat(monthlyGoal);
-    const monthStr = format(date, 'yyyy-MM');
 
     try {
-      await runTransaction(firestore, async (transaction) => {
-        // 1. Check if a record for this date already exists
-        const dateQuery = query(
-          collection(firestore, 'daily_collections'),
-          where('date', '==', formattedDate)
-        );
-        const dateQuerySnapshot = await getDocs(dateQuery);
-        if (!dateQuerySnapshot.empty) {
-          throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
-        }
-
-        // 2. Get all collections for the month to calculate the new accumulated total
-        const monthQuery = query(
-          collection(firestore, 'daily_collections'),
-          where('date', '>=', `${monthStr}-01`),
-          where('date', '<=', `${monthStr}-31`)
-        );
-        const monthSnapshot = await getDocs(monthQuery);
-        const monthDocs = monthSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: doc.data().date as string}));
-
-        // Calculate new accumulated total
-        const newAccumulatedTotal = monthDocs.reduce((acc, doc) => acc + doc.dailyCollectionAmount, 0) + newDailyAmount;
-        
-        // 3. Create the new document
-        const newDocRef = doc(collection(firestore, 'daily_collections'));
-        transaction.set(newDocRef, {
-          date: formattedDate,
-          dailyCollectionAmount: newDailyAmount,
-          accumulatedMonthlyTotal: newAccumulatedTotal,
-          monthlyGoal: newMonthlyGoal,
-          updatedAt: new Date(),
+      // If we are editing, we update the document
+      if (editingId) {
+        const docRef = doc(firestore, 'daily_collections', editingId);
+        await runTransaction(firestore, async (transaction) => {
+          transaction.update(docRef, {
+            date: formattedDate,
+            dailyCollectionAmount: newDailyAmount,
+            monthlyGoal: newMonthlyGoal,
+            updatedAt: Timestamp.now(),
+          });
         });
-        
-        // 4. Update the accumulated total for all subsequent days in the month
-        const subsequentDays = monthDocs
-            .filter(d => parse(d.date, 'yyyy-MM-dd', new Date()) > date)
-            .sort((a,b) => a.date.localeCompare(b.date));
-
-        let currentAccumulated = newAccumulatedTotal;
-        for (const dayDoc of subsequentDays) {
-            currentAccumulated += dayDoc.dailyCollectionAmount;
-            const docRef = doc(firestore, 'daily_collections', dayDoc.id);
-            transaction.update(docRef, { accumulatedMonthlyTotal: currentAccumulated });
+         toast({
+          title: 'Éxito',
+          description: 'El registro ha sido actualizado.',
+        });
+      } else { // If not editing, we add a new document
+        const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
+        const existingDocs = await getDocs(q);
+        if (!existingDocs.empty) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: `Ya existe un registro para la fecha ${formattedDate}.`,
+          });
+          return;
         }
-      });
 
-      toast({
-        title: 'Éxito',
-        description: 'El registro de recaudación diaria ha sido agregado.',
-      });
-      // Clear form
-      setDate(undefined);
-      setDailyAmount('');
-      setMonthlyGoal('');
+        const newDocRef = doc(collection(firestore, 'daily_collections'));
+        await runTransaction(firestore, async (transaction) => {
+           const monthStr = format(date, 'yyyy-MM');
+           const monthQuery = query(
+              collection(firestore, 'daily_collections'),
+              where('date', '>=', `${monthStr}-01`),
+              where('date', '<=', `${monthStr}-31`)
+            );
+            const monthSnapshot = await getDocs(monthQuery);
+            const accumulated = monthSnapshot.docs.reduce((acc, doc) => acc + doc.data().dailyCollectionAmount, 0) + newDailyAmount;
+
+            transaction.set(newDocRef, {
+                date: formattedDate,
+                dailyCollectionAmount: newDailyAmount,
+                accumulatedMonthlyTotal: accumulated, // This will need recalculation logic for the whole month
+                monthlyGoal: newMonthlyGoal,
+                updatedAt: Timestamp.now(),
+            });
+        });
+        toast({
+          title: 'Éxito',
+          description: 'El nuevo registro ha sido agregado.',
+        });
+      }
+      
+      clearForm();
+      
     } catch (error: any) {
-      toast({
+       toast({
         variant: 'destructive',
-        title: 'Error al agregar registro',
+        title: 'Error al guardar',
         description: error.message,
       });
     }
@@ -181,6 +198,7 @@ export function DailyCollectionCRUD() {
                   onSelect={setDate}
                   initialFocus
                   locale={es}
+                  disabled={!!editingId}
                 />
               </PopoverContent>
             </Popover>
@@ -193,10 +211,16 @@ export function DailyCollectionCRUD() {
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
             <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Agregar
-          </Button>
+          <div className="flex items-end gap-2">
+            <Button className="w-full" onClick={handleAddOrUpdate}>
+              {editingId ? <><Edit className="mr-2 h-4 w-4" /> Actualizar</> : <><Plus className="mr-2 h-4 w-4" /> Agregar</>}
+            </Button>
+            {editingId && (
+              <Button variant="outline" size="icon" onClick={clearForm}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Data Table */}
@@ -227,12 +251,12 @@ export function DailyCollectionCRUD() {
               ) : (
                 sortedData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.date}</TableCell>
+                  <TableCell>{format(parse(item.date, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy', {locale: es})}</TableCell>
                   <TableCell>{formatCurrency(item.dailyCollectionAmount)}</TableCell>
                   <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>

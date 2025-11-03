@@ -24,14 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, getDocs, writeBatch, doc, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, writeBatch, doc, deleteDoc, addDoc, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -73,11 +73,31 @@ export function DistrictProgressCRUD() {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState('');
   const [recoveredAmount, setRecoveredAmount] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   
   const sortedData = districtProgressData
     ? [...districtProgressData].sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
     : [];
+  
+  const clearForm = () => {
+    setDate(undefined);
+    setSelectedDistrict('');
+    setMonthlyGoal('');
+    setRecoveredAmount('');
+    setEditingId(null);
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingId(item.id);
+    const itemDate = parse(item.month, 'yyyy-MM', new Date());
+    if (isValid(itemDate)) {
+      setDate(itemDate);
+    }
+    setSelectedDistrict(item.district);
+    setMonthlyGoal(item.monthlyGoal.toString());
+    setRecoveredAmount(item.recovered.toString());
+  };
 
   const handleAddOrUpdate = async () => {
     if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
@@ -94,50 +114,55 @@ export function DistrictProgressCRUD() {
     const newRecoveredAmount = parseFloat(recoveredAmount);
   
     try {
-      // Check if a record for this district and month already exists
-      const q = query(
-        collection(firestore, 'district_progress'),
-        where('month', '==', monthStr),
-        where('district', '==', selectedDistrict)
-      );
-  
-      const querySnapshot = await getDocs(q);
-  
-      if (querySnapshot.empty) {
-        // Add new document
-        await addDoc(collection(firestore, 'district_progress'), {
+      if (editingId) {
+        // Update existing document
+        const docRef = doc(firestore, 'district_progress', editingId);
+        await writeBatch(firestore).update(docRef, {
           month: monthStr,
           district: selectedDistrict,
           monthlyGoal: newMonthlyGoal,
           recovered: newRecoveredAmount,
-          updatedAt: new Date(),
-        });
-        toast({
-          title: 'Éxito',
-          description: 'El nuevo registro de avance ha sido creado.',
-        });
-      } else {
-        // Update existing document
-        const docId = querySnapshot.docs[0].id;
-        const docRef = doc(firestore, 'district_progress', docId);
-        const batch = writeBatch(firestore);
-        batch.update(docRef, {
-          monthlyGoal: newMonthlyGoal,
-          recovered: newRecoveredAmount,
-          updatedAt: new Date(),
-        });
-        await batch.commit();
+          updatedAt: Timestamp.now(),
+        }).commit();
+
         toast({
           title: 'Éxito',
           description: 'El registro de avance ha sido actualizado.',
         });
+      } else {
+        // Check if a record for this district and month already exists before adding
+        const q = query(
+          collection(firestore, 'district_progress'),
+          where('month', '==', monthStr),
+          where('district', '==', selectedDistrict)
+        );
+    
+        const querySnapshot = await getDocs(q);
+    
+        if (querySnapshot.empty) {
+          // Add new document
+          await addDoc(collection(firestore, 'district_progress'), {
+            month: monthStr,
+            district: selectedDistrict,
+            monthlyGoal: newMonthlyGoal,
+            recovered: newRecoveredAmount,
+            updatedAt: Timestamp.now(),
+          });
+          toast({
+            title: 'Éxito',
+            description: 'El nuevo registro de avance ha sido creado.',
+          });
+        } else {
+           toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: `Ya existe un registro para ${selectedDistrict} en ${format(date, "MMMM yyyy", {locale: es})}.`,
+          });
+          return;
+        }
       }
-  
-      // Clear form
-      setDate(undefined);
-      setSelectedDistrict('');
-      setMonthlyGoal('');
-      setRecoveredAmount('');
+      
+      clearForm();
   
     } catch (error: any) {
       toast({
@@ -184,6 +209,7 @@ export function DistrictProgressCRUD() {
                 <Button
                   variant={"outline"}
                   className="justify-start text-left font-normal"
+                  disabled={!!editingId}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "MMMM 'de' yyyy", { locale: es }) : <span>Seleccione un mes</span>}
@@ -203,7 +229,7 @@ export function DistrictProgressCRUD() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="district">Distrito</Label>
-            <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+            <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!!editingId}>
                 <SelectTrigger>
                     <SelectValue placeholder="Seleccione un distrito" />
                 </SelectTrigger>
@@ -220,10 +246,16 @@ export function DistrictProgressCRUD() {
             <Label htmlFor="recovered">Recuperado</Label>
             <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Guardar
-          </Button>
+          <div className="flex items-end gap-2">
+            <Button className="w-full" onClick={handleAddOrUpdate}>
+                {editingId ? <><Edit className="mr-2 h-4 w-4" /> Actualizar</> : <><Plus className="mr-2 h-4 w-4" /> Agregar</>}
+            </Button>
+            {editingId && (
+                <Button variant="outline" size="icon" onClick={clearForm}>
+                    <X className="h-4 w-4" />
+                </Button>
+            )}
+          </div>
         </div>
 
         {/* Data Table */}
@@ -254,12 +286,12 @@ export function DistrictProgressCRUD() {
               ) : (
                 sortedData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.month}</TableCell>
+                  <TableCell>{format(parse(item.month, 'yyyy-MM', new Date()), 'MMMM yyyy', {locale: es})}</TableCell>
                   <TableCell>{item.district}</TableCell>
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell>{formatCurrency(item.recovered)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
