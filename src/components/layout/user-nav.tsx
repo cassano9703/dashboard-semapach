@@ -57,6 +57,15 @@ export function UserNav() {
                 </p>
               </div>
             </DropdownMenuLabel>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-muted-foreground focus:text-muted-foreground cursor-default focus:bg-transparent">
+                  <Shield className="mr-2 h-4 w-4 text-primary" />
+                  <span>Rol: Administrador</span>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
