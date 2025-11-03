@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   Rectangle,
   ResponsiveContainer,
   Tooltip,
@@ -19,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -36,6 +35,7 @@ const formatCurrency = (value: number) =>
 
 export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonChartProps) {
   const firestore = useFirestore();
+  const firstAvailableDate = new Date(2025, 8, 1); // September 2025
 
   const servicesRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'desc')) : null),
@@ -52,9 +52,11 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
 
     const currentMonthLabel = format(selectedDate, 'MMMM', { locale: es });
     const prevMonthLabel = format(prevMonth, 'MMMM', { locale: es });
+    
+    const showPreviousMonth = !isBefore(prevMonth, startOfMonth(firstAvailableDate));
 
     if (!servicesData) {
-      return { chartData: [], currentMonthLabel, prevMonthLabel };
+      return { chartData: { quantity: [], amount: [] }, currentMonthLabel, prevMonthLabel };
     }
 
     let currentMonthTotalQuantity = 0;
@@ -68,38 +70,25 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
       if (isWithinInterval(itemDate, { start: currentMonthStart, end: currentMonthEnd })) {
         currentMonthTotalQuantity += item.recoveredCount;
         currentMonthTotalAmount += item.recoveredAmount;
-      } else if (isWithinInterval(itemDate, { start: prevMonthStart, end: prevMonthEnd })) {
+      } else if (showPreviousMonth && isWithinInterval(itemDate, { start: prevMonthStart, end: prevMonthEnd })) {
         prevMonthTotalQuantity += item.recoveredCount;
         prevMonthTotalAmount += item.recoveredAmount;
       }
     });
-
-    const data = [
-      {
-        name: 'Cantidad',
-        [prevMonthLabel]: prevMonthTotalQuantity,
-        [currentMonthLabel]: currentMonthTotalQuantity,
-      },
-      {
-        name: 'Monto',
-        [prevMonthLabel]: prevMonthTotalAmount,
-        [currentMonthLabel]: currentMonthTotalAmount,
-      }
-    ];
-
-    const quantityData = [
-      { name: prevMonthLabel, value: prevMonthTotalQuantity },
-      { name: currentMonthLabel, value: currentMonthTotalQuantity },
-    ];
     
-    const amountData = [
-      { name: prevMonthLabel, value: prevMonthTotalAmount },
-      { name: currentMonthLabel, value: currentMonthTotalAmount },
-    ];
+    const quantityData = [];
+    const amountData = [];
+    
+    if (showPreviousMonth) {
+        quantityData.push({ name: prevMonthLabel, value: prevMonthTotalQuantity });
+        amountData.push({ name: prevMonthLabel, value: prevMonthTotalAmount });
+    }
+    quantityData.push({ name: currentMonthLabel, value: currentMonthTotalQuantity });
+    amountData.push({ name: currentMonthLabel, value: currentMonthTotalAmount });
 
 
     return { chartData: { quantity: quantityData, amount: amountData }, currentMonthLabel, prevMonthLabel };
-  }, [servicesData, selectedDate]);
+  }, [servicesData, selectedDate, firstAvailableDate]);
 
 
   return (
