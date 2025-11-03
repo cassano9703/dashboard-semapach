@@ -4,11 +4,10 @@ import {
   Book,
   Home,
   Settings,
-  Shield,
   Target,
   TrendingUp,
   Droplets,
-  UserCog,
+  Database,
 } from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -20,26 +19,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 
 const allNavItems = [
-  {href: '/', label: 'Inicio', icon: Home, adminOnly: false},
-  {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp, adminOnly: false},
-  {href: '/avance-distritos', label: 'Avance de distritos', icon: Target, adminOnly: false},
-  {href: '/reportes', label: 'Reportes', icon: Book, adminOnly: false},
-  {href: '/configuracion', label: 'Configuración', icon: Settings, adminOnly: false},
+  {href: '/', label: 'Inicio', icon: Home},
+  {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp},
+  {href: '/avance-distritos', label: 'Avance de distritos', icon: Target},
+  {href: '/reportes', label: 'Reportes', icon: Book},
+  {href: '/admin', label: 'Admin', icon: Database},
+  {href: '/configuracion', label: 'Configuración', icon: Settings},
 ];
 
 export function MainNav() {
   const pathname = usePathname();
-  const { user, claims } = useUser();
-  const isSuperAdmin = user?.email === 'cassano9703@gmail.com';
-  const isAdmin = claims?.claims?.role === 'admin' || isSuperAdmin;
+  const { user } = useUser();
 
 
-  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
+  const navItems = allNavItems;
 
   return (
     <>
