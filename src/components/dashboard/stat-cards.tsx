@@ -10,7 +10,7 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
 import { useMemo } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const formatCurrency = (value: number) =>
@@ -47,19 +47,9 @@ export function StatCards({ selectedDate }: StatCardsProps) {
 
     const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(selectedMonthStr));
     
-    let dailyCollection = 0;
-    let lastUpdated = null;
-
-    // "Recaudación del día" solo tiene sentido si el mes seleccionado es el mes actual
-    // y el día seleccionado es hoy.
-    if (isSameDay(selectedDate, new Date())) {
-        const latestCollectionForToday = dailyCollectionData
-        .filter(item => item.date === selectedDayStr)
-        .sort((a, b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
-
-        dailyCollection = latestCollectionForToday?.dailyCollectionAmount || 0;
-        lastUpdated = latestCollectionForToday?.updatedAt || null;
-    }
+    const collectionForSelectedDay = dailyCollectionData.find(item => item.date === selectedDayStr);
+    const dailyCollection = collectionForSelectedDay?.dailyCollectionAmount || 0;
+    const lastUpdated = collectionForSelectedDay?.updatedAt || null;
 
     const monthlyAccumulated = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
 
@@ -77,21 +67,14 @@ export function StatCards({ selectedDate }: StatCardsProps) {
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
   
-  let lastUpdatedText = '';
-  if (stats.lastUpdated) {
-    lastUpdatedText = `Actualizado 'a las' ${format(stats.lastUpdated.toDate(), "hh:mm a", { locale: es })}`;
-  } else if (isSameDay(selectedDate, new Date())) {
-    lastUpdatedText = 'Aún no hay datos para hoy';
-  } else {
-    lastUpdatedText = `Total del ${format(selectedDate, 'd MMM yyyy', {locale: es})}`
-  }
+  const dailyCollectionDescription = `Total del ${format(selectedDate, 'd MMM yyyy', { locale: es })}`;
 
 
   const cardData = [
     {
       title: 'Recaudación del Día',
       value: formatCurrency(stats.dailyCollection),
-      description: lastUpdatedText,
+      description: dailyCollectionDescription,
       icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
     },
     {
