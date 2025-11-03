@@ -161,7 +161,7 @@ export function DistrictProgress() {
                           {item.monthlyGoal.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {goalReached ? 'S/ 0' : item.difference.toLocaleString('es-PE')}
+                          {goalReached ? '0' : item.difference.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell>
                           {goalReached ? (
