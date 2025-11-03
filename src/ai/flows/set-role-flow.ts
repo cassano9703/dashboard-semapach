@@ -2,10 +2,9 @@
 /**
  * @fileOverview Flow de Genkit para asignar roles de administrador a usuarios.
  */
-
+import admin from '@/lib/firebase-admin'; // Import to ensure initialization
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import admin from '@/lib/firebase-admin'; // Import the initialized admin instance
 
 // Esquema de entrada para el flow
 const SetAdminRoleInputSchema = z.object({
