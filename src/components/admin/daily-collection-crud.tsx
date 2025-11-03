@@ -20,7 +20,7 @@ import {
 import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, parse, isValid, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -51,6 +51,22 @@ export function DailyCollectionCRUD() {
   const [monthlyGoal, setMonthlyGoal] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   
+  useEffect(() => {
+    if (!date || !dailyCollectionData || editingId) return;
+
+    const monthStr = format(date, 'yyyy-MM');
+    const recordsForMonth = dailyCollectionData.filter(item => item.date.startsWith(monthStr));
+
+    if (recordsForMonth.length > 0) {
+      // Sort to get the most recent goal entry for that month, just in case
+      recordsForMonth.sort((a, b) => b.date.localeCompare(a.date));
+      setMonthlyGoal(recordsForMonth[0].monthlyGoal.toString());
+    } else {
+      setMonthlyGoal(''); // Clear if no records for the new month
+    }
+  }, [date, dailyCollectionData, editingId]);
+
+
   const sortedData = dailyCollectionData || [];
 
   const recalculateMonthAndCommit = async (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
@@ -192,6 +208,7 @@ export function DailyCollectionCRUD() {
   };
 
   const isLoading = isDataLoading;
+  const isGoalDisabled = date && (dailyCollectionData || []).some(item => item.date.startsWith(format(date, 'yyyy-MM'))) && !editingId;
 
   return (
     <Card>
@@ -232,7 +249,7 @@ export function DailyCollectionCRUD() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
-            <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
+            <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} disabled={isGoalDisabled} />
           </div>
           <div className="flex items-end gap-2">
             <Button className="w-full" onClick={handleAddOrUpdate}>
@@ -248,7 +265,7 @@ export function DailyCollectionCRUD() {
 
         {/* Data Table */}
         <div className="border rounded-lg overflow-hidden">
-          <div className="relative max-h-[400px] overflow-y-auto">
+          <div className="relative max-h-96 overflow-y-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>
