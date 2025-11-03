@@ -5,7 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import * as admin from 'firebase-admin';
+import admin from '@/lib/firebase-admin'; // Import the initialized admin instance
 
 // Esquema de entrada para el flow
 const SetAdminRoleInputSchema = z.object({
@@ -16,11 +16,6 @@ const SetAdminRoleInputSchema = z.object({
 const SetAdminRoleOutputSchema = z.object({
   message: z.string(),
 });
-
-// Inicializar Firebase Admin SDK (solo si no se ha inicializado)
-if (admin.apps.length === 0) {
-  admin.initializeApp();
-}
 
 /**
  * Asigna el custom claim 'role: admin' a un usuario de Firebase por su correo.
