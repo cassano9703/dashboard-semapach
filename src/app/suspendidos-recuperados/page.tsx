@@ -125,7 +125,7 @@ export default function SuspendidosRecuperadosPage() {
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : monthlyTotalCount}</div>
             <p className="text-xs text-muted-foreground">
-              Total de usuarios recuperados
+              Total de usuarios recuperados en {format(selectedDate, 'LLLL', {locale: es})}
             </p>
           </CardContent>
         </Card>
@@ -137,44 +137,23 @@ export default function SuspendidosRecuperadosPage() {
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(monthlyTotalAmount)}</div>
             <p className="text-xs text-muted-foreground">
-              Suma total de los montos recuperados en el mes
+              Suma total de los montos recuperados en {format(selectedDate, 'LLLL', {locale: es})}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <RecoveredComparisonChart selectedDate={selectedDate} />
+      <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate}/>
       
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Resumen de Servicios Recuperados</CardTitle>
+              <CardTitle>Resumen de Servicios Recuperados por Distrito</CardTitle>
               <CardDescription>
-                Visualización de la cantidad de servicios recuperados y el monto total por distrito. La gestión de estos datos se realiza en el panel de Administración.
+                Datos correspondientes al mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}. La gestión de estos datos se realiza en el panel de Administración.
               </CardDescription>
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={{ before: fromDate, after: new Date() }}
-                  fromMonth={fromDate}
-                  toMonth={new Date()}
-                  initialFocus
-                  locale={es}
-                  defaultMonth={selectedDate}
-                />
-              </PopoverContent>
-            </Popover>
           </div>
         </CardHeader>
         <CardContent>

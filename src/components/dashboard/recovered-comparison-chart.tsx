@@ -18,13 +18,18 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, eachMonthOfInterval, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Button } from '../ui/button';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/calendar';
 
 interface RecoveredComparisonChartProps {
   selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -33,7 +38,7 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonChartProps) {
+export function RecoveredComparisonChart({ selectedDate, onDateChange }: RecoveredComparisonChartProps) {
   const firestore = useFirestore();
   const firstAvailableDate = new Date(2025, 8, 1); // September 2025
 
@@ -52,8 +57,14 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
         start: firstAvailableDate,
         end: selectedDate,
     };
+    
+    // Ensure the interval start is not before the first available date
+    const validIntervalStart = interval.start < firstAvailableDate ? firstAvailableDate : interval.start;
+    if (selectedDate < validIntervalStart) {
+        return { quantity: [], amount: [] };
+    }
 
-    const monthsInInterval = eachMonthOfInterval(interval);
+    const monthsInInterval = eachMonthOfInterval({start: validIntervalStart, end: selectedDate});
 
     const monthlyTotals = monthsInInterval.map(month => {
         const monthStart = startOfMonth(month);
@@ -87,10 +98,35 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evolución Mensual de Recuperados</CardTitle>
-        <CardDescription>
-          Evolución de la cantidad de servicios y montos recuperados desde el inicio de la data.
-        </CardDescription>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Evolución Mensual de Recuperados</CardTitle>
+              <CardDescription>
+                Evolución de la cantidad de servicios y montos recuperados desde el inicio de la data.
+              </CardDescription>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && onDateChange(date)}
+                  disabled={{ before: firstAvailableDate, after: new Date() }}
+                  fromMonth={firstAvailableDate}
+                  toMonth={new Date()}
+                  initialFocus
+                  locale={es}
+                  defaultMonth={selectedDate}
+                />
+              </PopoverContent>
+            </Popover>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
