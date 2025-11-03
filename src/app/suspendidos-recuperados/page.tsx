@@ -13,9 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
 
 const districts = [
   'Chincha Alta',
@@ -31,22 +28,14 @@ export default function SuspendidosRecuperadosPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">
-        Suspendidos Recuperados
+        Reporte de Suspendidos Recuperados
       </h1>
       <Card>
         <CardHeader>
-          <div className='flex justify-between items-start'>
-            <div>
-              <CardTitle>Registro de Servicios Recuperados</CardTitle>
-              <CardDescription>
-                Ingrese la cantidad de servicios recuperados y el monto total por distrito.
-              </CardDescription>
-            </div>
-            <Button>
-              <Save className="mr-2 h-4 w-4" /> Guardar Cambios
-            </Button>
-          </div>
-
+          <CardTitle>Resumen de Servicios Recuperados</CardTitle>
+          <CardDescription>
+            Visualización de la cantidad de servicios recuperados y el monto total por distrito. La gestión de estos datos se realiza en el panel de Administración.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
@@ -54,20 +43,16 @@ export default function SuspendidosRecuperadosPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Distrito</TableHead>
-                  <TableHead className="w-[200px]">Recuperados (Cantidad)</TableHead>
-                  <TableHead className="w-[200px]">Monto (S/)</TableHead>
+                  <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
+                  <TableHead className="w-[200px] text-right">Monto (S/)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {districts.map((district) => (
                   <TableRow key={district}>
                     <TableCell className="font-medium">{district}</TableCell>
-                    <TableCell>
-                      <Input type="number" placeholder="0" />
-                    </TableCell>
-                    <TableCell>
-                      <Input type="number" placeholder="0.00" />
-                    </TableCell>
+                    <TableCell className="text-right">0</TableCell>
+                    <TableCell className="text-right">0.00</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
