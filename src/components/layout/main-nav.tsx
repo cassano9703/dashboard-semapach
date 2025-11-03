@@ -36,7 +36,9 @@ const allNavItems = [
 export function MainNav() {
   const pathname = usePathname();
   const { user, claims } = useUser();
-  const isAdmin = claims?.claims?.role === 'admin' || user?.email === 'cassano9703@gmail.com';
+  const isSuperAdmin = user?.email === 'cassano9703@gmail.com';
+  const isAdmin = claims?.claims?.role === 'admin' || isSuperAdmin;
+
 
   const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
