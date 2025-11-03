@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Droplets,
   Database,
+  ClipboardCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -24,6 +25,11 @@ const allNavItems = [
   {href: '/', label: 'Inicio', icon: Home},
   {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp},
   {href: '/avance-distritos', label: 'Avance de distritos', icon: Target},
+  {
+    href: '/suspendidos-recuperados',
+    label: 'Suspendidos Recuperados',
+    icon: ClipboardCheck,
+  },
   {href: '/admin', label: 'Administración', icon: Database },
   {href: '/reportes', label: 'Reportes', icon: Book},
   {href: '/configuracion', label: 'Configuración', icon: Settings},
