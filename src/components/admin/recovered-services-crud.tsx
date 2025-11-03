@@ -248,49 +248,51 @@ export function RecoveredServicesCRUD() {
 
         {/* Data Table */}
         <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Distrito</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-                <TableHead className="text-right">Monto (S/)</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+          <div className="relative max-h-[400px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Distrito</TableHead>
+                  <TableHead className="text-right">Cantidad</TableHead>
+                  <TableHead className="text-right">Monto (S/)</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
-                </TableRow>
-              ) : sortedData.length === 0 ? (
-                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
-                </TableRow>
-              ) : (
-                sortedData.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{format(parse(item.date, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy', {locale: es})}</TableCell>
-                  <TableCell>{item.district}</TableCell>
-                  <TableCell className="text-right">{item.recoveredCount}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.recoveredAmount)}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )))
-              }
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
+                  </TableRow>
+                ) : sortedData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
+                  </TableRow>
+                ) : (
+                  sortedData.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{format(parse(item.date, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy', {locale: es})}</TableCell>
+                    <TableCell>{item.district}</TableCell>
+                    <TableCell className="text-right">{item.recoveredCount}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.recoveredAmount)}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )))
+                }
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>
