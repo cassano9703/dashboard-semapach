@@ -20,11 +20,11 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, DollarSign, UserCheck, Users } from 'lucide-react';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, isEqual } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
 const districts = [
   'Chincha Alta',
@@ -46,56 +46,54 @@ export default function SuspendidosRecuperadosPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const firestore = useFirestore();
 
-  const servicesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    const monthStart = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
-    const monthEnd = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
+  const servicesRef = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'desc')) : null),
+    [firestore]
+  );
+  const { data: servicesData, isLoading } = useCollection(servicesRef);
 
-    return query(
-      collection(firestore, 'recovered_services'),
-      where('date', '>=', monthStart),
-      where('date', '<=', monthEnd)
-    );
-  }, [firestore, selectedDate]);
-
-  const { data: servicesData, isLoading } = useCollection(servicesQuery);
-
-  const { dailyTotal, monthlyTotal, monthlyAmount, districtTotals } = useMemo(() => {
+  const { dailyTotal, monthlyTotalCount, monthlyTotalAmount, districtTotals } = useMemo(() => {
     if (!servicesData) {
-      return { dailyTotal: 0, monthlyTotal: 0, monthlyAmount: 0, districtTotals: new Map() };
+      return { dailyTotal: 0, monthlyTotalCount: 0, monthlyTotalAmount: 0, districtTotals: new Map() };
     }
 
-    const selectedDayStr = format(selectedDate, 'yyyy-MM-dd');
-    
-    let dailyTotal = 0;
-    let monthlyTotal = 0;
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const formattedSelectedDate = format(selectedDate, 'yyyy-MM-dd');
+
+    let daily = 0;
+    let monthlyCount = 0;
     let monthlyAmount = 0;
-    const districtTotals = new Map<string, { count: number; amount: number }>();
+    const totals = new Map<string, { recoveredCount: number; recoveredAmount: number }>();
 
-    districts.forEach(d => districtTotals.set(d, { count: 0, amount: 0 }));
-
-    servicesData.forEach(service => {
-      // Daily total
-      if (service.date === selectedDayStr) {
-        dailyTotal += service.recoveredCount;
-      }
+    servicesData.forEach(item => {
+      const itemDate = parseISO(item.date + 'T00:00:00');
       
-      // Monthly totals
-      monthlyTotal += service.recoveredCount;
-      monthlyAmount += service.recoveredAmount;
+      // Daily total
+      if (item.date === formattedSelectedDate) {
+        daily += item.recoveredCount;
+      }
 
-      // District totals
-      if (districtTotals.has(service.district)) {
-        const current = districtTotals.get(service.district)!;
-        districtTotals.set(service.district, {
-          count: current.count + service.recoveredCount,
-          amount: current.amount + service.recoveredAmount,
-        });
+      // Monthly totals
+      if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
+        monthlyCount += item.recoveredCount;
+        monthlyAmount += item.recoveredAmount;
+
+        const current = totals.get(item.district) || { recoveredCount: 0, recoveredAmount: 0 };
+        current.recoveredCount += item.recoveredCount;
+        current.recoveredAmount += item.recoveredAmount;
+        totals.set(item.district, current);
       }
     });
 
-    return { dailyTotal, monthlyTotal, monthlyAmount, districtTotals };
+    return { 
+      dailyTotal: daily, 
+      monthlyTotalCount: monthlyCount, 
+      monthlyTotalAmount: monthlyAmount,
+      districtTotals: totals,
+    };
   }, [servicesData, selectedDate]);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,9 +121,9 @@ export default function SuspendidosRecuperadosPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : monthlyTotal}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : monthlyTotalCount}</div>
             <p className="text-xs text-muted-foreground">
-              Total de usuarios recuperados en el mes
+              Total de usuarios recuperados
             </p>
           </CardContent>
         </Card>
@@ -135,7 +133,7 @@ export default function SuspendidosRecuperadosPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(monthlyAmount)}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(monthlyTotalAmount)}</div>
             <p className="text-xs text-muted-foreground">
               Suma total de los montos recuperados en el mes
             </p>
@@ -176,28 +174,31 @@ export default function SuspendidosRecuperadosPage() {
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Distrito</TableHead>
-                  <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
-                  <TableHead className="w-[200px] text-right">Monto (S/)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+             {isLoading ? (
+              <div className="text-center p-8">Cargando datos...</div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8">Cargando datos...</TableCell>
+                    <TableHead>Distrito</TableHead>
+                    <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
+                    <TableHead className="w-[200px] text-right">Monto (S/)</TableHead>
                   </TableRow>
-                ) : districts.map((district) => (
-                  <TableRow key={district}>
-                    <TableCell className="font-medium">{district}</TableCell>
-                    <TableCell className="text-right">{districtTotals.get(district)?.count || 0}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(districtTotals.get(district)?.amount || 0)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {districts.map((district) => {
+                    const data = districtTotals.get(district) || { recoveredCount: 0, recoveredAmount: 0 };
+                    return (
+                      <TableRow key={district}>
+                        <TableCell className="font-medium">{district}</TableCell>
+                        <TableCell className="text-right">{data.recoveredCount}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(data.recoveredAmount)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>
