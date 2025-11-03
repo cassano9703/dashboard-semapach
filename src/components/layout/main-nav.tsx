@@ -22,14 +22,15 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
+  SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 
-const navItems = [
-  {href: '/', label: 'Inicio', icon: Home},
-  {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp},
-  {href: '/avance-distritos', label: 'Avance de distritos', icon: Target},
-  {href: '/reportes', label: 'Reportes', icon: Book},
-  {href: '/configuracion', label: 'Configuración', icon: Settings},
+const allNavItems = [
+  {href: '/', label: 'Inicio', icon: Home, adminOnly: false},
+  {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp, adminOnly: false},
+  {href: '/avance-distritos', label: 'Avance de distritos', icon: Target, adminOnly: false},
+  {href: '/reportes', label: 'Reportes', icon: Book, adminOnly: false},
+  {href: '/configuracion', label: 'Configuración', icon: Settings, adminOnly: true},
 ];
 
 const adminSubNavItems = [
@@ -41,6 +42,8 @@ export function MainNav() {
   const pathname = usePathname();
   const { user, claims } = useUser();
   const isAdmin = claims?.claims?.role === 'admin' || user?.email === 'cassano9703@gmail.com';
+
+  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <>
