@@ -20,12 +20,12 @@ service cloud.firestore {
      * Allows read access to any authenticated user.
      * @path /daily_collections/{dailyCollectionId}
      * @allow read: if isSignedIn();
-     * @allow write: if isAdmin();
+     * @allow write: if isSignedIn();
      * @principle Enforces role-based access control for collection data.
      */
     match /daily_collections/{dailyCollectionId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     /**
@@ -33,12 +33,12 @@ service cloud.firestore {
      * Allows read access to any authenticated user.
      * @path /district_progress/{districtProgressId}
      * @allow read: if isSignedIn();
-     * @allow write: if isAdmin();
+     * @allow write: if isSignedIn();
      * @principle Enforces role-based access control for district progress data.
      */
     match /district_progress/{districtProgressId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     // Helper function to determine if a user is signed in

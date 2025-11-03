@@ -24,7 +24,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -55,13 +55,98 @@ export function DailyCollectionCRUD() {
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
     : [];
 
-  const handleActionClick = () => {
-    toast({
-        variant: "destructive",
-        title: "Función Deshabilitada",
-        description: "Las acciones de escritura (agregar, editar, borrar) están deshabilitadas por falta de permisos en el servidor.",
-    });
-  }
+  const handleAdd = async () => {
+    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
+        toast({
+            variant: "destructive",
+            title: "Error de Validación",
+            description: "Por favor, complete todos los campos.",
+        });
+        return;
+    }
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const selectedDateStr = format(date, "yyyy-MM-dd");
+            const monthStr = selectedDateStr.substring(0, 7);
+
+            const newDocRef = doc(collection(firestore, "daily_collections"));
+
+            // Get all documents for the month to recalculate accumulated totals
+            const monthQuery = dailyCollectionsRef ? dailyCollectionsRef.where('date', '>=', `${monthStr}-01`).where('date', '<=', `${monthStr}-31`) : null;
+            if (!monthQuery) throw new Error("Could not create query.");
+
+            const monthDocsSnapshot = await transaction.get(monthQuery);
+            const monthDocs = monthDocsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date }));
+            
+            monthDocs.push({
+                id: newDocRef.id,
+                date: selectedDateStr,
+                dailyCollectionAmount: parseFloat(dailyAmount),
+                monthlyGoal: parseFloat(monthlyGoal),
+                updatedAt: new Date(),
+                accumulatedMonthlyTotal: 0, // Placeholder
+            });
+
+            monthDocs.sort((a, b) => a.date.localeCompare(b.date));
+
+            let accumulatedTotal = 0;
+            for (const docData of monthDocs) {
+                accumulatedTotal += docData.dailyCollectionAmount;
+                const docRefToUpdate = doc(firestore, "daily_collections", docData.id);
+                
+                if (docData.id === newDocRef.id) {
+                     transaction.set(docRefToUpdate, {
+                        date: selectedDateStr,
+                        dailyCollectionAmount: parseFloat(dailyAmount),
+                        accumulatedMonthlyTotal: accumulatedTotal,
+                        monthlyGoal: parseFloat(monthlyGoal),
+                        updatedAt: new Date(),
+                    });
+                } else {
+                    transaction.update(docRefToUpdate, { 
+                        accumulatedMonthlyTotal: accumulatedTotal,
+                        monthlyGoal: parseFloat(monthlyGoal)
+                    });
+                }
+            }
+        });
+
+        toast({
+            title: "Operación Exitosa",
+            description: "La recaudación ha sido agregada y los acumulados recalculados.",
+        });
+        setDate(undefined);
+        setDailyAmount('');
+        setMonthlyGoal('');
+    } catch (error: any) {
+        console.error("Transaction failed: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error en la operación",
+            description: error.message || "No se pudo completar la acción.",
+        });
+    }
+  };
+
+  const handleDelete = async (docId: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'daily_collections', docId);
+    try {
+        await deleteDoc(docRef);
+        toast({
+            title: "Registro Eliminado",
+            description: "La recaudación diaria ha sido eliminada.",
+        });
+    } catch (error: any) {
+        console.error("Delete failed: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error al eliminar",
+            description: error.message || "No se pudo completar la acción.",
+        });
+    }
+  };
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -104,7 +189,7 @@ export function DailyCollectionCRUD() {
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
             <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleActionClick}>
+          <Button className="w-full md:w-auto" onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
             Agregar
           </Button>
@@ -139,10 +224,10 @@ export function DailyCollectionCRUD() {
                   <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>

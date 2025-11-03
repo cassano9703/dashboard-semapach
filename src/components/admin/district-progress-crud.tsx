@@ -31,7 +31,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, where, getDocs, writeBatch, doc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -80,13 +80,73 @@ export function DistrictProgressCRUD() {
     ? [...districtProgressData].sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
     : [];
 
-  const handleActionClick = () => {
-    toast({
-        variant: "destructive",
-        title: "Función Deshabilitada",
-        description: "Las acciones de escritura (agregar, editar, borrar) están deshabilitadas por falta de permisos en el servidor.",
-    });
-  }
+  const handleAddOrUpdate = async () => {
+    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
+        toast({
+            variant: "destructive",
+            title: "Error de Validación",
+            description: "Por favor, complete todos los campos.",
+        });
+        return;
+    }
+
+    const monthStr = format(date, "yyyy-MM");
+    const id = `${monthStr}-${selectedDistrict}`;
+    const docRef = doc(firestore, "district_progress", id);
+
+    const data = {
+        month: monthStr,
+        district: selectedDistrict,
+        monthlyGoal: parseFloat(monthlyGoal),
+        recovered: parseFloat(recoveredAmount),
+        updatedAt: new Date(),
+    };
+
+    try {
+        const batch = writeBatch(firestore);
+        batch.set(docRef, data, { merge: true }); // Use set with merge to create or update
+        await batch.commit();
+        
+        toast({
+            title: "Operación Exitosa",
+            description: `El progreso para ${selectedDistrict} ha sido guardado.`,
+        });
+
+        // Reset form
+        setDate(undefined);
+        setSelectedDistrict('');
+        setMonthlyGoal('');
+        setRecoveredAmount('');
+
+    } catch (error: any) {
+        console.error("Save failed: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error al guardar",
+            description: error.message || "No se pudo completar la acción.",
+        });
+    }
+  };
+
+  const handleDelete = async (docId: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'district_progress', docId);
+    try {
+        await deleteDoc(docRef);
+        toast({
+            title: "Registro Eliminado",
+            description: "El progreso del distrito ha sido eliminado.",
+        });
+    } catch (error: any) {
+        console.error("Delete failed: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error al eliminar",
+            description: error.message || "No se pudo completar la acción.",
+        });
+    }
+  };
+
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -141,7 +201,7 @@ export function DistrictProgressCRUD() {
             <Label htmlFor="recovered">Recuperado</Label>
             <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleActionClick}>
+          <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
             <Plus className="mr-2 h-4 w-4" />
             Guardar
           </Button>
@@ -176,10 +236,10 @@ export function DistrictProgressCRUD() {
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell>{formatCurrency(item.recovered)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
