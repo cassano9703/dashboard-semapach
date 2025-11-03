@@ -153,10 +153,10 @@ export function DistrictProgress() {
                           {item.district}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          S/ {item.recovered.toLocaleString('es-PE')}
+                          {item.recovered.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          S/ {item.monthlyGoal.toLocaleString('es-PE')}
+                          {item.monthlyGoal.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell>
                           {goalReached ? (
@@ -174,7 +174,7 @@ export function DistrictProgress() {
                           )}
                         </TableCell>
                         <TableCell className={cn("text-right font-medium", goalReached ? "text-green-600" : "text-amber-600")}>
-                          {goalReached ? '¡Superado!' : `S/ ${item.difference.toLocaleString('es-PE')}`}
+                          {goalReached ? '¡Superado!' : `${item.difference.toLocaleString('es-PE')}`}
                         </TableCell>
                       </TableRow>
                     );
