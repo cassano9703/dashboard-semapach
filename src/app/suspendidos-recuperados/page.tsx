@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -16,15 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, DollarSign, UserCheck, Users } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, isEqual } from 'date-fns';
+import { UserCheck, Users, DollarSign } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 const districts = [
   'Chincha Alta',
@@ -69,12 +67,10 @@ export default function SuspendidosRecuperadosPage() {
     servicesData.forEach(item => {
       const itemDate = parseISO(item.date + 'T00:00:00');
       
-      // Daily total
       if (item.date === formattedSelectedDate) {
         daily += item.recoveredCount;
       }
 
-      // Monthly totals
       if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
         monthlyCount += item.recoveredCount;
         monthlyAmount += item.recoveredAmount;
@@ -103,7 +99,6 @@ export default function SuspendidosRecuperadosPage() {
         Reporte de Suspendidos Recuperados
       </h1>
 
-      {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
