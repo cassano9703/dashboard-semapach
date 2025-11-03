@@ -126,6 +126,7 @@ export function DistrictProgressCRUD() {
         }).commit();
 
         toast({
+          variant: 'success',
           title: 'Éxito',
           description: 'El registro de avance ha sido actualizado.',
         });
@@ -149,6 +150,7 @@ export function DistrictProgressCRUD() {
             updatedAt: Timestamp.now(),
           });
           toast({
+            variant: 'success',
             title: 'Éxito',
             description: 'El nuevo registro de avance ha sido creado.',
           });
@@ -179,6 +181,7 @@ export function DistrictProgressCRUD() {
     try {
         await deleteDoc(docRef);
         toast({
+            variant: "success",
             title: "Éxito",
             description: "El registro ha sido eliminado.",
         });

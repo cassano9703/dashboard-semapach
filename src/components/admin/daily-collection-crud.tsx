@@ -103,6 +103,7 @@ export function DailyCollectionCRUD() {
         await recalculateMonthAndCommit(itemDate);
 
         toast({
+            variant: "success",
             title: "Éxito",
             description: "El registro ha sido eliminado y los totales recalculados.",
         });
@@ -174,6 +175,7 @@ export function DailyCollectionCRUD() {
         await recalculateMonthAndCommit(date);
         
         toast({
+            variant: "success",
             title: 'Éxito',
             description: 'El registro ha sido guardado y los totales recalculados.',
         });

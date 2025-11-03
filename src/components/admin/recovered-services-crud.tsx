@@ -125,7 +125,7 @@ export function RecoveredServicesCRUD() {
           recoveredAmount: newRecoveredAmount,
           updatedAt: Timestamp.now(),
         });
-        toast({ title: 'Éxito', description: 'El registro ha sido actualizado.' });
+        toast({ variant: 'success', title: 'Éxito', description: 'El registro ha sido actualizado.' });
 
       } else {
         // Check if a record for this district and date already exists before adding
@@ -146,7 +146,7 @@ export function RecoveredServicesCRUD() {
             recoveredAmount: newRecoveredAmount,
             updatedAt: Timestamp.now(),
           });
-          toast({ title: 'Éxito', description: 'El nuevo registro ha sido creado.' });
+          toast({ variant: 'success', title: 'Éxito', description: 'El nuevo registro ha sido creado.' });
         } else {
            toast({
             variant: 'destructive',
@@ -173,7 +173,7 @@ export function RecoveredServicesCRUD() {
     const docRef = doc(firestore, "recovered_services", id);
     try {
         await deleteDoc(docRef);
-        toast({ title: "Éxito", description: "El registro ha sido eliminado." });
+        toast({ variant: 'success', title: "Éxito", description: "El registro ha sido eliminado." });
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error al eliminar", description: e.message });
     }
