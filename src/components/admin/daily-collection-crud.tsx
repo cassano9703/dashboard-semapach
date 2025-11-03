@@ -24,7 +24,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, runTransaction, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -55,12 +55,77 @@ export function DailyCollectionCRUD() {
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
     : [];
 
-  const handleDisabledAction = () => {
-    toast({
-      title: "Función Deshabilitada",
-      description: "Las operaciones de escritura no están disponibles por falta de permisos de administrador.",
-    });
+  const handleAdd = async () => {
+    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
+      toast({
+        variant: "destructive",
+        title: "Error de Validación",
+        description: "Todos los campos son obligatorios para agregar un registro.",
+      });
+      return;
+    }
+
+    const newRecordDate = format(date, "yyyy-MM-dd");
+    const newRecordMonth = newRecordDate.substring(0, 7);
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const collectionsForMonthQuery = dailyCollectionsRef;
+        const querySnapshot = await collection(firestore, "daily_collections").get();
+        const collectionsForMonth = querySnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(item => item.date.startsWith(newRecordMonth));
+
+        const accumulatedTotal = collectionsForMonth.reduce(
+            (acc, item) => acc + item.dailyCollectionAmount,
+            0
+        ) + parseFloat(dailyAmount);
+        
+        const newDocRef = doc(collection(firestore, "daily_collections"));
+        transaction.set(newDocRef, {
+            date: newRecordDate,
+            dailyCollectionAmount: parseFloat(dailyAmount),
+            accumulatedMonthlyTotal: accumulatedTotal,
+            monthlyGoal: parseFloat(monthlyGoal),
+            updatedAt: serverTimestamp(),
+        });
+      });
+      toast({
+        title: "Éxito",
+        description: "Registro de recaudación diaria agregado correctamente.",
+      });
+      // Clear form
+      setDate(undefined);
+      setDailyAmount('');
+      setMonthlyGoal('');
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error al agregar",
+        description: "No se pudo agregar el registro. Es posible que no tenga los permisos necesarios.",
+      });
+    }
   };
+
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, "daily_collections", id));
+      toast({
+        title: "Éxito",
+        description: "Registro eliminado correctamente.",
+      });
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: "No se pudo eliminar el registro. Es posible que no tenga los permisos necesarios.",
+      });
+    }
+  };
+
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -103,7 +168,7 @@ export function DailyCollectionCRUD() {
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
             <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleDisabledAction}>
+          <Button className="w-full md:w-auto" onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
             Agregar
           </Button>
@@ -138,10 +203,10 @@ export function DailyCollectionCRUD() {
                   <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
+                    <Button variant="ghost" size="icon" disabled>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>

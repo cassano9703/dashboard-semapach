@@ -1,0 +1,51 @@
+/**
+ * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
+ *
+ * Core Philosophy:
+ * This ruleset restricts data access based on user authentication.
+ * - Authenticated users: Can read and write all data.
+ * - Unauthenticated users: Cannot access any data.
+ *
+ * Data Structure:
+ * - /daily_collections/{dailyCollectionId}
+ * - /district_progress/{districtProgressId}
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows read and write access to any authenticated user.
+     * @path /daily_collections/{dailyCollectionId}
+     * @allow read: if isSignedIn();
+     * @allow write: if isSignedIn();
+     * @principle Enforces that only signed-in users can modify collection data.
+     */
+    match /daily_collections/{dailyCollectionId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Allows read and write access to any authenticated user.
+     * @path /district_progress/{districtProgressId}
+     * @allow read: if isSignedIn();
+     * @allow write: if isSignedIn();
+     * @principle Enforces that only signed-in users can modify district progress data.
+     */
+    match /district_progress/{districtProgressId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // Helper function to determine if a user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to determine if a user has the 'admin' role (currently not used for write)
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+  }
+}
