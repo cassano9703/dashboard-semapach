@@ -43,6 +43,7 @@ const formatCurrency = (value: number) =>
 export default function SuspendidosRecuperadosPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const firestore = useFirestore();
+  const fromDate = new Date(2025, 8, 1);
 
   const servicesRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'desc')) : null),
@@ -90,7 +91,6 @@ export default function SuspendidosRecuperadosPage() {
     };
   }, [servicesData, selectedDate]);
   
-  const fromDate = new Date(2025, 8, 1);
 
 
   return (
