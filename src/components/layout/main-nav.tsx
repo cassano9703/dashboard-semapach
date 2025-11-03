@@ -29,7 +29,7 @@ const allNavItems = [
   {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp, adminOnly: false},
   {href: '/avance-distritos', label: 'Avance de distritos', icon: Target, adminOnly: false},
   {href: '/reportes', label: 'Reportes', icon: Book, adminOnly: false},
-  {href: '/configuracion', label: 'Configuración', icon: Settings, adminOnly: true},
+  {href: '/configuracion', label: 'Configuración', icon: Settings, adminOnly: false},
 ];
 
 export function MainNav() {
@@ -67,18 +67,6 @@ export function MainNav() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-           {isAdmin && (
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                  href="/admin"
-                  isActive={pathname.startsWith('/admin')}
-                  tooltip="Administración"
-                >
-                  <Shield />
-                  <span>Admin</span>
-                </SidebarMenuButton>
-             </SidebarMenuItem>
-           )}
         </SidebarMenu>
       </SidebarContent>
     </>

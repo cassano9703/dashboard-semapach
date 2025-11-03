@@ -67,14 +67,6 @@ export function UserNav() {
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Facturación</span>
               </DropdownMenuItem>
-              {isAdmin && (
-                <DropdownMenuItem asChild>
-                  <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin</span>
-                  </Link>
-                </DropdownMenuItem>
-              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
