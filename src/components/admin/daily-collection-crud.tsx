@@ -41,7 +41,7 @@ export function DailyCollectionCRUD() {
   const { toast } = useToast();
   
   const dailyCollectionsRef = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'daily_collections') : null),
+    () => (firestore ? query(collection(firestore, 'daily_collections'), orderBy('date', 'desc')) : null),
     [firestore]
   );
   const { data: dailyCollectionData, isLoading: isDataLoading, error } = useCollection(dailyCollectionsRef);
@@ -51,13 +51,11 @@ export function DailyCollectionCRUD() {
   const [monthlyGoal, setMonthlyGoal] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const sortedData = dailyCollectionData
-    ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
-    : [];
+  const sortedData = dailyCollectionData || [];
 
   const recalculateAndBatchUpdate = async (batch: WriteBatch, monthDate: Date) => {
     if (!firestore) return;
-
+  
     const monthStr = format(monthDate, 'yyyy-MM');
     const firstDayOfMonth = format(startOfMonth(monthDate), 'yyyy-MM-dd');
     
@@ -67,11 +65,14 @@ export function DailyCollectionCRUD() {
       where('date', '<=', `${monthStr}-31`),
       orderBy('date')
     );
-
+  
     const snapshot = await getDocs(q);
     let accumulatedTotal = 0;
-
-    for (const docSnap of snapshot.docs) {
+  
+    // Firestore snapshots are not guaranteed to be sorted if data changes during the query
+    const sortedDocs = snapshot.docs.sort((a, b) => a.data().date.localeCompare(b.data().date));
+  
+    for (const docSnap of sortedDocs) {
       const data = docSnap.data();
       accumulatedTotal += data.dailyCollectionAmount;
       batch.update(doc(firestore, 'daily_collections', docSnap.id), {
@@ -86,9 +87,8 @@ export function DailyCollectionCRUD() {
     try {
       const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
       
-      await deleteDoc(docRef);
-      
       const batch = writeBatch(firestore);
+      batch.delete(docRef);
       await recalculateAndBatchUpdate(batch, itemDate);
       await batch.commit();
 
@@ -137,40 +137,57 @@ export function DailyCollectionCRUD() {
     const newMonthlyGoal = parseFloat(monthlyGoal);
 
     try {
-      const batch = writeBatch(firestore);
-
-      if (editingId) {
-        const docRef = doc(firestore, 'daily_collections', editingId);
-        batch.update(docRef, {
-            dailyCollectionAmount: newDailyAmount,
-            monthlyGoal: newMonthlyGoal,
-            updatedAt: Timestamp.now(),
-        });
-      } else {
-        const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
-        const existingDocs = await getDocs(q);
-        if (!existingDocs.empty) {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: `Ya existe un registro para la fecha ${formattedDate}.`,
-          });
-          return;
+      await runTransaction(firestore, async (transaction) => {
+        let docRef;
+        if (editingId) {
+            docRef = doc(firestore, 'daily_collections', editingId);
+            transaction.update(docRef, {
+                dailyCollectionAmount: newDailyAmount,
+                monthlyGoal: newMonthlyGoal,
+                updatedAt: Timestamp.now(),
+            });
+        } else {
+            const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
+            const existingDocs = await getDocs(q);
+            if (!existingDocs.empty) {
+                throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
+            }
+            docRef = doc(collection(firestore, 'daily_collections'));
+            transaction.set(docRef, {
+                date: formattedDate,
+                dailyCollectionAmount: newDailyAmount,
+                accumulatedMonthlyTotal: 0, // Placeholder
+                monthlyGoal: newMonthlyGoal,
+                updatedAt: Timestamp.now(),
+            });
         }
+        
+        // Recalculate logic using transaction
+        const monthStr = format(date, 'yyyy-MM');
+        const firstDayOfMonth = format(startOfMonth(date), 'yyyy-MM-dd');
+        
+        const monthlyQuery = query(
+          collection(firestore, 'daily_collections'),
+          where('date', '>=', firstDayOfMonth),
+          where('date', '<=', `${monthStr}-31`),
+          orderBy('date')
+        );
 
-        const newDocRef = doc(collection(firestore, 'daily_collections'));
-        batch.set(newDocRef, {
-            date: formattedDate,
-            dailyCollectionAmount: newDailyAmount,
-            accumulatedMonthlyTotal: 0, // Will be calculated next
-            monthlyGoal: newMonthlyGoal,
-            updatedAt: Timestamp.now(),
-        });
-      }
+        const monthlySnapshot = await getDocs(monthlyQuery);
+        let accumulatedTotal = 0;
+        const sortedDocs = monthlySnapshot.docs.sort((a,b) => a.data().date.localeCompare(b.data().date));
+        
+        for (const snap of sortedDocs) {
+            let currentDailyAmount = snap.data().dailyCollectionAmount;
+            // If it's the doc we are currently editing, use the new amount for calculation
+            if (snap.id === docRef.id) {
+                currentDailyAmount = newDailyAmount;
+            }
+            accumulatedTotal += currentDailyAmount;
+            transaction.update(snap.ref, { accumulatedMonthlyTotal: accumulatedTotal });
+        }
+      });
       
-      await recalculateAndBatchUpdate(batch, date);
-      await batch.commit();
-
       toast({
         title: 'Éxito',
         description: 'El registro ha sido guardado y los totales recalculados.',
@@ -205,6 +222,7 @@ export function DailyCollectionCRUD() {
                 <Button
                   variant={"outline"}
                   className="justify-start text-left font-normal"
+                  disabled={!!editingId}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "dd/MM/yyyy") : <span>Seleccione una fecha</span>}
@@ -292,3 +310,5 @@ export function DailyCollectionCRUD() {
     </Card>
   );
 }
+
+    
