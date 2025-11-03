@@ -6,27 +6,12 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  ChartContainer,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
 import {
   Table,
   TableBody,
@@ -42,13 +27,6 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Check, CheckCircle2, Download } from 'lucide-react';
 import { Button } from '../ui/button';
-
-const chartConfig = {
-  recovered: {
-    label: 'Recuperados',
-    color: 'hsl(var(--chart-1))',
-  },
-} satisfies ChartConfig;
 
 export function DistrictProgress() {
   const firestore = useFirestore();
@@ -141,13 +119,12 @@ export function DistrictProgress() {
             </Button>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-8 md:grid-cols-2">
+      <CardContent>
         {isLoading ? (
           <div className="col-span-2 flex justify-center items-center h-[280px]">
             Cargando datos...
           </div>
         ) : (
-          <>
             <div className="flex flex-col">
               <Table>
                 <TableHeader>
@@ -204,63 +181,6 @@ export function DistrictProgress() {
                 </TableBody>
               </Table>
             </div>
-            <div className="h-[280px] w-full">
-              <ChartContainer config={chartConfig}>
-                <BarChart
-                  accessibilityLayer
-                  data={dataForCurrentMonth}
-                  layout="vertical"
-                  margin={{
-                    left: 10,
-                    right: 40,
-                  }}
-                >
-                  <CartesianGrid horizontal={false} />
-                  <YAxis
-                    dataKey="district"
-                    type="category"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    tickFormatter={(value) => value.slice(0, 12)}
-                    className="text-xs"
-                  />
-                  <XAxis dataKey="recovered" type="number" hide />
-                  <Tooltip
-                    cursor={false}
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) => Number(value).toLocaleString('es-PE')}
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="recovered"
-                    fill="hsl(var(--primary))"
-                    radius={5}
-                  >
-                    <LabelList
-                      position="right"
-                      offset={10}
-                      className="fill-foreground text-sm"
-                      formatter={(value: number) => {
-                        const item = dataForCurrentMonth.find(
-                          (d) => d.recovered === value
-                        );
-                        return item
-                          ? `${(value / 1000).toFixed(1)}k (${
-                              item.monthlyGoal > 0
-                                ? ((value / item.monthlyGoal) * 100).toFixed(0)
-                                : 0
-                            }%)`
-                          : '';
-                      }}
-                    />
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </>
         )}
       </CardContent>
     </Card>
