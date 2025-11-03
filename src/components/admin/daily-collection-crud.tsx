@@ -56,9 +56,10 @@ export function DailyCollectionCRUD() {
     : [];
   
   const handleDelete = async (id: string) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || !dailyCollectionsRef) return;
+    const docRef = doc(dailyCollectionsRef, id);
     try {
-      await deleteDoc(doc(firestore, "daily_collections", id));
+      await deleteDoc(docRef);
       toast({
         title: "Éxito",
         description: "El registro ha sido eliminado.",

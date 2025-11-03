@@ -150,9 +150,10 @@ export function DistrictProgressCRUD() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || !districtProgressRef) return;
+    const docRef = doc(districtProgressRef, id);
     try {
-        await deleteDoc(doc(firestore, "district_progress", id));
+        await deleteDoc(docRef);
         toast({
             title: "Éxito",
             description: "El registro ha sido eliminado.",
