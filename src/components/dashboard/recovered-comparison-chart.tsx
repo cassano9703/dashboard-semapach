@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO, isBefore } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -38,65 +38,58 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
   const firstAvailableDate = new Date(2025, 8, 1); // September 2025
 
   const servicesRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'desc')) : null),
+    () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'asc')) : null),
     [firestore]
   );
   const { data: servicesData, isLoading } = useCollection(servicesRef);
   
-  const { chartData, currentMonthLabel, prevMonthLabel } = useMemo(() => {
-    const prevMonth = subMonths(selectedDate, 1);
-    const currentMonthStart = startOfMonth(selectedDate);
-    const currentMonthEnd = endOfMonth(selectedDate);
-    const prevMonthStart = startOfMonth(prevMonth);
-    const prevMonthEnd = endOfMonth(prevMonth);
-
-    const currentMonthLabel = format(selectedDate, 'MMMM', { locale: es });
-    const prevMonthLabel = format(prevMonth, 'MMMM', { locale: es });
-    
-    const showPreviousMonth = !isBefore(prevMonth, startOfMonth(firstAvailableDate));
-
+  const chartData = useMemo(() => {
     if (!servicesData) {
-      return { chartData: { quantity: [], amount: [] }, currentMonthLabel, prevMonthLabel };
+      return { quantity: [], amount: [] };
     }
 
-    let currentMonthTotalQuantity = 0;
-    let currentMonthTotalAmount = 0;
-    let prevMonthTotalQuantity = 0;
-    let prevMonthTotalAmount = 0;
+    const interval = {
+        start: firstAvailableDate,
+        end: selectedDate,
+    };
 
-    servicesData.forEach(item => {
-      const itemDate = parseISO(item.date + 'T00:00:00');
-      
-      if (isWithinInterval(itemDate, { start: currentMonthStart, end: currentMonthEnd })) {
-        currentMonthTotalQuantity += item.recoveredCount;
-        currentMonthTotalAmount += item.recoveredAmount;
-      } else if (showPreviousMonth && isWithinInterval(itemDate, { start: prevMonthStart, end: prevMonthEnd })) {
-        prevMonthTotalQuantity += item.recoveredCount;
-        prevMonthTotalAmount += item.recoveredAmount;
-      }
+    const monthsInInterval = eachMonthOfInterval(interval);
+
+    const monthlyTotals = monthsInInterval.map(month => {
+        const monthStart = startOfMonth(month);
+        const monthEnd = endOfMonth(month);
+        
+        let totalQuantity = 0;
+        let totalAmount = 0;
+
+        servicesData.forEach(item => {
+            const itemDate = parseISO(item.date + 'T00:00:00');
+            if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
+                totalQuantity += item.recoveredCount;
+                totalAmount += item.recoveredAmount;
+            }
+        });
+
+        return {
+            name: format(month, 'MMM', { locale: es }),
+            quantity: totalQuantity,
+            amount: totalAmount,
+        };
     });
     
-    const quantityData = [];
-    const amountData = [];
-    
-    if (showPreviousMonth) {
-        quantityData.push({ name: prevMonthLabel, value: prevMonthTotalQuantity });
-        amountData.push({ name: prevMonthLabel, value: prevMonthTotalAmount });
-    }
-    quantityData.push({ name: currentMonthLabel, value: currentMonthTotalQuantity });
-    amountData.push({ name: currentMonthLabel, value: currentMonthTotalAmount });
+    const quantityData = monthlyTotals.map(({name, quantity}) => ({name, value: quantity}));
+    const amountData = monthlyTotals.map(({name, amount}) => ({name, value: amount}));
 
-
-    return { chartData: { quantity: quantityData, amount: amountData }, currentMonthLabel, prevMonthLabel };
+    return { quantity: quantityData, amount: amountData };
   }, [servicesData, selectedDate, firstAvailableDate]);
 
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Comparativa Mensual de Recuperados</CardTitle>
+        <CardTitle>Evolución Mensual de Recuperados</CardTitle>
         <CardDescription>
-          Comparación de la cantidad de servicios y montos recuperados entre el mes actual y el anterior.
+          Evolución de la cantidad de servicios y montos recuperados desde el inicio de la data.
         </CardDescription>
       </CardHeader>
       <CardContent>
