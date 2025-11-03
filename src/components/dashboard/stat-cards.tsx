@@ -67,7 +67,9 @@ export function StatCards({ selectedDate }: StatCardsProps) {
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
   
-  const dailyCollectionDescription = `Total del ${format(selectedDate, 'd MMM yyyy', { locale: es })}`;
+  const dailyCollectionDescription = stats.lastUpdated
+    ? `Actualizado el ${format(stats.lastUpdated.toDate(), "d MMM 'a las' HH:mm", { locale: es })}`
+    : `Total del ${format(selectedDate, 'd MMM yyyy', { locale: es })}`;
 
 
   const cardData = [
