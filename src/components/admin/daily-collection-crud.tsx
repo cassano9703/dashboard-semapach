@@ -21,10 +21,10 @@ import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy, WriteBatch } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -54,15 +54,47 @@ export function DailyCollectionCRUD() {
   const sortedData = dailyCollectionData
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
     : [];
-  
-  const handleDelete = async (id: string) => {
+
+  const recalculateAndBatchUpdate = async (batch: WriteBatch, monthDate: Date) => {
     if (!firestore) return;
-    const docRef = doc(firestore, "daily_collections", id);
+
+    const monthStr = format(monthDate, 'yyyy-MM');
+    const firstDayOfMonth = format(startOfMonth(monthDate), 'yyyy-MM-dd');
+    
+    const q = query(
+      collection(firestore, 'daily_collections'),
+      where('date', '>=', firstDayOfMonth),
+      where('date', '<=', `${monthStr}-31`),
+      orderBy('date')
+    );
+
+    const snapshot = await getDocs(q);
+    let accumulatedTotal = 0;
+
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      accumulatedTotal += data.dailyCollectionAmount;
+      batch.update(doc(firestore, 'daily_collections', docSnap.id), {
+        accumulatedMonthlyTotal: accumulatedTotal
+      });
+    }
+  };
+  
+  const handleDelete = async (item: any) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, "daily_collections", item.id);
     try {
+      const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
+      
       await deleteDoc(docRef);
+      
+      const batch = writeBatch(firestore);
+      await recalculateAndBatchUpdate(batch, itemDate);
+      await batch.commit();
+
       toast({
         title: "Éxito",
-        description: "El registro ha sido eliminado.",
+        description: "El registro ha sido eliminado y los totales recalculados.",
       });
     } catch (e: any) {
       toast({
@@ -105,22 +137,16 @@ export function DailyCollectionCRUD() {
     const newMonthlyGoal = parseFloat(monthlyGoal);
 
     try {
-      // If we are editing, we update the document
+      const batch = writeBatch(firestore);
+
       if (editingId) {
         const docRef = doc(firestore, 'daily_collections', editingId);
-        await runTransaction(firestore, async (transaction) => {
-          transaction.update(docRef, {
-            date: formattedDate,
+        batch.update(docRef, {
             dailyCollectionAmount: newDailyAmount,
             monthlyGoal: newMonthlyGoal,
             updatedAt: Timestamp.now(),
-          });
         });
-         toast({
-          title: 'Éxito',
-          description: 'El registro ha sido actualizado.',
-        });
-      } else { // If not editing, we add a new document
+      } else {
         const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
         const existingDocs = await getDocs(q);
         if (!existingDocs.empty) {
@@ -133,34 +159,22 @@ export function DailyCollectionCRUD() {
         }
 
         const newDocRef = doc(collection(firestore, 'daily_collections'));
-        await runTransaction(firestore, async (transaction) => {
-           const monthStr = format(date, 'yyyy-MM');
-           // Query for all documents in the same month, up to (but not including) the current date
-           const monthQuery = query(
-              collection(firestore, 'daily_collections'),
-              where('date', '>=', `${monthStr}-01`),
-              where('date', '<', formattedDate),
-              orderBy('date', 'desc')
-            );
-            const monthSnapshot = await getDocs(monthQuery);
-            
-            // The accumulated amount is the sum of previous days + the new amount
-            const previousDaysTotal = monthSnapshot.docs.reduce((acc, doc) => acc + doc.data().dailyCollectionAmount, 0);
-            const accumulated = previousDaysTotal + newDailyAmount;
-
-            transaction.set(newDocRef, {
-                date: formattedDate,
-                dailyCollectionAmount: newDailyAmount,
-                accumulatedMonthlyTotal: accumulated, 
-                monthlyGoal: newMonthlyGoal,
-                updatedAt: Timestamp.now(),
-            });
-        });
-        toast({
-          title: 'Éxito',
-          description: 'El nuevo registro ha sido agregado.',
+        batch.set(newDocRef, {
+            date: formattedDate,
+            dailyCollectionAmount: newDailyAmount,
+            accumulatedMonthlyTotal: 0, // Will be calculated next
+            monthlyGoal: newMonthlyGoal,
+            updatedAt: Timestamp.now(),
         });
       }
+      
+      await recalculateAndBatchUpdate(batch, date);
+      await batch.commit();
+
+      toast({
+        title: 'Éxito',
+        description: 'El registro ha sido guardado y los totales recalculados.',
+      });
       
       clearForm();
       
@@ -264,7 +278,7 @@ export function DailyCollectionCRUD() {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
