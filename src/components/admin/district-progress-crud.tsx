@@ -117,13 +117,15 @@ export function DistrictProgressCRUD() {
       if (editingId) {
         // Update existing document
         const docRef = doc(firestore, 'district_progress', editingId);
-        await writeBatch(firestore).update(docRef, {
+        const batch = writeBatch(firestore);
+        batch.update(docRef, {
           month: monthStr,
           district: selectedDistrict,
           monthlyGoal: newMonthlyGoal,
           recovered: newRecoveredAmount,
           updatedAt: Timestamp.now(),
-        }).commit();
+        });
+        batch.commit();
 
         toast({
           variant: 'success',
@@ -142,7 +144,7 @@ export function DistrictProgressCRUD() {
     
         if (querySnapshot.empty) {
           // Add new document
-          await addDoc(collection(firestore, 'district_progress'), {
+          addDoc(collection(firestore, 'district_progress'), {
             month: monthStr,
             district: selectedDistrict,
             monthlyGoal: newMonthlyGoal,
@@ -263,7 +265,7 @@ export function DistrictProgressCRUD() {
 
         {/* Data Table */}
         <div className="border rounded-lg overflow-hidden">
-          <div className="relative max-h-[400px] overflow-y-auto">
+          <div className="relative max-h-96 overflow-y-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>

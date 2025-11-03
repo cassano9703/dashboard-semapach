@@ -118,7 +118,7 @@ export function RecoveredServicesCRUD() {
       if (editingId) {
         // Update existing document
         const docRef = doc(firestore, 'recovered_services', editingId);
-        await updateDoc(docRef, {
+        updateDoc(docRef, {
           // date field is not updated to prevent moving records between dates, only data is updated
           district: selectedDistrict,
           recoveredCount: newRecoveredCount,
@@ -139,7 +139,7 @@ export function RecoveredServicesCRUD() {
     
         if (querySnapshot.empty) {
           // Add new document
-          await addDoc(collection(firestore, 'recovered_services'), {
+          addDoc(collection(firestore, 'recovered_services'), {
             date: formattedDate,
             district: selectedDistrict,
             recoveredCount: newRecoveredCount,
@@ -248,7 +248,7 @@ export function RecoveredServicesCRUD() {
 
         {/* Data Table */}
         <div className="border rounded-lg overflow-hidden">
-          <div className="relative max-h-[400px] overflow-y-auto">
+          <div className="relative max-h-96 overflow-y-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>

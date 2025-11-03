@@ -115,14 +115,15 @@ export function DailyCollectionCRUD() {
         batch.delete(docRef);
         await batch.commit();
         
-        // After deletion, run a full recalculation
-        await recalculateMonthAndCommit(itemDate);
-
         toast({
             variant: "success",
             title: "Éxito",
-            description: "El registro ha sido eliminado y los totales recalculados.",
+            description: "El registro ha sido eliminado. Recalculando totales...",
         });
+
+        // After deletion, run a full recalculation in the background
+        recalculateMonthAndCommit(itemDate);
+
     } catch (e: any) {
         toast({
             variant: "destructive",
@@ -187,16 +188,16 @@ export function DailyCollectionCRUD() {
             });
         }
         
-        // After adding or updating, recalculate the entire month
-        await recalculateMonthAndCommit(date);
-        
         toast({
             variant: "success",
             title: 'Éxito',
-            description: 'El registro ha sido guardado y los totales recalculados.',
+            description: 'El registro ha sido guardado. Recalculando totales...',
         });
         
         clearForm();
+        
+        // After adding or updating, recalculate the entire month in the background
+        recalculateMonthAndCommit(date);
         
     } catch (error: any) {
        toast({
