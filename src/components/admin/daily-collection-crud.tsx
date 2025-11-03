@@ -24,7 +24,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
