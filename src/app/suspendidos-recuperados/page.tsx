@@ -22,6 +22,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, DollarSign, UserCheck, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 
 const districts = [
   'Chincha Alta',
@@ -82,6 +83,8 @@ export default function SuspendidosRecuperadosPage() {
         </Card>
       </div>
 
+      <RecoveredComparisonChart selectedDate={selectedDate} />
+      
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
