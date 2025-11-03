@@ -31,9 +31,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import {useMemo} from 'react';
+import {useMemo, useState} from 'react';
 import {format} from 'date-fns';
 import {es} from 'date-fns/locale';
+import { Button } from '../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/calendar';
 
 const chartConfig = {
   dailyCollectionAmount: {
@@ -54,6 +58,7 @@ const formatCurrency = (value: number) =>
 
 export function DailyCollectionChart() {
   const firestore = useFirestore();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const dailyCollectionsRef = useMemoFirebase(
     () => collection(firestore, 'daily_collections'),
@@ -66,11 +71,10 @@ export function DailyCollectionChart() {
       return { chartData: [], monthlyGoal: 0 };
     }
 
-    const today = new Date();
-    const currentMonth = today.toISOString().substring(0, 7);
+    const monthStr = format(selectedDate, 'yyyy-MM');
 
     const dataForMonth = dailyCollectionData
-      .filter(item => item.date.startsWith(currentMonth))
+      .filter(item => item.date.startsWith(monthStr))
       .sort((a, b) => a.date.localeCompare(b.date));
     
     if (dataForMonth.length === 0) {
@@ -85,20 +89,46 @@ export function DailyCollectionChart() {
     }));
 
     return { chartData: processedData, monthlyGoal: goal };
-  }, [dailyCollectionData]);
+  }, [dailyCollectionData, selectedDate]);
 
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análisis de Recaudación Mensual</CardTitle>
-        <CardDescription>
-          Muestra la recaudación diaria y el acumulado mensual frente a la meta.
-        </CardDescription>
+        <div className="flex justify-between items-start">
+            <div>
+                <CardTitle>Análisis de Recaudación Mensual</CardTitle>
+                <CardDescription>
+                  Muestra la recaudación diaria y el acumulado mensual frente a la meta.
+                </CardDescription>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  locale={es}
+                  defaultMonth={selectedDate}
+                />
+              </PopoverContent>
+            </Popover>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center h-[250px]">Cargando datos...</div>
+        ) : chartData.length === 0 ? (
+          <div className="flex justify-center items-center h-[250px] text-muted-foreground">
+            No hay datos para el mes seleccionado.
+          </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <LineChart
