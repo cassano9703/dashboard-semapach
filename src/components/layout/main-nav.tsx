@@ -70,27 +70,14 @@ export function MainNav() {
           ))}
            {isAdmin && (
              <SidebarMenuItem>
-              <SidebarMenuSub>
                 <SidebarMenuButton
+                  href="/admin"
                   isActive={pathname.startsWith('/admin')}
                   tooltip="Administración"
                 >
                   <Shield />
                   <span>Admin</span>
                 </SidebarMenuButton>
-                <SidebarMenuSubContent>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="/admin">
-                      Gestionar Datos
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="/admin/set-role">
-                      Gestionar Roles
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSubContent>
-              </SidebarMenuSub>
              </SidebarMenuItem>
            )}
         </SidebarMenu>
