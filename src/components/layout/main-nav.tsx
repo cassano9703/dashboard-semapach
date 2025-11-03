@@ -22,7 +22,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 
 const allNavItems = [
@@ -78,6 +77,14 @@ export function MainNav() {
                   <Shield />
                   <span>Admin</span>
                 </SidebarMenuButton>
+                 <SidebarMenuSub>
+                    <SidebarMenuSubButton href="/admin" isActive={pathname === '/admin'}>
+                        Gestión de Datos
+                    </SidebarMenuSubButton>
+                    <SidebarMenuSubButton href="/admin/set-role" isActive={pathname === '/admin/set-role'}>
+                        Asignar Roles
+                    </SidebarMenuSubButton>
+                </SidebarMenuSub>
              </SidebarMenuItem>
            )}
         </SidebarMenu>
