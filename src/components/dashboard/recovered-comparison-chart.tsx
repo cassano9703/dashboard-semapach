@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, eachMonthOfInterval, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -49,7 +49,7 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
   const { data: servicesData, isLoading } = useCollection(servicesRef);
   
   const chartData = useMemo(() => {
-    if (!servicesData) {
+    if (!servicesData || selectedDate < firstAvailableDate) {
       return { quantity: [], amount: [] };
     }
 
@@ -57,14 +57,8 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
         start: firstAvailableDate,
         end: selectedDate,
     };
-    
-    // Ensure the interval start is not before the first available date
-    const validIntervalStart = interval.start < firstAvailableDate ? firstAvailableDate : interval.start;
-    if (selectedDate < validIntervalStart) {
-        return { quantity: [], amount: [] };
-    }
 
-    const monthsInInterval = eachMonthOfInterval({start: validIntervalStart, end: selectedDate});
+    const monthsInInterval = eachMonthOfInterval(interval);
 
     const monthlyTotals = monthsInInterval.map(month => {
         const monthStart = startOfMonth(month);
@@ -102,7 +96,7 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
             <div>
               <CardTitle>Evolución Mensual de Recuperados</CardTitle>
               <CardDescription>
-                Evolución de la cantidad de usuarios y montos recuperados desde el inicio de la data.
+                Cantidad de usuarios y montos recuperados por mes.
               </CardDescription>
             </div>
             <Popover>
