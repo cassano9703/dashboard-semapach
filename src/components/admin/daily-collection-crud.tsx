@@ -24,7 +24,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, addDoc, doc, deleteDoc, runTransaction } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -48,16 +48,95 @@ export function DailyCollectionCRUD() {
   const { data: dailyCollectionData, isLoading: isDataLoading } = useCollection(dailyCollectionsRef);
 
   const [date, setDate] = useState<Date>();
+  const [dailyAmount, setDailyAmount] = useState('');
+  const [monthlyGoal, setMonthlyGoal] = useState('');
   
   const sortedData = dailyCollectionData
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
     : [];
 
-  const handleActionClick = () => {
-    toast({
+  const handleAdd = async () => {
+    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
+      toast({
         variant: "destructive",
-        title: "Función Deshabilitada",
-        description: "Las acciones de escritura (agregar, editar, borrar) están deshabilitadas por falta de permisos en el servidor.",
+        title: "Error de Validación",
+        description: "Todos los campos son requeridos para agregar un registro.",
+      });
+      return;
+    }
+
+    const newDoc = {
+      date: format(date, 'yyyy-MM-dd'),
+      dailyCollectionAmount: parseFloat(dailyAmount),
+      monthlyGoal: parseFloat(monthlyGoal),
+      accumulatedMonthlyTotal: 0, // Se calculará en la transacción
+      createdAt: new Date(),
+    };
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const monthStr = format(date, 'yyyy-MM');
+        
+        // 1. Encontrar el último acumulado del mes.
+        const monthDocs = sortedData
+          .filter(d => d.date.startsWith(monthStr))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        const lastDayOfMonth = monthDocs[monthDocs.length - 1];
+        const lastAccumulated = lastDayOfMonth ? lastDayOfMonth.accumulatedMonthlyTotal : 0;
+        
+        newDoc.accumulatedMonthlyTotal = lastAccumulated + newDoc.dailyCollectionAmount;
+
+        // 2. Agregar el nuevo documento.
+        // Como no podemos leer después de escribir en una transacción, agregamos el doc al final
+        const newDocRef = doc(collection(firestore, 'daily_collections'));
+        transaction.set(newDocRef, newDoc);
+      });
+
+      toast({
+        title: "Éxito",
+        description: "Registro de recaudación diaria agregado correctamente.",
+      });
+      // Reset form
+      setDate(undefined);
+      setDailyAmount('');
+      setMonthlyGoal('');
+    } catch (error: any) {
+      console.error("Error adding document: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error al Agregar",
+        description: error.code === 'permission-denied' 
+          ? "No tienes permisos para agregar registros." 
+          : "Ocurrió un error al agregar el registro.",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, "daily_collections", id));
+      toast({
+        title: "Éxito",
+        description: "Registro eliminado correctamente.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting document: ", error);
+       toast({
+        variant: "destructive",
+        title: "Error al Eliminar",
+        description: error.code === 'permission-denied' 
+          ? "No tienes permisos para eliminar registros." 
+          : "Ocurrió un error al eliminar el registro.",
+      });
+    }
+  };
+  
+  const handleEditClick = () => {
+    toast({
+        title: "Función no implementada",
+        description: "La edición de registros se implementará próximamente.",
     });
   }
 
@@ -96,13 +175,13 @@ export function DailyCollectionCRUD() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="daily-collection">Recaudación Diaria</Label>
-            <Input id="daily-collection" placeholder="S/ 0.00" />
+            <Input id="daily-collection" placeholder="S/ 0.00" type="number" value={dailyAmount} onChange={(e) => setDailyAmount(e.target.value)} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
-            <Input id="monthly-goal" placeholder="2850000" />
+            <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleActionClick}>
+          <Button className="w-full md:w-auto" onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
             Agregar
           </Button>
@@ -137,10 +216,10 @@ export function DailyCollectionCRUD() {
                   <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={handleEditClick}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleActionClick}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
