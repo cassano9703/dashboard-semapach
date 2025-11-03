@@ -94,7 +94,7 @@ export default function SuspendidosRecuperadosPage() {
     };
   }, [servicesData, selectedDate]);
   
-  const fromDate = new Date(2023, 8, 1);
+  const fromDate = new Date(2025, 8, 1);
 
 
   return (

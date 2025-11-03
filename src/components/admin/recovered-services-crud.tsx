@@ -179,7 +179,7 @@ export function RecoveredServicesCRUD() {
     }
   };
   
-  const fromDate = new Date(2023, 8, 1);
+  const fromDate = new Date(2025, 8, 1);
 
   return (
     <Card>
