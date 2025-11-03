@@ -157,7 +157,7 @@ export default function SuspendidosRecuperadosPage() {
               <div className="text-center p-8">Cargando datos...</div>
             ) : (
               <Table>
-                <TableHeader className="sticky top-0 bg-card z-10">
+                <TableHeader className="sticky top-0 bg-muted z-10">
                   <TableRow>
                     <TableHead>Distrito</TableHead>
                     <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
