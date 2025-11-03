@@ -31,7 +31,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import {useMemo, useState} from 'react';
+import {useMemo} from 'react';
 import {format} from 'date-fns';
 import {es} from 'date-fns/locale';
 import { Button } from '../ui/button';
@@ -55,10 +55,14 @@ const formatCurrency = (value: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+  
+interface DailyCollectionChartProps {
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+}
 
-export function DailyCollectionChart() {
+export function DailyCollectionChart({ selectedDate, onDateChange }: DailyCollectionChartProps) {
   const firestore = useFirestore();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const dailyCollectionsRef = useMemoFirebase(
     () => collection(firestore, 'daily_collections'),
@@ -113,7 +117,7 @@ export function DailyCollectionChart() {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => date && onDateChange(date)}
                   initialFocus
                   locale={es}
                   defaultMonth={selectedDate}

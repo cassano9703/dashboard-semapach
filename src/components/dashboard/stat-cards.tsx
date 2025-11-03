@@ -10,7 +10,7 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {DollarSign, Goal, Percent, TrendingUp} from 'lucide-react';
 import { useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const formatCurrency = (value: number) =>
@@ -19,7 +19,11 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-export function StatCards() {
+interface StatCardsProps {
+    selectedDate: Date;
+}
+
+export function StatCards({ selectedDate }: StatCardsProps) {
   const firestore = useFirestore();
 
   const dailyCollectionsRef = useMemoFirebase(
@@ -38,24 +42,29 @@ export function StatCards() {
       };
     }
     
-    const today = new Date().toISOString().split('T')[0];
-    const currentMonth = today.substring(0, 7);
+    const selectedDayStr = format(selectedDate, 'yyyy-MM-dd');
+    const selectedMonthStr = format(selectedDate, 'yyyy-MM');
 
-    const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(currentMonth));
+    const collectionsForMonth = dailyCollectionData.filter(item => item.date.startsWith(selectedMonthStr));
     
-    const latestCollectionForToday = dailyCollectionData
-      .filter(item => item.date === today)
-      .sort((a, b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
+    let dailyCollection = 0;
+    let lastUpdated = null;
 
-    const dailyCollection = latestCollectionForToday?.dailyCollectionAmount || 0;
+    // "Recaudación del día" solo tiene sentido si el mes seleccionado es el mes actual
+    // y el día seleccionado es hoy.
+    if (isSameDay(selectedDate, new Date())) {
+        const latestCollectionForToday = dailyCollectionData
+        .filter(item => item.date === selectedDayStr)
+        .sort((a, b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
+
+        dailyCollection = latestCollectionForToday?.dailyCollectionAmount || 0;
+        lastUpdated = latestCollectionForToday?.updatedAt || null;
+    }
+
     const monthlyAccumulated = collectionsForMonth.reduce((acc, item) => acc + item.dailyCollectionAmount, 0);
 
-    // Find the latest goal set for the month
     const latestGoalEntry = [...collectionsForMonth].sort((a,b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))[0];
     const monthlyGoal = latestGoalEntry?.monthlyGoal || 0;
-    
-    const lastUpdated = latestCollectionForToday?.updatedAt || null;
-
 
     return {
       dailyCollection,
@@ -63,17 +72,26 @@ export function StatCards() {
       monthlyGoal,
       lastUpdated
     };
-  }, [dailyCollectionData]);
+  }, [dailyCollectionData, selectedDate]);
 
 
   const progress = stats.monthlyGoal > 0 ? (stats.monthlyAccumulated / stats.monthlyGoal) * 100 : 0;
-  const lastUpdatedTime = stats.lastUpdated ? format(stats.lastUpdated.toDate(), "'a las' hh:mm a", { locale: es }) : '';
+  
+  let lastUpdatedText = '';
+  if (stats.lastUpdated) {
+    lastUpdatedText = `Actualizado 'a las' ${format(stats.lastUpdated.toDate(), "hh:mm a", { locale: es })}`;
+  } else if (isSameDay(selectedDate, new Date())) {
+    lastUpdatedText = 'Aún no hay datos para hoy';
+  } else {
+    lastUpdatedText = `Total del ${format(selectedDate, 'd MMM yyyy', {locale: es})}`
+  }
+
 
   const cardData = [
     {
       title: 'Recaudación del Día',
       value: formatCurrency(stats.dailyCollection),
-      description: `Actualizado ${lastUpdatedTime}`,
+      description: lastUpdatedText,
       icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
     },
     {

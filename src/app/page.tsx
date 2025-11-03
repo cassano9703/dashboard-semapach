@@ -1,13 +1,18 @@
-import {DailyCollectionChart} from '@/components/dashboard/daily-collection-chart';
-import {DistrictProgress} from '@/components/dashboard/district-progress';
-import {StatCards} from '@/components/dashboard/stat-cards';
+'use client';
+
+import { DailyCollectionChart } from '@/components/dashboard/daily-collection-chart';
+import { DistrictProgress } from '@/components/dashboard/district-progress';
+import { StatCards } from '@/components/dashboard/stat-cards';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
-  const currentMonth = format(new Date(), "MMMM 'de' yyyy", { locale: es });
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
+  const currentMonth = format(selectedDate, "MMMM 'de' yyyy", { locale: es });
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -17,8 +22,8 @@ export default function Home() {
           <p className="text-lg font-medium capitalize">{currentMonth}</p>
         </div>
       </div>
-      <StatCards />
-      <DailyCollectionChart />
+      <StatCards selectedDate={selectedDate} />
+      <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <DistrictProgress />
     </div>
   );
