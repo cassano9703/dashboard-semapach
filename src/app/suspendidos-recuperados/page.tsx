@@ -43,7 +43,6 @@ const formatCurrency = (value: number) =>
 export default function SuspendidosRecuperadosPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const firestore = useFirestore();
-  const fromDate = new Date(2025, 8, 1);
 
   const servicesRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'recovered_services'), orderBy('date', 'desc')) : null),
@@ -100,7 +99,7 @@ export default function SuspendidosRecuperadosPage() {
       </h1>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recuperados del Día</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
@@ -112,7 +111,7 @@ export default function SuspendidosRecuperadosPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Recuperados (Mes)</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -124,7 +123,7 @@ export default function SuspendidosRecuperadosPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monto Total Recuperado (Mes)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -144,7 +143,7 @@ export default function SuspendidosRecuperadosPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Resumen de Servicios Recuperados por Distrito</CardTitle>
+              <CardTitle>Resumen de Usuarios Recuperados por Distrito</CardTitle>
               <CardDescription>
                 Datos correspondientes al mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}. La gestión de estos datos se realiza en el panel de Administración.
               </CardDescription>
@@ -153,11 +152,12 @@ export default function SuspendidosRecuperadosPage() {
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
+            <div className="relative max-h-96 overflow-y-auto">
              {isLoading ? (
               <div className="text-center p-8">Cargando datos...</div>
             ) : (
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
                     <TableHead>Distrito</TableHead>
                     <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
@@ -178,6 +178,7 @@ export default function SuspendidosRecuperadosPage() {
                 </TableBody>
               </Table>
             )}
+            </div>
           </div>
         </CardContent>
       </Card>
