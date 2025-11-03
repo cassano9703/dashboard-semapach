@@ -23,11 +23,7 @@ export default function AdminPage() {
     // Si la carga ha terminado y el usuario no es admin ni super admin,
     // o si no hay usuario, redirigir.
     if (!isAdmin && !isSuperAdmin) {
-      if (user) {
-        router.push('/'); // Si hay un usuario logueado pero no es admin
-      } else {
-        router.push('/login'); // Si no hay ningún usuario logueado
-      }
+      router.push('/');
     }
   }, [user, claims, isUserLoading, router]);
   

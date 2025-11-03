@@ -37,9 +37,11 @@ export const setAdminRole = ai.defineFlow(
     outputSchema: SetAdminRoleOutputSchema,
     auth: (auth, input) => {
         // Esta es una política de autorización de Genkit.
+        // Permite que el superadmin temporal se asigne el rol.
+        if (auth?.email === 'cassano9703@gmail.com') {
+          return;
+        }
         // Solo permite que usuarios con el claim 'role: admin' ejecuten este flow.
-        // O el superadmin temporal
-        if (auth?.email === 'cassano9703@gmail.com') return;
         if (auth?.custom?.role !== 'admin') {
             throw new Error('No tienes permisos para realizar esta acción.');
         }
