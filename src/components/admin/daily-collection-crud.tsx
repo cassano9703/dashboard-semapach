@@ -69,7 +69,7 @@ export function DailyCollectionCRUD() {
 
   const sortedData = dailyCollectionData || [];
 
-  const recalculateMonthAndCommit = async (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
+  const recalculateMonthAndCommit = (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
     if (!firestore) return;
 
     const monthStart = format(startOfMonth(monthDate), 'yyyy-MM-dd');
@@ -82,30 +82,31 @@ export function DailyCollectionCRUD() {
       orderBy('date')
     );
 
-    const snapshot = await getDocs(q);
-    const batch = writeBatch(firestore);
+    getDocs(q).then(snapshot => {
+      const batch = writeBatch(firestore);
 
-    // Apply any pre-batch operations (like delete)
-    preBatch?.(batch);
-    
-    let accumulatedTotal = 0;
-    
-    snapshot.docs.forEach(docSnap => {
-      const data = docSnap.data();
-      // Skip the document if it's marked for deletion in the pre-batch
-      if (preBatch && docSnap.id === (preBatch as any).__deletedDocId) {
-          return;
-      }
-      accumulatedTotal += data.dailyCollectionAmount;
-      batch.update(doc(firestore, 'daily_collections', docSnap.id), {
-        accumulatedMonthlyTotal: accumulatedTotal
+      // Apply any pre-batch operations (like delete)
+      preBatch?.(batch);
+      
+      let accumulatedTotal = 0;
+      
+      snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        // Skip the document if it's marked for deletion in the pre-batch
+        if (preBatch && docSnap.id === (preBatch as any).__deletedDocId) {
+            return;
+        }
+        accumulatedTotal += data.dailyCollectionAmount;
+        batch.update(doc(firestore, 'daily_collections', docSnap.id), {
+          accumulatedMonthlyTotal: accumulatedTotal
+        });
       });
-    });
 
-    await batch.commit();
+      batch.commit();
+    });
   };
   
-  const handleDelete = async (item: any) => {
+  const handleDelete = (item: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "daily_collections", item.id);
     const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
@@ -113,7 +114,7 @@ export function DailyCollectionCRUD() {
     try {
         const batch = writeBatch(firestore);
         batch.delete(docRef);
-        await batch.commit();
+        batch.commit();
         
         toast({
             variant: "success",
@@ -151,7 +152,7 @@ export function DailyCollectionCRUD() {
     setMonthlyGoal('');
   }
 
-  const handleAddOrUpdate = async () => {
+  const handleAddOrUpdate = () => {
     if (!firestore || !date || !dailyAmount || !monthlyGoal) {
       toast({
         variant: 'destructive',
@@ -168,23 +169,24 @@ export function DailyCollectionCRUD() {
     try {
         if (editingId) {
             const docRef = doc(firestore, 'daily_collections', editingId);
-            await updateDoc(docRef, {
+            updateDoc(docRef, {
                 dailyCollectionAmount: newDailyAmount,
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
         } else {
             const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
-            const existingDocs = await getDocs(q);
-            if (!existingDocs.empty) {
-                throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
-            }
-            await addDoc(collection(firestore, 'daily_collections'), {
-                date: formattedDate,
-                dailyCollectionAmount: newDailyAmount,
-                accumulatedMonthlyTotal: 0, // Will be recalculated
-                monthlyGoal: newMonthlyGoal,
-                updatedAt: Timestamp.now(),
+            getDocs(q).then(existingDocs => {
+                if (!existingDocs.empty) {
+                    throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
+                }
+                addDoc(collection(firestore, 'daily_collections'), {
+                    date: formattedDate,
+                    dailyCollectionAmount: newDailyAmount,
+                    accumulatedMonthlyTotal: 0, // Will be recalculated
+                    monthlyGoal: newMonthlyGoal,
+                    updatedAt: Timestamp.now(),
+                });
             });
         }
         
@@ -268,7 +270,7 @@ export function DailyCollectionCRUD() {
         <div className="border rounded-lg overflow-hidden">
           <div className="relative max-h-96 overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-card z-10">
+              <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Recaudación Diaria</TableHead>

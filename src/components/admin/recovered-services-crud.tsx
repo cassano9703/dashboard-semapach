@@ -91,7 +91,7 @@ export function RecoveredServicesCRUD() {
     setRecoveredAmount(item.recoveredAmount.toString());
   };
 
-  const handleAddOrUpdate = async () => {
+  const handleAddOrUpdate = () => {
     if (!firestore || !date || !selectedDistrict || !recoveredCount || !recoveredAmount) {
       toast({
         variant: 'destructive',
@@ -135,26 +135,25 @@ export function RecoveredServicesCRUD() {
           where('district', '==', selectedDistrict)
         );
     
-        const querySnapshot = await getDocs(q);
-    
-        if (querySnapshot.empty) {
-          // Add new document
-          addDoc(collection(firestore, 'recovered_services'), {
-            date: formattedDate,
-            district: selectedDistrict,
-            recoveredCount: newRecoveredCount,
-            recoveredAmount: newRecoveredAmount,
-            updatedAt: Timestamp.now(),
-          });
-          toast({ variant: 'success', title: 'Éxito', description: 'El nuevo registro ha sido creado.' });
-        } else {
-           toast({
-            variant: 'destructive',
-            title: 'Error: Registro Duplicado',
-            description: `Ya existe un registro para ${selectedDistrict} en la fecha ${format(date, "dd/MM/yyyy")}.`,
-          });
-          return;
-        }
+        getDocs(q).then(querySnapshot => {
+            if (querySnapshot.empty) {
+              // Add new document
+              addDoc(collection(firestore, 'recovered_services'), {
+                date: formattedDate,
+                district: selectedDistrict,
+                recoveredCount: newRecoveredCount,
+                recoveredAmount: newRecoveredAmount,
+                updatedAt: Timestamp.now(),
+              });
+              toast({ variant: 'success', title: 'Éxito', description: 'El nuevo registro ha sido creado.' });
+            } else {
+               toast({
+                variant: 'destructive',
+                title: 'Error: Registro Duplicado',
+                description: `Ya existe un registro para ${selectedDistrict} en la fecha ${format(date, "dd/MM/yyyy")}.`,
+              });
+            }
+        });
       }
       
       clearForm();
@@ -168,11 +167,11 @@ export function RecoveredServicesCRUD() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, "recovered_services", id);
     try {
-        await deleteDoc(docRef);
+        deleteDoc(docRef);
         toast({ variant: 'success', title: "Éxito", description: "El registro ha sido eliminado." });
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error al eliminar", description: e.message });
@@ -184,9 +183,9 @@ export function RecoveredServicesCRUD() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestionar Servicios Suspendidos Recuperados</CardTitle>
+        <CardTitle>Gestionar Usuarios Suspendidos Recuperados</CardTitle>
         <CardDescription>
-          Añada, edite o elimine los registros diarios de servicios recuperados por distrito.
+          Añada, edite o elimine los registros diarios de usuarios recuperados por distrito.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -250,7 +249,7 @@ export function RecoveredServicesCRUD() {
         <div className="border rounded-lg overflow-hidden">
           <div className="relative max-h-96 overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-card z-10">
+              <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Distrito</TableHead>

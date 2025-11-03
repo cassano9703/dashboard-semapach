@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -95,7 +94,7 @@ export default function SuspendidosRecuperadosPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">
-        Reporte de Suspendidos Recuperados
+        Reporte de Usuarios Recuperados
       </h1>
 
       <div className="grid gap-4 md:grid-cols-3">

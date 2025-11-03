@@ -99,7 +99,7 @@ export function DistrictProgressCRUD() {
     setRecoveredAmount(item.recovered.toString());
   };
 
-  const handleAddOrUpdate = async () => {
+  const handleAddOrUpdate = () => {
     if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
       toast({
         variant: 'destructive',
@@ -140,30 +140,29 @@ export function DistrictProgressCRUD() {
           where('district', '==', selectedDistrict)
         );
     
-        const querySnapshot = await getDocs(q);
-    
-        if (querySnapshot.empty) {
-          // Add new document
-          addDoc(collection(firestore, 'district_progress'), {
-            month: monthStr,
-            district: selectedDistrict,
-            monthlyGoal: newMonthlyGoal,
-            recovered: newRecoveredAmount,
-            updatedAt: Timestamp.now(),
-          });
-          toast({
-            variant: 'success',
-            title: 'Éxito',
-            description: 'El nuevo registro de avance ha sido creado.',
-          });
-        } else {
-           toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: `Ya existe un registro para ${selectedDistrict} en ${format(date, "MMMM yyyy", {locale: es})}.`,
-          });
-          return;
-        }
+        getDocs(q).then(querySnapshot => {
+            if (querySnapshot.empty) {
+              // Add new document
+              addDoc(collection(firestore, 'district_progress'), {
+                month: monthStr,
+                district: selectedDistrict,
+                monthlyGoal: newMonthlyGoal,
+                recovered: newRecoveredAmount,
+                updatedAt: Timestamp.now(),
+              });
+              toast({
+                variant: 'success',
+                title: 'Éxito',
+                description: 'El nuevo registro de avance ha sido creado.',
+              });
+            } else {
+               toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: `Ya existe un registro para ${selectedDistrict} en ${format(date, "MMMM yyyy", {locale: es})}.`,
+              });
+            }
+        });
       }
       
       clearForm();
@@ -267,7 +266,7 @@ export function DistrictProgressCRUD() {
         <div className="border rounded-lg overflow-hidden">
           <div className="relative max-h-96 overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-card z-10">
+              <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
                   <TableHead>Mes</TableHead>
                   <TableHead>Distrito</TableHead>
