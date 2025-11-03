@@ -11,22 +11,22 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading) {
-      // If loading is finished, check for user and role
-      if (!user) {
-        // If no user, redirect to login
-        router.push('/login');
-      } else if (claims?.claims?.role !== 'admin') {
-        // If user is not an admin, redirect to home
-        router.push('/');
-      }
+    // No esperamos a que la carga termine para redirigir.
+    // Si en cualquier punto sabemos que no es admin, redirigimos.
+    if (!isUserLoading && claims && claims.claims.role !== 'admin') {
+      router.push('/');
+    }
+    // Si no hay usuario y la carga ha terminado, redirigir a login.
+    if (!isUserLoading && !user) {
+      router.push('/login');
     }
   }, [user, claims, isUserLoading, router]);
 
-  // Show a loading state while we verify auth and roles
-  if (isUserLoading || !user || claims?.claims?.role !== 'admin') {
+  // Mientras se carga, o si el usuario no es admin, mostramos el mensaje.
+  // La redirección ocurrirá en el useEffect.
+  if (isUserLoading || !claims || claims.claims.role !== 'admin') {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-[calc(100vh-20rem)]">
         <p>Verificando acceso...</p>
       </div>
     );
