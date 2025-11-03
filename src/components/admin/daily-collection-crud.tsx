@@ -21,10 +21,10 @@ import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format, parse, isValid, startOfMonth } from "date-fns";
+import { format, parse, isValid, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy, WriteBatch } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy, WriteBatch, updateDoc, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -53,57 +53,68 @@ export function DailyCollectionCRUD() {
   
   const sortedData = dailyCollectionData || [];
 
-  const recalculateAndBatchUpdate = async (batch: WriteBatch, monthDate: Date) => {
+  const recalculateMonthAndCommit = async (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
     if (!firestore) return;
-  
-    const monthStr = format(monthDate, 'yyyy-MM');
-    const firstDayOfMonth = format(startOfMonth(monthDate), 'yyyy-MM-dd');
-    
+
+    const monthStart = format(startOfMonth(monthDate), 'yyyy-MM-dd');
+    const monthEnd = format(endOfMonth(monthDate), 'yyyy-MM-dd');
+
     const q = query(
       collection(firestore, 'daily_collections'),
-      where('date', '>=', firstDayOfMonth),
-      where('date', '<=', `${monthStr}-31`),
+      where('date', '>=', monthStart),
+      where('date', '<=', monthEnd),
       orderBy('date')
     );
-  
+
     const snapshot = await getDocs(q);
+    const batch = writeBatch(firestore);
+
+    // Apply any pre-batch operations (like delete)
+    preBatch?.(batch);
+    
     let accumulatedTotal = 0;
-  
-    // Firestore snapshots are not guaranteed to be sorted if data changes during the query
-    const sortedDocs = snapshot.docs.sort((a, b) => a.data().date.localeCompare(b.data().date));
-  
-    for (const docSnap of sortedDocs) {
+    
+    snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
+      // Skip the document if it's marked for deletion in the pre-batch
+      if (preBatch && docSnap.id === (preBatch as any).__deletedDocId) {
+          return;
+      }
       accumulatedTotal += data.dailyCollectionAmount;
       batch.update(doc(firestore, 'daily_collections', docSnap.id), {
         accumulatedMonthlyTotal: accumulatedTotal
       });
-    }
+    });
+
+    await batch.commit();
   };
   
   const handleDelete = async (item: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "daily_collections", item.id);
+    const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
+    
     try {
-      const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
-      
-      const batch = writeBatch(firestore);
-      batch.delete(docRef);
-      await recalculateAndBatchUpdate(batch, itemDate);
-      await batch.commit();
+        const batch = writeBatch(firestore);
+        batch.delete(docRef);
+        await batch.commit();
+        
+        // After deletion, run a full recalculation
+        await recalculateMonthAndCommit(itemDate);
 
-      toast({
-        title: "Éxito",
-        description: "El registro ha sido eliminado y los totales recalculados.",
-      });
+        toast({
+            title: "Éxito",
+            description: "El registro ha sido eliminado y los totales recalculados.",
+        });
     } catch (e: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al eliminar",
-        description: e.message,
-      });
+        toast({
+            variant: "destructive",
+            title: "Error al eliminar",
+            description: e.message,
+        });
     }
   };
+
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
@@ -135,13 +146,11 @@ export function DailyCollectionCRUD() {
     const formattedDate = format(date, 'yyyy-MM-dd');
     const newDailyAmount = parseFloat(dailyAmount);
     const newMonthlyGoal = parseFloat(monthlyGoal);
-
+    
     try {
-      await runTransaction(firestore, async (transaction) => {
-        let docRef;
         if (editingId) {
-            docRef = doc(firestore, 'daily_collections', editingId);
-            transaction.update(docRef, {
+            const docRef = doc(firestore, 'daily_collections', editingId);
+            await updateDoc(docRef, {
                 dailyCollectionAmount: newDailyAmount,
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
@@ -152,49 +161,25 @@ export function DailyCollectionCRUD() {
             if (!existingDocs.empty) {
                 throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
             }
-            docRef = doc(collection(firestore, 'daily_collections'));
-            transaction.set(docRef, {
+            await addDoc(collection(firestore, 'daily_collections'), {
                 date: formattedDate,
                 dailyCollectionAmount: newDailyAmount,
-                accumulatedMonthlyTotal: 0, // Placeholder
+                accumulatedMonthlyTotal: 0, // Will be recalculated
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
         }
         
-        // Recalculate logic using transaction
-        const monthStr = format(date, 'yyyy-MM');
-        const firstDayOfMonth = format(startOfMonth(date), 'yyyy-MM-dd');
+        // After adding or updating, recalculate the entire month
+        await recalculateMonthAndCommit(date);
         
-        const monthlyQuery = query(
-          collection(firestore, 'daily_collections'),
-          where('date', '>=', firstDayOfMonth),
-          where('date', '<=', `${monthStr}-31`),
-          orderBy('date')
-        );
-
-        const monthlySnapshot = await getDocs(monthlyQuery);
-        let accumulatedTotal = 0;
-        const sortedDocs = monthlySnapshot.docs.sort((a,b) => a.data().date.localeCompare(b.data().date));
+        toast({
+            title: 'Éxito',
+            description: 'El registro ha sido guardado y los totales recalculados.',
+        });
         
-        for (const snap of sortedDocs) {
-            let currentDailyAmount = snap.data().dailyCollectionAmount;
-            // If it's the doc we are currently editing, use the new amount for calculation
-            if (snap.id === docRef.id) {
-                currentDailyAmount = newDailyAmount;
-            }
-            accumulatedTotal += currentDailyAmount;
-            transaction.update(snap.ref, { accumulatedMonthlyTotal: accumulatedTotal });
-        }
-      });
-      
-      toast({
-        title: 'Éxito',
-        description: 'El registro ha sido guardado y los totales recalculados.',
-      });
-      
-      clearForm();
-      
+        clearForm();
+        
     } catch (error: any) {
        toast({
         variant: 'destructive',
@@ -203,7 +188,6 @@ export function DailyCollectionCRUD() {
       });
     }
   };
-
 
   const isLoading = isDataLoading;
 
@@ -310,5 +294,3 @@ export function DailyCollectionCRUD() {
     </Card>
   );
 }
-
-    
