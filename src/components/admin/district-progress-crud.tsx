@@ -31,7 +31,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, getDocs, writeBatch, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, writeBatch, doc, deleteDoc, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -68,7 +68,7 @@ export function DistrictProgressCRUD() {
     () => (user ? collection(firestore, 'district_progress') : null),
     [user, firestore]
   );
-  const { data: districtProgressData, isLoading: isDataLoading } = useCollection(districtProgressRef);
+  const { data: districtProgressData, isLoading: isDataLoading, error } = useCollection(districtProgressRef);
 
   const [date, setDate] = useState<Date>();
   const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -79,14 +79,93 @@ export function DistrictProgressCRUD() {
   const sortedData = districtProgressData
     ? [...districtProgressData].sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
     : [];
+
+  const handleAddOrUpdate = async () => {
+    if (!firestore || !user || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de validación',
+        description: 'Por favor, complete todos los campos.',
+      });
+      return;
+    }
   
-  const handleDisabledAction = () => {
-    toast({
-      variant: "destructive",
-      title: "Función no disponible",
-      description: "No tienes los permisos necesarios para realizar esta acción.",
-    });
+    const monthStr = format(date, 'yyyy-MM');
+    const newMonthlyGoal = parseFloat(monthlyGoal);
+    const newRecoveredAmount = parseFloat(recoveredAmount);
+  
+    try {
+      // Check if a record for this district and month already exists
+      const q = query(
+        collection(firestore, 'district_progress'),
+        where('month', '==', monthStr),
+        where('district', '==', selectedDistrict)
+      );
+  
+      const querySnapshot = await getDocs(q);
+  
+      if (querySnapshot.empty) {
+        // Add new document
+        await addDoc(collection(firestore, 'district_progress'), {
+          month: monthStr,
+          district: selectedDistrict,
+          monthlyGoal: newMonthlyGoal,
+          recovered: newRecoveredAmount,
+          updatedAt: new Date(),
+        });
+        toast({
+          title: 'Éxito',
+          description: 'El nuevo registro de avance ha sido creado.',
+        });
+      } else {
+        // Update existing document
+        const docId = querySnapshot.docs[0].id;
+        const docRef = doc(firestore, 'district_progress', docId);
+        const batch = writeBatch(firestore);
+        batch.update(docRef, {
+          monthlyGoal: newMonthlyGoal,
+          recovered: newRecoveredAmount,
+          updatedAt: new Date(),
+        });
+        await batch.commit();
+        toast({
+          title: 'Éxito',
+          description: 'El registro de avance ha sido actualizado.',
+        });
+      }
+  
+      // Clear form
+      setDate(undefined);
+      setSelectedDistrict('');
+      setMonthlyGoal('');
+      setRecoveredAmount('');
+  
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al guardar',
+        description: error.message,
+      });
+    }
   };
+
+  const handleDelete = async (id: string) => {
+    if (!firestore || !user) return;
+    try {
+        await deleteDoc(doc(firestore, "district_progress", id));
+        toast({
+            title: "Éxito",
+            description: "El registro ha sido eliminado.",
+        });
+    } catch (e: any) {
+        toast({
+            variant: "destructive",
+            title: "Error al eliminar",
+            description: e.message,
+        });
+    }
+  };
+
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -138,9 +217,10 @@ export function DistrictProgressCRUD() {
             <Input id="monthly-goal" placeholder="0" type="number" value={monthlyGoal} onChange={e => setMonthlyGoal(e.target.value)} />
           </div>
            <div className="grid gap-2">
-            <Label htmlFor="recovered">Recuperado</Label>            <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
+            <Label htmlFor="recovered">Recuperado</Label>
+            <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleDisabledAction}>
+          <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
             <Plus className="mr-2 h-4 w-4" />
             Guardar
           </Button>
@@ -163,6 +243,10 @@ export function DistrictProgressCRUD() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
                 </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
+                </TableRow>
               ) : sortedData.length === 0 ? (
                  <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
@@ -178,7 +262,7 @@ export function DistrictProgressCRUD() {
                     <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>

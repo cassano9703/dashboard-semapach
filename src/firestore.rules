@@ -3,7 +3,7 @@
  *
  * Core Philosophy:
  * This ruleset makes data publicly readable but restricts write operations
- * to authenticated users with an 'admin' role.
+ * to authenticated users.
  *
  * Data Structure:
  * - /daily_collections/{dailyCollectionId}
@@ -15,28 +15,28 @@ service cloud.firestore {
 
     /**
      * @description Allows public read access.
-     * Restricts write access to admin users.
+     * Restricts write access to any signed-in user.
      * @path /daily_collections/{dailyCollectionId}
      * @allow read: if true;
-     * @allow write: if isAdmin();
+     * @allow write: if isSignedIn();
      * @principle Public data visualization with authenticated editing.
      */
     match /daily_collections/{dailyCollectionId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     /**
      * @description Allows public read access.
-     * Restricts write access to admin users.
+     * Restricts write access to any signed-in user.
      * @path /district_progress/{districtProgressId}
      * @allow read: if true;
-     * @allow write: if isAdmin();
+     * @allow write: if isSignedIn();
      * @principle Public data visualization with authenticated editing.
      */
     match /district_progress/{districtProgressId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     // Helper function to determine if a user is signed in

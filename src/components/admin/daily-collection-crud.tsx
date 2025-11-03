@@ -21,7 +21,7 @@ import { Calendar as CalendarIcon, Edit, Plus, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, runTransaction, doc, deleteDoc, query, where, getDocs } from "firebase/firestore";
@@ -45,7 +45,7 @@ export function DailyCollectionCRUD() {
     () => (user ? collection(firestore, 'daily_collections') : null),
     [user, firestore]
   );
-  const { data: dailyCollectionData, isLoading: isDataLoading } = useCollection(dailyCollectionsRef);
+  const { data: dailyCollectionData, isLoading: isDataLoading, error } = useCollection(dailyCollectionsRef);
 
   const [date, setDate] = useState<Date>();
   const [dailyAmount, setDailyAmount] = useState('');
@@ -54,14 +54,103 @@ export function DailyCollectionCRUD() {
   const sortedData = dailyCollectionData
     ? [...dailyCollectionData].sort((a, b) => b.date.localeCompare(a.date))
     : [];
-
-  const handleDisabledAction = () => {
-    toast({
-      variant: "destructive",
-      title: "Función no disponible",
-      description: "No tienes los permisos necesarios para realizar esta acción.",
-    });
+  
+  const handleDelete = async (id: string) => {
+    if (!firestore || !user) return;
+    try {
+      await deleteDoc(doc(firestore, "daily_collections", id));
+      toast({
+        title: "Éxito",
+        description: "El registro ha sido eliminado.",
+      });
+    } catch (e: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: e.message,
+      });
+    }
   };
+
+  const handleAdd = async () => {
+    if (!firestore || !user || !date || !dailyAmount || !monthlyGoal) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de validación',
+        description: 'Por favor, complete todos los campos.',
+      });
+      return;
+    }
+
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    const newDailyAmount = parseFloat(dailyAmount);
+    const newMonthlyGoal = parseFloat(monthlyGoal);
+    const monthStr = format(date, 'yyyy-MM');
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        // 1. Check if a record for this date already exists
+        const dateQuery = query(
+          collection(firestore, 'daily_collections'),
+          where('date', '==', formattedDate)
+        );
+        const dateQuerySnapshot = await getDocs(dateQuery);
+        if (!dateQuerySnapshot.empty) {
+          throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
+        }
+
+        // 2. Get all collections for the month to calculate the new accumulated total
+        const monthQuery = query(
+          collection(firestore, 'daily_collections'),
+          where('date', '>=', `${monthStr}-01`),
+          where('date', '<=', `${monthStr}-31`)
+        );
+        const monthSnapshot = await getDocs(monthQuery);
+        const monthDocs = monthSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: doc.data().date as string}));
+
+        // Calculate new accumulated total
+        const newAccumulatedTotal = monthDocs.reduce((acc, doc) => acc + doc.dailyCollectionAmount, 0) + newDailyAmount;
+        
+        // 3. Create the new document
+        const newDocRef = doc(collection(firestore, 'daily_collections'));
+        transaction.set(newDocRef, {
+          date: formattedDate,
+          dailyCollectionAmount: newDailyAmount,
+          accumulatedMonthlyTotal: newAccumulatedTotal,
+          monthlyGoal: newMonthlyGoal,
+          updatedAt: new Date(),
+        });
+        
+        // 4. Update the accumulated total for all subsequent days in the month
+        const subsequentDays = monthDocs
+            .filter(d => parse(d.date, 'yyyy-MM-dd', new Date()) > date)
+            .sort((a,b) => a.date.localeCompare(b.date));
+
+        let currentAccumulated = newAccumulatedTotal;
+        for (const dayDoc of subsequentDays) {
+            currentAccumulated += dayDoc.dailyCollectionAmount;
+            const docRef = doc(firestore, 'daily_collections', dayDoc.id);
+            transaction.update(docRef, { accumulatedMonthlyTotal: currentAccumulated });
+        }
+      });
+
+      toast({
+        title: 'Éxito',
+        description: 'El registro de recaudación diaria ha sido agregado.',
+      });
+      // Clear form
+      setDate(undefined);
+      setDailyAmount('');
+      setMonthlyGoal('');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al agregar registro',
+        description: error.message,
+      });
+    }
+  };
+
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -104,7 +193,7 @@ export function DailyCollectionCRUD() {
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
             <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleDisabledAction}>
+          <Button className="w-full md:w-auto" onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
             Agregar
           </Button>
@@ -127,6 +216,10 @@ export function DailyCollectionCRUD() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
                 </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
+                </TableRow>
               ) : sortedData.length === 0 ? (
                  <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
@@ -142,7 +235,7 @@ export function DailyCollectionCRUD() {
                     <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
