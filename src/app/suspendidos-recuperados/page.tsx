@@ -93,6 +93,8 @@ export default function SuspendidosRecuperadosPage() {
       districtTotals: totals,
     };
   }, [servicesData, selectedDate]);
+  
+  const fromDate = new Date(2023, 8, 1);
 
 
   return (
@@ -164,6 +166,8 @@ export default function SuspendidosRecuperadosPage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
+                  disabled={{ before: fromDate }}
+                  fromMonth={fromDate}
                   initialFocus
                   locale={es}
                   defaultMonth={selectedDate}

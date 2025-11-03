@@ -178,6 +178,8 @@ export function RecoveredServicesCRUD() {
         toast({ variant: "destructive", title: "Error al eliminar", description: e.message });
     }
   };
+  
+  const fromDate = new Date(2023, 8, 1);
 
   return (
     <Card>
@@ -200,7 +202,15 @@ export function RecoveredServicesCRUD() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={es} />
+                <Calendar 
+                  mode="single" 
+                  selected={date} 
+                  onSelect={setDate} 
+                  initialFocus 
+                  locale={es} 
+                  disabled={{ before: fromDate }}
+                  fromMonth={fromDate}
+                />
               </PopoverContent>
             </Popover>
           </div>
