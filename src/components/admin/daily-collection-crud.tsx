@@ -113,24 +113,12 @@ export function DailyCollectionCRUD() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!firestore) return;
-    try {
-      await deleteDoc(doc(firestore, "daily_collections", id));
-      toast({
-        title: "Éxito",
-        description: "Registro eliminado correctamente.",
-      });
-    } catch (error: any) {
-      console.error("Error deleting document: ", error);
-       toast({
+  const handleDelete = (id: string) => {
+    toast({
         variant: "destructive",
-        title: "Error al Eliminar",
-        description: error.code === 'permission-denied' 
-          ? "No tienes permisos para eliminar registros." 
-          : "Ocurrió un error al eliminar el registro.",
-      });
-    }
+        title: "Función Deshabilitada",
+        description: "Las acciones de escritura (borrar) están deshabilitadas por falta de permisos.",
+    });
   };
   
   const handleEditClick = () => {
