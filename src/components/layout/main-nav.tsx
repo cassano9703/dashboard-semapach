@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import { useUser } from '@/firebase';
 
 import {
   SidebarContent,
@@ -25,16 +24,13 @@ const allNavItems = [
   {href: '/', label: 'Inicio', icon: Home},
   {href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp},
   {href: '/avance-distritos', label: 'Avance de distritos', icon: Target},
+  {href: '/admin', label: 'Administración', icon: Database },
   {href: '/reportes', label: 'Reportes', icon: Book},
-  {href: '/admin', label: 'Admin', icon: Database},
   {href: '/configuracion', label: 'Configuración', icon: Settings},
 ];
 
 export function MainNav() {
   const pathname = usePathname();
-  const { user } = useUser();
-
-
   const navItems = allNavItems;
 
   return (

@@ -8,9 +8,8 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {MainNav} from '@/components/layout/main-nav';
-import {UserNav} from '@/components/layout/user-nav';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Inter } from 'next/font/google';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -42,7 +41,6 @@ export default function RootLayout({
                   <div className="flex-1">
                     {/* Page Title or Breadcrumbs can go here */}
                   </div>
-                  <UserNav />
                 </header>
                 <div className="flex-1 overflow-y-auto">
                   <main className="p-4 md:p-6 lg:p-8">{children}</main>

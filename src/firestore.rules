@@ -2,8 +2,9 @@
  * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
  *
  * Core Philosophy:
- * This ruleset makes data publicly readable but restricts write operations
- * to authenticated users.
+ * This ruleset makes all data publicly readable but restricts write access
+ * to authenticated users. This is a common pattern for apps that display
+ * public information but require a login for administrative actions.
  *
  * Data Structure:
  * - /daily_collections/{dailyCollectionId}
@@ -14,12 +15,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access.
-     * Restricts write access to any signed-in user.
+     * @description Allows public read access to all daily collection data,
+     * but restricts write access to authenticated users.
      * @path /daily_collections/{dailyCollectionId}
      * @allow read: if true;
      * @allow write: if isSignedIn();
-     * @principle Public data visualization with authenticated editing.
+     * @principle Open read access, authenticated write access.
      */
     match /daily_collections/{dailyCollectionId} {
       allow read: if true;
@@ -27,12 +28,12 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public read access.
-     * Restricts write access to any signed-in user.
+     * @description Allows public read access to all district progress data,
+     * but restricts write access to authenticated users.
      * @path /district_progress/{districtProgressId}
      * @allow read: if true;
      * @allow write: if isSignedIn();
-     * @principle Public data visualization with authenticated editing.
+     * @principle Open read access, authenticated write access.
      */
     match /district_progress/{districtProgressId} {
       allow read: if true;
@@ -42,11 +43,6 @@ service cloud.firestore {
     // Helper function to determine if a user is signed in
     function isSignedIn() {
       return request.auth != null;
-    }
-
-    // Helper function to determine if a user has the 'admin' role
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
     }
   }
 }

@@ -30,7 +30,7 @@ import { Calendar } from "../ui/calendar";
 import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, getDocs, writeBatch, doc, deleteDoc, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -60,13 +60,12 @@ const districts = [
 
 
 export function DistrictProgressCRUD() {
-  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   
   const districtProgressRef = useMemoFirebase(
-    () => (user ? collection(firestore, 'district_progress') : null),
-    [user, firestore]
+    () => (firestore ? collection(firestore, 'district_progress') : null),
+    [firestore]
   );
   const { data: districtProgressData, isLoading: isDataLoading, error } = useCollection(districtProgressRef);
 
@@ -81,7 +80,7 @@ export function DistrictProgressCRUD() {
     : [];
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !user || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
+    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
@@ -150,8 +149,8 @@ export function DistrictProgressCRUD() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!firestore || !user || !districtProgressRef) return;
-    const docRef = doc(districtProgressRef, id);
+    if (!firestore) return;
+    const docRef = doc(firestore, "district_progress", id);
     try {
         await deleteDoc(docRef);
         toast({
@@ -168,7 +167,7 @@ export function DistrictProgressCRUD() {
   };
 
 
-  const isLoading = isUserLoading || (user && isDataLoading);
+  const isLoading = isDataLoading;
 
   return (
     <Card>

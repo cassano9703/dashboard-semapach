@@ -8,6 +8,9 @@ export default function AdminPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           Panel de Administración
         </h1>
+        <p className="text-muted-foreground">
+          Gestione los datos de recaudación diaria y el avance por distritos.
+        </p>
       </div>
       <DailyCollectionCRUD />
       <DistrictProgressCRUD />

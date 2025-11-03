@@ -23,7 +23,7 @@ import { Calendar } from "../ui/calendar";
 import { useState } from "react";
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, runTransaction, doc, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,13 +37,12 @@ const formatCurrency = (value: number | string) => {
 };
 
 export function DailyCollectionCRUD() {
-  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   
   const dailyCollectionsRef = useMemoFirebase(
-    () => (user ? collection(firestore, 'daily_collections') : null),
-    [user, firestore]
+    () => (firestore ? collection(firestore, 'daily_collections') : null),
+    [firestore]
   );
   const { data: dailyCollectionData, isLoading: isDataLoading, error } = useCollection(dailyCollectionsRef);
 
@@ -56,8 +55,8 @@ export function DailyCollectionCRUD() {
     : [];
   
   const handleDelete = async (id: string) => {
-    if (!firestore || !user || !dailyCollectionsRef) return;
-    const docRef = doc(dailyCollectionsRef, id);
+    if (!firestore) return;
+    const docRef = doc(firestore, "daily_collections", id);
     try {
       await deleteDoc(docRef);
       toast({
@@ -74,7 +73,7 @@ export function DailyCollectionCRUD() {
   };
 
   const handleAdd = async () => {
-    if (!firestore || !user || !date || !dailyAmount || !monthlyGoal) {
+    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
@@ -153,7 +152,7 @@ export function DailyCollectionCRUD() {
   };
 
 
-  const isLoading = isUserLoading || (user && isDataLoading);
+  const isLoading = isDataLoading;
 
   return (
     <Card>
