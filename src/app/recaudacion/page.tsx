@@ -1,14 +1,19 @@
-import {DailyCollectionChart} from '@/components/dashboard/daily-collection-chart';
-import {StatCards} from '@/components/dashboard/stat-cards';
+'use client';
+
+import { DailyCollectionChart } from '@/components/dashboard/daily-collection-chart';
+import { StatCards } from '@/components/dashboard/stat-cards';
+import { useState } from 'react';
 
 export default function RecaudacionPage() {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">
         Recaudación Diaria
       </h1>
-      <StatCards />
-      <DailyCollectionChart />
+      <StatCards selectedDate={selectedDate} />
+      <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
     </div>
   );
 }
