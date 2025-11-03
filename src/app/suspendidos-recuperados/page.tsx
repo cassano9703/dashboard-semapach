@@ -42,7 +42,7 @@ export default function SuspendidosRecuperadosPage() {
           <CardContent>
             <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
-              Suma total de servicios recuperados
+              Total de usuarios recuperados
             </p>
           </CardContent>
         </Card>
