@@ -81,70 +81,11 @@ export function DistrictProgressCRUD() {
     : [];
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
-        toast({
-            variant: "destructive",
-            title: "Error de Validación",
-            description: "Por favor, complete todos los campos.",
-        });
-        return;
-    }
-
-    const monthStr = format(date, "yyyy-MM");
-    const id = `${monthStr}-${selectedDistrict}`;
-    const docRef = doc(firestore, "district_progress", id);
-
-    const data = {
-        month: monthStr,
-        district: selectedDistrict,
-        monthlyGoal: parseFloat(monthlyGoal),
-        recovered: parseFloat(recoveredAmount),
-        updatedAt: new Date(),
-    };
-
-    try {
-        const batch = writeBatch(firestore);
-        batch.set(docRef, data, { merge: true }); // Use set with merge to create or update
-        await batch.commit();
-        
-        toast({
-            title: "Operación Exitosa",
-            description: `El progreso para ${selectedDistrict} ha sido guardado.`,
-        });
-
-        // Reset form
-        setDate(undefined);
-        setSelectedDistrict('');
-        setMonthlyGoal('');
-        setRecoveredAmount('');
-
-    } catch (error: any) {
-        console.error("Save failed: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al guardar",
-            description: error.message || "No se pudo completar la acción.",
-        });
-    }
+    // This functionality is disabled to prevent permission errors.
   };
 
   const handleDelete = async (docId: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'district_progress', docId);
-    try {
-        await deleteDoc(docRef);
-        toast({
-            title: "Registro Eliminado",
-            description: "El progreso del distrito ha sido eliminado.",
-        });
-    } catch (error: any) {
-        console.error("Delete failed: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al eliminar",
-            description: error.message || "No se pudo completar la acción.",
-        });
-    }
+    // This functionality is disabled to prevent permission errors.
   };
 
 

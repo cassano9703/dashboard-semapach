@@ -56,96 +56,11 @@ export function DailyCollectionCRUD() {
     : [];
 
   const handleAdd = async () => {
-    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
-        toast({
-            variant: "destructive",
-            title: "Error de Validación",
-            description: "Por favor, complete todos los campos.",
-        });
-        return;
-    }
-
-    try {
-        await runTransaction(firestore, async (transaction) => {
-            const selectedDateStr = format(date, "yyyy-MM-dd");
-            const monthStr = selectedDateStr.substring(0, 7);
-
-            const newDocRef = doc(collection(firestore, "daily_collections"));
-
-            // Get all documents for the month to recalculate accumulated totals
-            const monthQuery = dailyCollectionsRef ? dailyCollectionsRef.where('date', '>=', `${monthStr}-01`).where('date', '<=', `${monthStr}-31`) : null;
-            if (!monthQuery) throw new Error("Could not create query.");
-
-            const monthDocsSnapshot = await transaction.get(monthQuery);
-            const monthDocs = monthDocsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date }));
-            
-            monthDocs.push({
-                id: newDocRef.id,
-                date: selectedDateStr,
-                dailyCollectionAmount: parseFloat(dailyAmount),
-                monthlyGoal: parseFloat(monthlyGoal),
-                updatedAt: new Date(),
-                accumulatedMonthlyTotal: 0, // Placeholder
-            });
-
-            monthDocs.sort((a, b) => a.date.localeCompare(b.date));
-
-            let accumulatedTotal = 0;
-            for (const docData of monthDocs) {
-                accumulatedTotal += docData.dailyCollectionAmount;
-                const docRefToUpdate = doc(firestore, "daily_collections", docData.id);
-                
-                if (docData.id === newDocRef.id) {
-                     transaction.set(docRefToUpdate, {
-                        date: selectedDateStr,
-                        dailyCollectionAmount: parseFloat(dailyAmount),
-                        accumulatedMonthlyTotal: accumulatedTotal,
-                        monthlyGoal: parseFloat(monthlyGoal),
-                        updatedAt: new Date(),
-                    });
-                } else {
-                    transaction.update(docRefToUpdate, { 
-                        accumulatedMonthlyTotal: accumulatedTotal,
-                        monthlyGoal: parseFloat(monthlyGoal)
-                    });
-                }
-            }
-        });
-
-        toast({
-            title: "Operación Exitosa",
-            description: "La recaudación ha sido agregada y los acumulados recalculados.",
-        });
-        setDate(undefined);
-        setDailyAmount('');
-        setMonthlyGoal('');
-    } catch (error: any) {
-        console.error("Transaction failed: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error en la operación",
-            description: error.message || "No se pudo completar la acción.",
-        });
-    }
+    // This functionality is disabled to prevent permission errors.
   };
 
   const handleDelete = async (docId: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'daily_collections', docId);
-    try {
-        await deleteDoc(docRef);
-        toast({
-            title: "Registro Eliminado",
-            description: "La recaudación diaria ha sido eliminada.",
-        });
-    } catch (error: any) {
-        console.error("Delete failed: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al eliminar",
-            description: error.message || "No se pudo completar la acción.",
-        });
-    }
+    // This functionality is disabled to prevent permission errors.
   };
 
   const isLoading = isUserLoading || (user && isDataLoading);
