@@ -31,7 +31,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, addDoc, doc, deleteDoc, query, where, getDocs, writeBatch, updateDoc } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -80,102 +80,12 @@ export function DistrictProgressCRUD() {
     ? [...districtProgressData].sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
     : [];
 
-  const handleAddOrUpdate = async () => {
-    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
-      toast({
-        variant: "destructive",
-        title: "Error de Validación",
-        description: "Todos los campos son requeridos.",
-      });
-      return;
-    }
-
-    const monthStr = format(date, 'yyyy-MM');
-    const goal = parseFloat(monthlyGoal);
-    const recovered = parseFloat(recoveredAmount);
-
-    try {
-      const q = query(
-        collection(firestore, "district_progress"),
-        where("month", "==", monthStr),
-        where("district", "==", selectedDistrict)
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        // Add new document
-        await addDoc(collection(firestore, "district_progress"), {
-          month: monthStr,
-          district: selectedDistrict,
-          monthlyGoal: goal,
-          recovered: recovered,
-          updatedAt: new Date(),
-        });
-        toast({
-          title: "Éxito",
-          description: "Nuevo progreso de distrito agregado.",
-        });
-      } else {
-        // Update existing document
-        const docId = querySnapshot.docs[0].id;
-        const docRef = doc(firestore, "district_progress", docId);
-        await updateDoc(docRef, {
-          monthlyGoal: goal,
-          recovered: recovered,
-          updatedAt: new Date(),
-        });
-        toast({
-          title: "Éxito",
-          description: "Progreso de distrito actualizado.",
-        });
-      }
-      
-      // Reset form
-      setDate(undefined);
-      setSelectedDistrict('');
-      setMonthlyGoal('');
-      setRecoveredAmount('');
-
-    } catch (error: any) {
-        console.error("Error adding/updating document: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al Guardar",
-            description: error.code === 'permission-denied' 
-            ? "No tienes permisos para esta acción." 
-            : "Ocurrió un error al guardar el registro.",
-        });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-     if (!firestore) return;
-    try {
-        const docRef = doc(firestore, 'district_progress', id);
-        await deleteDoc(docRef);
-        toast({
-            title: "Éxito",
-            description: "Registro eliminado correctamente.",
-        });
-    } catch (error: any) {
-        console.error("Error deleting document: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al Eliminar",
-            description: error.code === 'permission-denied' 
-            ? "No tienes permisos para eliminar registros." 
-            : "Ocurrió un error al eliminar el registro.",
-        });
-    }
-  };
-
-  const handleEditClick = () => {
+  const handleDisabledAction = () => {
     toast({
-        title: "Función no implementada",
-        description: "La edición de registros se implementará próximamente.",
+      title: "Función Deshabilitada",
+      description: "Las operaciones de escritura no están disponibles por falta de permisos de administrador.",
     });
-  }
+  };
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -230,7 +140,7 @@ export function DistrictProgressCRUD() {
             <Label htmlFor="recovered">Recuperado</Label>
             <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
+          <Button className="w-full md:w-auto" onClick={handleDisabledAction}>
             <Plus className="mr-2 h-4 w-4" />
             Guardar
           </Button>
@@ -265,10 +175,10 @@ export function DistrictProgressCRUD() {
                   <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                   <TableCell>{formatCurrency(item.recovered)}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={handleEditClick}>
+                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
