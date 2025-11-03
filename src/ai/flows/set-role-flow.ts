@@ -72,9 +72,9 @@ const setAdminRoleFlow = ai.defineFlow(
       if (error.code === 'auth/user-not-found') {
         throw new Error('No se encontró ningún usuario con ese correo electrónico.');
       }
-      throw new Error(
-        'Ocurrió un error inesperado al intentar asignar el rol.'
-      );
+      // Relanzar el error original con más detalles si es posible
+      const errorMessage = error.message || 'Ocurrió un error inesperado al intentar asignar el rol.';
+      throw new Error(errorMessage);
     }
   }
 );
