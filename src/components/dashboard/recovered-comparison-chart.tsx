@@ -28,6 +28,12 @@ interface RecoveredComparisonChartProps {
   selectedDate: Date;
 }
 
+const formatCurrency = (value: number) =>
+  `S/ ${value.toLocaleString('es-PE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonChartProps) {
   const firestore = useFirestore();
 
@@ -51,40 +57,48 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
       return { chartData: [], currentMonthLabel, prevMonthLabel };
     }
 
-    const currentTotals = new Map<string, { quantity: number; amount: number }>();
-    const prevTotals = new Map<string, { quantity: number; amount: number }>();
-    const allDistricts = new Set<string>();
+    let currentMonthTotalQuantity = 0;
+    let currentMonthTotalAmount = 0;
+    let prevMonthTotalQuantity = 0;
+    let prevMonthTotalAmount = 0;
 
     servicesData.forEach(item => {
-      allDistricts.add(item.district);
       const itemDate = parseISO(item.date + 'T00:00:00');
       
       if (isWithinInterval(itemDate, { start: currentMonthStart, end: currentMonthEnd })) {
-        const current = currentTotals.get(item.district) || { quantity: 0, amount: 0 };
-        current.quantity += item.recoveredCount;
-        current.amount += item.recoveredAmount;
-        currentTotals.set(item.district, current);
+        currentMonthTotalQuantity += item.recoveredCount;
+        currentMonthTotalAmount += item.recoveredAmount;
       } else if (isWithinInterval(itemDate, { start: prevMonthStart, end: prevMonthEnd })) {
-        const prev = prevTotals.get(item.district) || { quantity: 0, amount: 0 };
-        prev.quantity += item.recoveredCount;
-        prev.amount += item.recoveredAmount;
-        prevTotals.set(item.district, prev);
+        prevMonthTotalQuantity += item.recoveredCount;
+        prevMonthTotalAmount += item.recoveredAmount;
       }
     });
 
-    const data = Array.from(allDistricts).map(district => {
-        const current = currentTotals.get(district) || { quantity: 0, amount: 0 };
-        const previous = prevTotals.get(district) || { quantity: 0, amount: 0 };
-        return {
-            district,
-            currentQuantity: current.quantity,
-            prevQuantity: previous.quantity,
-            currentAmount: current.amount,
-            prevAmount: previous.amount,
-        };
-    });
+    const data = [
+      {
+        name: 'Cantidad',
+        [prevMonthLabel]: prevMonthTotalQuantity,
+        [currentMonthLabel]: currentMonthTotalQuantity,
+      },
+      {
+        name: 'Monto',
+        [prevMonthLabel]: prevMonthTotalAmount,
+        [currentMonthLabel]: currentMonthTotalAmount,
+      }
+    ];
 
-    return { chartData: data, currentMonthLabel, prevMonthLabel };
+    const quantityData = [
+      { name: prevMonthLabel, value: prevMonthTotalQuantity },
+      { name: currentMonthLabel, value: currentMonthTotalQuantity },
+    ];
+    
+    const amountData = [
+      { name: prevMonthLabel, value: prevMonthTotalAmount },
+      { name: currentMonthLabel, value: currentMonthTotalAmount },
+    ];
+
+
+    return { chartData: { quantity: quantityData, amount: amountData }, currentMonthLabel, prevMonthLabel };
   }, [servicesData, selectedDate]);
 
 
@@ -107,26 +121,24 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
                 <div>
                     <h3 className="text-center font-semibold mb-4">Cantidad de Servicios Recuperados</h3>
                     <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData}>
+                    <BarChart data={chartData.quantity}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="district" fontSize={12} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis fontSize={12} tickLine={false} axisLine={false} />
                         <Tooltip
                             contentStyle={{ fontSize: '12px' }}
-                            formatter={(value, name) => [value, name === 'prevQuantity' ? `Cant. ${prevMonthLabel}` : `Cant. ${currentMonthLabel}`]}
+                            formatter={(value) => [value, "Cantidad"]}
                         />
-                        <Legend wrapperStyle={{ fontSize: '14px' }} formatter={(value) => value === 'prevQuantity' ? `Cant. ${prevMonthLabel}` : `Cant. ${currentMonthLabel}`} />
-                        <Bar dataKey="prevQuantity" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
-                        <Bar dataKey="currentQuantity" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
+                        <Bar dataKey="value" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
                 <div>
                     <h3 className="text-center font-semibold mb-4">Monto Recuperado (S/)</h3>
                     <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData}>
+                    <BarChart data={chartData.amount}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="district" fontSize={12} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis 
                             fontSize={12} 
                             tickLine={false} 
@@ -135,11 +147,9 @@ export function RecoveredComparisonChart({ selectedDate }: RecoveredComparisonCh
                         />
                         <Tooltip 
                             contentStyle={{ fontSize: '12px' }}
-                            formatter={(value, name) => [`S/ ${Number(value).toFixed(2)}`, name === 'prevAmount' ? `Monto ${prevMonthLabel}` : `Monto ${currentMonthLabel}`]}
+                            formatter={(value) => [formatCurrency(Number(value)), "Monto"]}
                         />
-                        <Legend wrapperStyle={{ fontSize: '14px' }} formatter={(value) => value === 'prevAmount' ? `Monto ${prevMonthLabel}` : `Monto ${currentMonthLabel}`} />
-                        <Bar dataKey="prevAmount" fill="hsl(var(--chart-4))" activeBar={<Rectangle fill="hsl(var(--chart-4) / 0.8)" />} />
-                        <Bar dataKey="currentAmount" fill="hsl(var(--chart-5))" activeBar={<Rectangle fill="hsl(var(--chart-5) / 0.8)" />} />
+                        <Bar dataKey="value" fill="hsl(var(--chart-4))" activeBar={<Rectangle fill="hsl(var(--chart-4) / 0.8)" />} />
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
