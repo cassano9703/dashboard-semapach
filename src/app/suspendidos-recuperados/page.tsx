@@ -1,5 +1,31 @@
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {ClipboardCheck} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Save } from 'lucide-react';
+
+const districts = [
+  'Chincha Alta',
+  'Grocio Prado',
+  'Pueblo Nuevo',
+  'Alto Laran',
+  'Sunampe',
+  'Tambo de Mora',
+  'Chincha baja',
+];
 
 export default function SuspendidosRecuperadosPage() {
   return (
@@ -7,18 +33,46 @@ export default function SuspendidosRecuperadosPage() {
       <h1 className="text-3xl font-bold tracking-tight">
         Suspendidos Recuperados
       </h1>
-      <Card className="flex flex-col items-center justify-center text-center p-12 border-dashed">
+      <Card>
         <CardHeader>
-          <div className="mx-auto bg-secondary p-4 rounded-full">
-            <ClipboardCheck className="h-8 w-8 text-muted-foreground" />
+          <div className='flex justify-between items-start'>
+            <div>
+              <CardTitle>Registro de Servicios Recuperados</CardTitle>
+              <CardDescription>
+                Ingrese la cantidad de servicios recuperados y el monto total por distrito.
+              </CardDescription>
+            </div>
+            <Button>
+              <Save className="mr-2 h-4 w-4" /> Guardar Cambios
+            </Button>
           </div>
-          <CardTitle>Módulo de Suspendidos Recuperados</CardTitle>
+
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Esta sección está en construcción. Próximamente podrá gestionar los
-            servicios suspendidos y recuperados.
-          </p>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Distrito</TableHead>
+                  <TableHead className="w-[200px]">Recuperados (Cantidad)</TableHead>
+                  <TableHead className="w-[200px]">Monto (S/)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {districts.map((district) => (
+                  <TableRow key={district}>
+                    <TableCell className="font-medium">{district}</TableCell>
+                    <TableCell>
+                      <Input type="number" placeholder="0" />
+                    </TableCell>
+                    <TableCell>
+                      <Input type="number" placeholder="0.00" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
