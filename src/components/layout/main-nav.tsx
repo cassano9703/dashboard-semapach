@@ -33,11 +33,6 @@ const allNavItems = [
   {href: '/configuracion', label: 'Configuración', icon: Settings, adminOnly: true},
 ];
 
-const adminSubNavItems = [
-    { href: '/admin', label: 'Gestión de Datos' },
-    { href: '/admin/set-role', label: 'Gestionar Roles' },
-]
-
 export function MainNav() {
   const pathname = usePathname();
   const { user, claims } = useUser();
@@ -81,15 +76,6 @@ export function MainNav() {
                     <Shield />
                     <span>Admin</span>
                  </SidebarMenuButton>
-                 <SidebarMenuSub>
-                    {adminSubNavItems.map(item => (
-                        <SidebarMenuSubItem key={item.href}>
-                            <SidebarMenuSubButton href={item.href} isActive={pathname === item.href}>
-                                {item.label}
-                            </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                    ))}
-                 </SidebarMenuSub>
             </SidebarMenuItem>
            )}
         </SidebarMenu>
