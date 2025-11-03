@@ -36,8 +36,9 @@ import {format} from 'date-fns';
 import {es} from 'date-fns/locale';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Download } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
+import Papa from 'papaparse';
 
 const chartConfig = {
   dailyCollectionAmount: {
@@ -94,36 +95,65 @@ export function DailyCollectionChart({ selectedDate, onDateChange }: DailyCollec
 
     return { chartData: processedData, monthlyGoal: goal };
   }, [dailyCollectionData, selectedDate]);
+  
+  const handleDownloadCsv = () => {
+    if (chartData.length === 0) return;
+    
+    const dataForCsv = chartData.map(item => ({
+      Fecha: item.date,
+      'Recaudación Diaria': item.dailyCollectionAmount,
+      'Acumulado Mensual': item.accumulatedMonthlyTotal,
+      'Meta Mensual': item.monthlyGoal,
+    }));
+
+    const csv = Papa.unparse(dataForCsv);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const monthYear = format(selectedDate, 'yyyy-MM');
+    link.setAttribute('download', `reporte-recaudacion-${monthYear}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <CardTitle>Análisis de Recaudación Mensual</CardTitle>
                 <CardDescription>
                   Muestra la recaudación diaria y el acumulado mensual frente a la meta.
                 </CardDescription>
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-[240px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && onDateChange(date)}
-                  initialFocus
-                  locale={es}
-                  defaultMonth={selectedDate}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className='flex items-center gap-2'>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className="w-[240px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && onDateChange(date)}
+                    initialFocus
+                    locale={es}
+                    defaultMonth={selectedDate}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button onClick={handleDownloadCsv} variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Descargar Excel
+              </Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
