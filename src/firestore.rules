@@ -2,8 +2,9 @@
  * @fileoverview Firestore Security Rules for SEMAPACH dashboard data.
  *
  * Core Philosophy:
- * This ruleset restricts data access based on user authentication.
- * - Authenticated users: Can read and write all data.
+ * This ruleset restricts data access based on user roles defined in custom claims.
+ * - 'admin' role: Can read and write all data.
+ * - Authenticated users (without admin role): Can only read data.
  * - Unauthenticated users: Cannot access any data.
  *
  * Data Structure:
@@ -15,27 +16,29 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows read and write access to any authenticated user.
+     * @description Restricts write access to admin users only.
+     * Allows read access to any authenticated user.
      * @path /daily_collections/{dailyCollectionId}
      * @allow read: if isSignedIn();
-     * @allow write: if isSignedIn();
-     * @principle Enforces that only signed-in users can modify collection data.
+     * @allow write: if isAdmin();
+     * @principle Enforces role-based access control for collection data.
      */
     match /daily_collections/{dailyCollectionId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     /**
-     * @description Allows read and write access to any authenticated user.
+     * @description Restricts write access to admin users only.
+     * Allows read access to any authenticated user.
      * @path /district_progress/{districtProgressId}
      * @allow read: if isSignedIn();
-     * @allow write: if isSignedIn();
-     * @principle Enforces that only signed-in users can modify district progress data.
+     * @allow write: if isAdmin();
+     * @principle Enforces role-based access control for district progress data.
      */
     match /district_progress/{districtProgressId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // Helper function to determine if a user is signed in
@@ -43,7 +46,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to determine if a user has the 'admin' role (currently not used for write)
+    // Helper function to determine if a user has the 'admin' role
     function isAdmin() {
       return isSignedIn() && request.auth.token.role == 'admin';
     }
