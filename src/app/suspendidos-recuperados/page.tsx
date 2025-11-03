@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -20,9 +20,11 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, DollarSign, UserCheck, Users } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 const districts = [
   'Chincha Alta',
@@ -34,9 +36,67 @@ const districts = [
   'Chincha baja',
 ];
 
+const formatCurrency = (value: number) =>
+  `S/ ${value.toLocaleString('es-PE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 export default function SuspendidosRecuperadosPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  
+  const firestore = useFirestore();
+
+  const servicesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    const monthStart = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
+    const monthEnd = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
+
+    return query(
+      collection(firestore, 'recovered_services'),
+      where('date', '>=', monthStart),
+      where('date', '<=', monthEnd)
+    );
+  }, [firestore, selectedDate]);
+
+  const { data: servicesData, isLoading } = useCollection(servicesQuery);
+
+  const { dailyTotal, monthlyTotal, monthlyAmount, districtTotals } = useMemo(() => {
+    if (!servicesData) {
+      return { dailyTotal: 0, monthlyTotal: 0, monthlyAmount: 0, districtTotals: new Map() };
+    }
+
+    const selectedDayStr = format(selectedDate, 'yyyy-MM-dd');
+    
+    let dailyTotal = 0;
+    let monthlyTotal = 0;
+    let monthlyAmount = 0;
+    const districtTotals = new Map<string, { count: number; amount: number }>();
+
+    districts.forEach(d => districtTotals.set(d, { count: 0, amount: 0 }));
+
+    servicesData.forEach(service => {
+      // Daily total
+      if (service.date === selectedDayStr) {
+        dailyTotal += service.recoveredCount;
+      }
+      
+      // Monthly totals
+      monthlyTotal += service.recoveredCount;
+      monthlyAmount += service.recoveredAmount;
+
+      // District totals
+      if (districtTotals.has(service.district)) {
+        const current = districtTotals.get(service.district)!;
+        districtTotals.set(service.district, {
+          count: current.count + service.recoveredCount,
+          amount: current.amount + service.recoveredAmount,
+        });
+      }
+    });
+
+    return { dailyTotal, monthlyTotal, monthlyAmount, districtTotals };
+  }, [servicesData, selectedDate]);
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">
@@ -51,7 +111,7 @@ export default function SuspendidosRecuperadosPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : dailyTotal}</div>
             <p className="text-xs text-muted-foreground">
               Usuarios recuperados en el día seleccionado
             </p>
@@ -63,7 +123,7 @@ export default function SuspendidosRecuperadosPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : monthlyTotal}</div>
             <p className="text-xs text-muted-foreground">
               Total de usuarios recuperados en el mes
             </p>
@@ -75,7 +135,7 @@ export default function SuspendidosRecuperadosPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">S/ 0.00</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(monthlyAmount)}</div>
             <p className="text-xs text-muted-foreground">
               Suma total de los montos recuperados en el mes
             </p>
@@ -125,11 +185,15 @@ export default function SuspendidosRecuperadosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {districts.map((district) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8">Cargando datos...</TableCell>
+                  </TableRow>
+                ) : districts.map((district) => (
                   <TableRow key={district}>
                     <TableCell className="font-medium">{district}</TableCell>
-                    <TableCell className="text-right">0</TableCell>
-                    <TableCell className="text-right">0.00</TableCell>
+                    <TableCell className="text-right">{districtTotals.get(district)?.count || 0}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(districtTotals.get(district)?.amount || 0)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
