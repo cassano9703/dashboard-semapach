@@ -79,74 +79,14 @@ export function DistrictProgressCRUD() {
   const sortedData = districtProgressData
     ? [...districtProgressData].sort((a, b) => b.month.localeCompare(a.month) || a.district.localeCompare(b.district))
     : [];
-
-  const handleAddOrUpdate = async () => {
-    if (!firestore || !date || !selectedDistrict || !monthlyGoal || !recoveredAmount) {
-      toast({
-        variant: "destructive",
-        title: "Error de validación",
-        description: "Por favor, complete todos los campos.",
-      });
-      return;
-    }
   
-    const month = format(date, "yyyy-MM");
-    const docId = `${month}-${selectedDistrict.replace(/\s+/g, '-')}`;
-    const docRef = doc(firestore, 'district_progress', docId);
-  
-    const data = {
-      month,
-      district: selectedDistrict,
-      monthlyGoal: parseFloat(monthlyGoal),
-      recovered: parseFloat(recoveredAmount),
-      updatedAt: new Date(),
-    };
-  
-    try {
-      // Use a write batch to perform an upsert (update if exists, create if not)
-      const batch = writeBatch(firestore);
-      batch.set(docRef, data, { merge: true }); // merge:true makes it an upsert
-      await batch.commit();
-  
-      toast({
-        title: "Operación exitosa",
-        description: `El progreso para ${selectedDistrict} ha sido guardado.`,
-      });
-  
-      // Clear form
-      setDate(undefined);
-      setSelectedDistrict('');
-      setMonthlyGoal('');
-      setRecoveredAmount('');
-    } catch (error) {
-      console.error("Error saving district progress: ", error);
-      toast({
-        variant: "destructive",
-        title: "Error al guardar",
-        description: "No se pudo guardar el progreso. Verifique sus permisos.",
-      });
-    }
+  const handleDisabledAction = () => {
+    toast({
+      variant: "destructive",
+      title: "Función no disponible",
+      description: "No tienes los permisos necesarios para realizar esta acción.",
+    });
   };
-
-  const handleDelete = async (docId: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'district_progress', docId);
-    try {
-        await deleteDoc(docRef);
-        toast({
-            title: "Registro eliminado",
-            description: "El progreso del distrito ha sido eliminado.",
-        });
-    } catch (error) {
-        console.error("Error deleting document: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error al eliminar",
-            description: "No se pudo eliminar el registro. Verifique sus permisos.",
-        });
-    }
-  };
-
 
   const isLoading = isUserLoading || (user && isDataLoading);
 
@@ -200,7 +140,7 @@ export function DistrictProgressCRUD() {
            <div className="grid gap-2">
             <Label htmlFor="recovered">Recuperado</Label>            <Input id="recovered" placeholder="0" type="number" value={recoveredAmount} onChange={e => setRecoveredAmount(e.target.value)} />
           </div>
-          <Button className="w-full md:w-auto" onClick={handleAddOrUpdate}>
+          <Button className="w-full md:w-auto" onClick={handleDisabledAction}>
             <Plus className="mr-2 h-4 w-4" />
             Guardar
           </Button>
@@ -238,7 +178,7 @@ export function DistrictProgressCRUD() {
                     <Button variant="ghost" size="icon" onClick={() => toast({ title: "Función no implementada" })}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                    <Button variant="ghost" size="icon" onClick={handleDisabledAction}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
