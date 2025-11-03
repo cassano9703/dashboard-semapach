@@ -25,7 +25,7 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Check, CheckCircle2, Download } from 'lucide-react';
+import { CheckCircle2, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 
 export function DistrictProgress() {
@@ -58,7 +58,6 @@ export function DistrictProgress() {
   const lastUpdated = useMemo(() => {
     if (!dataForCurrentMonth || dataForCurrentMonth.length === 0) return null;
     
-    // Find the most recent updatedAt timestamp
     const latestTimestamp = dataForCurrentMonth.reduce((latest, item) => {
       if (!item.updatedAt) return latest;
       const itemTimestamp = item.updatedAt.toDate();
@@ -72,7 +71,6 @@ export function DistrictProgress() {
     const input = pdfRef.current;
     if (!input) return;
 
-    // Remove the download button from the capture
     const button = input.querySelector('#download-pdf-button');
     if (button) {
       (button as HTMLElement).style.display = 'none';
@@ -87,13 +85,12 @@ export function DistrictProgress() {
         const imgHeight = canvas.height;
         const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
         const imgX = (pdfWidth - imgWidth * ratio) / 2;
-        const imgY = 15; // Margin top
+        const imgY = 15;
         pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
         
         const month = format(new Date(), 'yyyy-MM');
         pdf.save(`reporte-avance-distritos-${month}.pdf`);
         
-        // Show the button again
         if (button) {
           (button as HTMLElement).style.display = 'flex';
         }
@@ -107,7 +104,7 @@ export function DistrictProgress() {
   return (
     <Card ref={pdfRef}>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
                 <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
                 <CardDescription>
@@ -125,16 +122,20 @@ export function DistrictProgress() {
           <div className="flex justify-center items-center h-[280px]">
             Cargando datos...
           </div>
+        ) : dataForCurrentMonth.length === 0 ? (
+          <div className="flex justify-center items-center h-[280px] text-muted-foreground">
+              No hay datos de avance para el mes actual.
+          </div>
         ) : (
             <div className="flex flex-col">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Distrito</TableHead>
-                    <TableHead className="text-right">Recuperados</TableHead>
-                    <TableHead className="text-right">Meta</TableHead>
-                    <TableHead className="text-right">Faltante para Meta</TableHead>
-                    <TableHead className="w-[120px]">Avance</TableHead>
+                    <TableHead className="w-[120px] text-right">Recuperado</TableHead>
+                    <TableHead className="w-[120px] text-right">Meta</TableHead>
+                    <TableHead className="w-[200px]">Avance</TableHead>
+                    <TableHead className="w-[150px] text-right">Faltante</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -145,40 +146,35 @@ export function DistrictProgress() {
                       <TableRow
                         key={item.id}
                         className={cn(
-                          goalReached && 'bg-green-100 dark:bg-green-900/50'
+                          goalReached && 'bg-green-50 dark:bg-green-900/20'
                         )}
                       >
-                        <TableCell className="font-medium flex items-center gap-2">
-                          {goalReached && (
-                            <Check className="h-4 w-4 text-green-600" />
-                          )}
+                        <TableCell className="font-medium">
                           {item.district}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {item.recovered.toLocaleString('es-PE')}
+                        <TableCell className="text-right font-semibold">
+                          S/ {item.recovered.toLocaleString('es-PE')}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {item.monthlyGoal.toLocaleString('es-PE')}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {goalReached ? '0' : item.difference.toLocaleString('es-PE')}
+                        <TableCell className="text-right text-muted-foreground">
+                          S/ {item.monthlyGoal.toLocaleString('es-PE')}
                         </TableCell>
                         <TableCell>
                           {goalReached ? (
-                            <div className="flex items-center justify-center gap-2 text-green-600">
+                            <div className="flex items-center gap-2 text-green-600 font-semibold">
                               <CheckCircle2 className="h-5 w-5" />
-                              <span className="text-xs font-semibold">
-                                Cumplido
-                              </span>
+                              <span>Meta Cumplida</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
                               <Progress value={item.progress} className="h-2" />
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs font-semibold text-muted-foreground w-10 text-right">
                                 {Math.round(item.progress)}%
                               </span>
                             </div>
                           )}
+                        </TableCell>
+                        <TableCell className={cn("text-right font-medium", goalReached ? "text-green-600" : "text-amber-600")}>
+                          {goalReached ? '¡Superado!' : `S/ ${item.difference.toLocaleString('es-PE')}`}
                         </TableCell>
                       </TableRow>
                     );
