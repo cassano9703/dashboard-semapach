@@ -11,11 +11,15 @@ import admin from '@/lib/firebase-admin'; // Import the initialized admin instan
 const SetAdminRoleInputSchema = z.object({
   email: z.string().email('Por favor, introduce un correo válido.'),
 });
+export type SetAdminRoleInput = z.infer<typeof SetAdminRoleInputSchema>;
+
 
 // Esquema de salida para el flow
 const SetAdminRoleOutputSchema = z.object({
   message: z.string(),
 });
+export type SetAdminRoleOutput = z.infer<typeof SetAdminRoleOutputSchema>;
+
 
 /**
  * Asigna el custom claim 'role: admin' a un usuario de Firebase por su correo.
@@ -23,7 +27,12 @@ const SetAdminRoleOutputSchema = z.object({
  * @param {string} input.email - El correo del usuario.
  * @returns {Promise<{message: string}>} Un mensaje de confirmación.
  */
-export const setAdminRole = ai.defineFlow(
+ export async function setAdminRole(input: SetAdminRoleInput): Promise<SetAdminRoleOutput> {
+  return setAdminRoleFlow(input);
+}
+
+
+const setAdminRoleFlow = ai.defineFlow(
   {
     name: 'setAdminRoleFlow',
     inputSchema: SetAdminRoleInputSchema,
