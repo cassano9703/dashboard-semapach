@@ -41,6 +41,10 @@ body {
     --sidebar-ring: 207 90% 61%;
     --sidebar-accent: 207 88% 96%;
     --sidebar-accent-foreground: 207 90% 40%;
+    
+    /* Custom Table Header Variables */
+    --table-header-background: 207 88% 96%;
+    --table-header-foreground: 207 90% 30%;
   }
 
   .dark {
@@ -76,6 +80,10 @@ body {
     --sidebar-ring: 207 90% 61%;
     --sidebar-accent: 207 88% 96%;
     --sidebar-accent-foreground: 207 90% 40%;
+    
+    /* Custom Table Header Variables */
+    --table-header-background: 207 90% 20%;
+    --table-header-foreground: 207 88% 96%;
   }
 }
 

@@ -129,7 +129,7 @@ export function DistrictProgress() {
         ) : (
             <div className="flex flex-col">
               <Table>
-                <TableHeader className="bg-muted">
+                <TableHeader className="bg-table-header text-table-header-foreground">
                   <TableRow>
                     <TableHead>Distrito</TableHead>
                     <TableHead className="w-[120px] text-right">Recuperado</TableHead>

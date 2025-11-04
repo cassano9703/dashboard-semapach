@@ -266,7 +266,7 @@ export function DistrictProgressCRUD() {
         <div className="border rounded-lg overflow-hidden">
           <div className="relative max-h-96 overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-muted z-10">
+              <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
                 <TableRow>
                   <TableHead>Mes</TableHead>
                   <TableHead>Distrito</TableHead>
