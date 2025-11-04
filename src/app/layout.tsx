@@ -31,7 +31,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <Toaster />
           <SidebarProvider>
-            <Sidebar>
+            <Sidebar className="border-r">
               <MainNav />
             </Sidebar>
             <SidebarInset>
