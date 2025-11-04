@@ -24,13 +24,13 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 
 const districts = [
-  'Chincha Alta',
-  'Grocio Prado',
-  'Pueblo Nuevo',
-  'Alto Laran',
-  'Sunampe',
-  'Tambo de Mora',
-  'Chincha Baja',
+  "Chincha Alta",
+  "Grocio Prado",
+  "Pueblo Nuevo",
+  "Alto Laran",
+  "Sunampe",
+  "Tambo de Mora",
+  "Chincha Baja",
 ];
 
 const formatCurrency = (value: number) =>

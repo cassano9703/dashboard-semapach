@@ -172,7 +172,7 @@ export function RecoveredServicesCRUD() {
     const docRef = doc(firestore, "recovered_services", id);
     try {
         deleteDoc(docRef);
-        toast({ variant: 'success', title: "Éxito", description: "El registro ha sido eliminado." });
+        toast({ variant: "success", title: "Éxito", description: "El registro ha sido eliminado." });
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error al eliminar", description: e.message });
     }

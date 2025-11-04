@@ -176,11 +176,11 @@ export function DistrictProgressCRUD() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, "district_progress", id);
     try {
-        await deleteDoc(docRef);
+        deleteDoc(docRef);
         toast({
             variant: "success",
             title: "Éxito",
