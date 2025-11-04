@@ -30,7 +30,7 @@ const districts = [
   'Alto Laran',
   'Sunampe',
   'Tambo de Mora',
-  'Chincha baja',
+  'Chincha Baja',
 ];
 
 const formatCurrency = (value: number) =>
