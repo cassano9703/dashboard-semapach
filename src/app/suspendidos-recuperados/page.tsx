@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { UserCheck, Users, DollarSign, History } from 'lucide-react';
+import { UserCheck, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
@@ -49,9 +49,9 @@ export default function SuspendidosRecuperadosPage() {
   );
   const { data: servicesData, isLoading } = useCollection(servicesRef);
 
-  const { dailyTotal, monthlyTotalCount, monthlyTotalAmount, districtTotals, historicalTotalCount, historicalTotalAmount } = useMemo(() => {
+  const { dailyTotal, monthlyTotalCount, monthlyTotalAmount, districtTotals } = useMemo(() => {
     if (!servicesData) {
-      return { dailyTotal: 0, monthlyTotalCount: 0, monthlyTotalAmount: 0, districtTotals: new Map(), historicalTotalCount: 0, historicalTotalAmount: 0 };
+      return { dailyTotal: 0, monthlyTotalCount: 0, monthlyTotalAmount: 0, districtTotals: new Map() };
     }
 
     const monthStart = startOfMonth(selectedDate);
@@ -61,16 +61,10 @@ export default function SuspendidosRecuperadosPage() {
     let daily = 0;
     let monthlyCount = 0;
     let monthlyAmount = 0;
-    let historicalCount = 0;
-    let historicalAmount = 0;
     const totals = new Map<string, { recoveredCount: number; recoveredAmount: number }>();
 
     servicesData.forEach(item => {
       const itemDate = parseISO(item.date + 'T00:00:00');
-      
-      // Historical totals
-      historicalCount += item.recoveredCount;
-      historicalAmount += item.recoveredAmount;
       
       if (item.date === formattedSelectedDate) {
         daily += item.recoveredCount;
@@ -92,8 +86,6 @@ export default function SuspendidosRecuperadosPage() {
       monthlyTotalCount: monthlyCount, 
       monthlyTotalAmount: monthlyAmount,
       districtTotals: totals,
-      historicalTotalCount: historicalCount,
-      historicalTotalAmount: historicalAmount,
     };
   }, [servicesData, selectedDate]);
   
@@ -105,7 +97,7 @@ export default function SuspendidosRecuperadosPage() {
         Reporte de Usuarios Recuperados
       </h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recuperados del Día</CardTitle>
@@ -139,30 +131,6 @@ export default function SuspendidosRecuperadosPage() {
             <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(monthlyTotalAmount)}</div>
             <p className="text-xs text-muted-foreground">
               Suma total de los montos recuperados en {format(selectedDate, 'LLLL', {locale: es})}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Acumulado Histórico (Cant.)</CardTitle>
-            <History className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : historicalTotalCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Suma de todos los usuarios recuperados.
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Acumulado Histórico (Monto)</CardTitle>
-            <History className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : formatCurrency(historicalTotalAmount)}</div>
-            <p className="text-xs text-muted-foreground">
-              Suma de todos los montos recuperados.
             </p>
           </CardContent>
         </Card>
