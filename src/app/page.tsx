@@ -28,9 +28,16 @@ export default function Home() {
       <StatCards selectedDate={selectedDate} />
       <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <DistrictProgress />
-      <RecoveredStatsCards selectedDate={selectedDate} />
-      <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
-      <RecoveredSummary selectedDate={selectedDate} />
+      
+      <hr className="my-4" />
+
+      <div className="flex flex-col gap-6">
+        <h2 className="text-2xl font-bold tracking-tight">Análisis de Usuarios Recuperados</h2>
+        <RecoveredStatsCards selectedDate={selectedDate} />
+        <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        <RecoveredSummary selectedDate={selectedDate} />
+      </div>
+
     </div>
   );
 }

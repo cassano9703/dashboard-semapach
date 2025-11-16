@@ -94,7 +94,7 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Evolución Mensual de Recuperados</CardTitle>
+              <CardTitle>Evolución Mensual</CardTitle>
               <CardDescription>
                 Cantidad de usuarios y montos recuperados por mes.
               </CardDescription>
