@@ -50,6 +50,19 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSignedIn();
     }
+    
+    /**
+     * @description Allows read access to any user and write access to authenticated users.
+     * @path /recovered_12_plus/{recovered12PlusId}
+     * @allow read: if true;
+     * @allow write: if isSignedIn();
+     * @principle Secures write operations while allowing public reads.
+     */
+    match /recovered_12_plus/{recovered12PlusId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
 
     // Helper function to determine if a user is signed in
     function isSignedIn() {
