@@ -13,6 +13,8 @@ import {
   ChevronDown,
   Gauge,
   Map,
+  History,
+  Clock3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,6 +53,16 @@ const allNavItems: NavItem[] = [
         href: '/suspendidos-recuperados',
         label: 'Suspendidos Recuperados',
         icon: ClipboardCheck,
+      },
+      {
+        href: '/recuperados-12-mas',
+        label: 'Recuperados 12 a mas',
+        icon: History,
+      },
+      {
+        href: '/recuperados-2-3-meses',
+        label: 'Recuperados 2 a 3 meses',
+        icon: Clock3,
       },
     ],
   },
