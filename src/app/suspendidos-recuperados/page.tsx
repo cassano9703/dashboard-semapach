@@ -4,34 +4,16 @@ import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { UserCheck, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-
-const districts = [
-  "Chincha Alta",
-  "Grocio Prado",
-  "Pueblo Nuevo",
-  "Alto Laran",
-  "Sunampe",
-  "Tambo de Mora",
-  "Chincha Baja",
-];
+import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 
 const formatCurrency = (value: number) =>
   `S/ ${value.toLocaleString('es-PE', {
@@ -49,9 +31,9 @@ export default function SuspendidosRecuperadosPage() {
   );
   const { data: servicesData, isLoading } = useCollection(servicesRef);
 
-  const { dailyTotal, monthlyTotalCount, monthlyTotalAmount, districtTotals } = useMemo(() => {
+  const { dailyTotal, monthlyTotalCount, monthlyTotalAmount } = useMemo(() => {
     if (!servicesData) {
-      return { dailyTotal: 0, monthlyTotalCount: 0, monthlyTotalAmount: 0, districtTotals: new Map() };
+      return { dailyTotal: 0, monthlyTotalCount: 0, monthlyTotalAmount: 0 };
     }
 
     const monthStart = startOfMonth(selectedDate);
@@ -61,7 +43,6 @@ export default function SuspendidosRecuperadosPage() {
     let daily = 0;
     let monthlyCount = 0;
     let monthlyAmount = 0;
-    const totals = new Map<string, { recoveredCount: number; recoveredAmount: number }>();
 
     servicesData.forEach(item => {
       const itemDate = parseISO(item.date + 'T00:00:00');
@@ -73,11 +54,6 @@ export default function SuspendidosRecuperadosPage() {
       if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
         monthlyCount += item.recoveredCount;
         monthlyAmount += item.recoveredAmount;
-
-        const current = totals.get(item.district) || { recoveredCount: 0, recoveredAmount: 0 };
-        current.recoveredCount += item.recoveredCount;
-        current.recoveredAmount += item.recoveredAmount;
-        totals.set(item.district, current);
       }
     });
 
@@ -85,7 +61,6 @@ export default function SuspendidosRecuperadosPage() {
       dailyTotal: daily, 
       monthlyTotalCount: monthlyCount, 
       monthlyTotalAmount: monthlyAmount,
-      districtTotals: totals,
     };
   }, [servicesData, selectedDate]);
   
@@ -138,49 +113,7 @@ export default function SuspendidosRecuperadosPage() {
 
       <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate}/>
       
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <CardTitle>Resumen de Usuarios Recuperados por Distrito</CardTitle>
-              <CardDescription>
-                Datos correspondientes al mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}. La gestión de estos datos se realiza en el panel de Administración.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg overflow-hidden">
-            <div className="relative max-h-96 overflow-y-auto">
-             {isLoading ? (
-              <div className="text-center p-8">Cargando datos...</div>
-            ) : (
-              <Table>
-                <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
-                  <TableRow>
-                    <TableHead>Distrito</TableHead>
-                    <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
-                    <TableHead className="w-[200px] text-right">Monto (S/)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {districts.map((district) => {
-                    const data = districtTotals.get(district) || { recoveredCount: 0, recoveredAmount: 0 };
-                    return (
-                      <TableRow key={district}>
-                        <TableCell className="font-medium">{district}</TableCell>
-                        <TableCell className="text-right">{data.recoveredCount}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(data.recoveredAmount)}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <RecoveredSummary selectedDate={selectedDate} />
     </div>
   );
 }
