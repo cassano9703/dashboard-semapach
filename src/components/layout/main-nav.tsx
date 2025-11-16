@@ -11,6 +11,8 @@ import {
   ClipboardCheck,
   Briefcase,
   ChevronDown,
+  Gauge,
+  Map,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -52,6 +54,8 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
+  { href: '/medicion', label: 'Medición', icon: Gauge },
+  { href: '/catastro', label: 'Catastro', icon: Map },
   { href: '/admin', label: 'Administración', icon: Database },
   { href: '/reportes', label: 'Reportes', icon: Book },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
