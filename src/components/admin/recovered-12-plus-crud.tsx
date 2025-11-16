@@ -22,7 +22,7 @@ import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState, useEffect } from "react";
-import { format, parse, isValid, startOfMonth, endOfMonth } from "date-fns";
+import { format, parse, isValid, startOfMonth, endOfMonth, getDate } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, getDocs, writeBatch, doc, deleteDoc, addDoc, Timestamp, orderBy, updateDoc } from "firebase/firestore";
@@ -205,7 +205,7 @@ export function Recovered12PlusCRUD() {
                   onSelect={setDate}
                   initialFocus
                   locale={es}
-                  disabled={!!editingId}
+                  disabled={(day) => getDate(day) > 15 || !!editingId}
                 />
               </PopoverContent>
             </Popover>
