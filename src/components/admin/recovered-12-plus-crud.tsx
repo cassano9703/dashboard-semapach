@@ -205,7 +205,7 @@ export function Recovered12PlusCRUD() {
                   onSelect={setDate}
                   initialFocus
                   locale={es}
-                  disabled={(day) => getDate(day) > 15 || !!editingId}
+                  disabled={!!editingId}
                 />
               </PopoverContent>
             </Popover>
@@ -276,3 +276,5 @@ export function Recovered12PlusCRUD() {
     </Card>
   );
 }
+
+    
