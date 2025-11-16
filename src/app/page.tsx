@@ -27,6 +27,9 @@ export default function Home() {
       </div>
       <StatCards selectedDate={selectedDate} />
       <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
+
+      <hr className="my-4" />
+
       <DistrictProgress />
       
       <hr className="my-4" />
