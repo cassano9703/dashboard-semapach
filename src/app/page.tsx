@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 import { Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
+import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -26,6 +27,7 @@ export default function Home() {
       <StatCards selectedDate={selectedDate} />
       <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <DistrictProgress />
+      <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <RecoveredSummary selectedDate={selectedDate} />
     </div>
   );
