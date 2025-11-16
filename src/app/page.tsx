@@ -10,6 +10,12 @@ import { useState } from 'react';
 import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { RecoveredStatsCards } from '@/components/dashboard/recovered-stats-cards';
+import { Recovered12PlusStatCards } from '@/components/dashboard/recovered-12-plus-stat-cards';
+import { Recovered12PlusChart } from '@/components/dashboard/recovered-12-plus-chart';
+import { Recovered2to3StatCards } from '@/components/dashboard/recovered-2-to-3-stat-cards';
+import { Recovered2to3Chart } from '@/components/dashboard/recovered-2-to-3-chart';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -35,10 +41,44 @@ export default function Home() {
       <hr className="my-4" />
 
       <div className="flex flex-col gap-6">
-        <h2 className="text-2xl font-bold tracking-tight">Análisis de Usuarios Recuperados</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Análisis de Usuarios Suspendidos Recuperados</h2>
         <RecoveredStatsCards selectedDate={selectedDate} />
         <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
         <RecoveredSummary selectedDate={selectedDate} />
+      </div>
+
+      <hr className="my-4" />
+
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">Análisis de Recuperados 12 a más Meses (No Factibles)</h2>
+            <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300">
+                <AlertCircle className="h-4 w-4 !text-blue-600 dark:!text-blue-400" />
+                <AlertTitle>Nota Importante</AlertTitle>
+                <AlertDescription>
+                    Acá se coloca el dato de Cobranza efectiva de 12 meses a más que NO INCLUYA factibles (dato llenado del 1 al 15 de cada mes).
+                </AlertDescription>
+            </Alert>
+        </div>
+        <Recovered12PlusStatCards selectedDate={selectedDate} />
+        <Recovered12PlusChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      </div>
+
+      <hr className="my-4" />
+
+      <div className="flex flex-col gap-6">
+         <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">Análisis de Recuperados 2 a 3 Meses (No Factibles)</h2>
+            <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300">
+                <AlertCircle className="h-4 w-4 !text-blue-600 dark:!text-blue-400" />
+                <AlertTitle>Nota Importante</AlertTitle>
+                <AlertDescription>
+                    Acá se coloca el dato de Cobranza efectiva de 2 y 3 meses que NO INCLUYA factibles (dato llenado del 16 al 30 del mes).
+                </AlertDescription>
+            </Alert>
+        </div>
+        <Recovered2to3StatCards selectedDate={selectedDate} />
+        <Recovered2to3Chart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
 
     </div>
