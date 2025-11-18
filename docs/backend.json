@@ -179,41 +179,6 @@
         "accumulatedMonthly",
         "updatedAt"
       ]
-    },
-    "InspectionsAndClandestine": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "InspectionsAndClandestine",
-      "type": "object",
-      "description": "Represents the monthly record of inspections and clandestine connections per district.",
-      "properties": {
-        "month": {
-          "type": "string",
-          "description": "The month of the record, in the format YYYY-MM."
-        },
-        "district": {
-          "type": "string",
-          "description": "The name of the district."
-        },
-        "inspectionsCount": {
-          "type": "number",
-          "description": "The number of inspections carried out."
-        },
-        "clandestineCount": {
-          "type": "number",
-          "description": "The number of clandestine connections found."
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The timestamp when the record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "month",
-        "district",
-        "inspectionsCount",
-        "clandestineCount"
-      ]
     }
   },
   "auth": {
@@ -300,22 +265,6 @@
             {
               "name": "recovered2to3Id",
               "description": "The unique ID of the recovered 2-3 month debt record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/inspections_clandestine/{recordId}",
-        "definition": {
-          "entityName": "InspectionsAndClandestine",
-          "schema": {
-            "$ref": "#/backend/entities/InspectionsAndClandestine"
-          },
-          "description": "Stores monthly records of inspections and clandestine connections for each district.",
-          "params": [
-            {
-              "name": "recordId",
-              "description": "The unique ID of the inspections and clandestine record."
             }
           ]
         }

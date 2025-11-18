@@ -75,19 +75,6 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
-    /**
-     * @description Allows read access to any user and write access to authenticated users.
-     * @path /inspections_clandestine/{recordId}
-     * @allow read: if true;
-     * @allow write: if isSignedIn();
-     * @principle Secures write operations while allowing public reads.
-     */
-    match /inspections_clandestine/{recordId} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-
     // Helper function to determine if a user is signed in
     function isSignedIn() {
       return request.auth != null;
@@ -99,4 +86,3 @@ service cloud.firestore {
     }
   }
 }
-
