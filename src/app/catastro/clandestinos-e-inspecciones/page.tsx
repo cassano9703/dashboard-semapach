@@ -1,20 +1,21 @@
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Map} from 'lucide-react';
+import {ClipboardList} from 'lucide-react';
 
-export default function CatastroPage() {
+export default function ClandestinosInspeccionesPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Catastro</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Clandestinos e Inspecciones</h1>
       <Card className="flex flex-col items-center justify-center text-center p-12 border-dashed">
         <CardHeader>
           <div className="mx-auto bg-secondary p-4 rounded-full">
-            <Map className="h-8 w-8 text-muted-foreground" />
+            <ClipboardList className="h-8 w-8 text-muted-foreground" />
           </div>
-          <CardTitle>Módulo de Catastro</CardTitle>
+          <CardTitle>Módulo de Clandestinos e Inspecciones</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Seleccione una opción del submenú para empezar a gestionar los datos del catastro.
+            Esta sección está en construcción. Próximamente podrá gestionar
+            los datos de clandestinos e inspecciones.
           </p>
         </CardContent>
       </Card>

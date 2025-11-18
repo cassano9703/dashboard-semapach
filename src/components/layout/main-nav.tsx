@@ -15,6 +15,7 @@ import {
   Map,
   History,
   Clock3,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -67,7 +68,18 @@ const allNavItems: NavItem[] = [
     ],
   },
   { href: '/medicion', label: 'Medición', icon: Gauge },
-  { href: '/catastro', label: 'Catastro', icon: Map },
+  {
+    href: '/catastro',
+    label: 'Catastro',
+    icon: Map,
+    subItems: [
+      {
+        href: '/catastro/clandestinos-e-inspecciones',
+        label: 'Clandestinos e Inspecciones',
+        icon: ClipboardList,
+      },
+    ],
+  },
   { href: '/admin', label: 'Administración', icon: Database },
   { href: '/reportes', label: 'Reportes', icon: Book },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
@@ -142,9 +154,9 @@ export function MainNav() {
                 <SidebarMenuButton
                   href={item.href}
                   isActive={
-                    item.href === '/'
+                    pathname === '/'
                       ? pathname === item.href
-                      : pathname.startsWith(item.href)
+                      : pathname.startsWith(item.href) && !isSubItemActive(navItems.find(nav => nav.href === item.href)?.subItems)
                   }
                   tooltip={item.label}
                 >
