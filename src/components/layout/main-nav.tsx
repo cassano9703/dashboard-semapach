@@ -16,6 +16,7 @@ import {
   History,
   Clock3,
   ClipboardList,
+  FileLock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -77,6 +78,11 @@ const allNavItems: NavItem[] = [
         href: '/catastro/clandestinos-e-inspecciones',
         label: 'Clandestinos e Inspecciones',
         icon: ClipboardList,
+      },
+      {
+        href: '/catastro/contratos-cerrados',
+        label: 'Contratos Cerrados',
+        icon: FileLock,
       },
     ],
   },
