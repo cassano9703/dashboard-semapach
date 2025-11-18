@@ -39,7 +39,6 @@ import { collection, query, orderBy } from 'firebase/firestore';
 export function InspectionsClandestineData() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const firestore = useFirestore();
-  const firstAvailableDate = new Date(2024, 0, 1); // Jan 2024
 
   const dataRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'inspections_clandestine'), orderBy('month', 'asc')) : null),
@@ -47,51 +46,27 @@ export function InspectionsClandestineData() {
   );
   const { data, isLoading } = useCollection(dataRef);
 
-  const { tableData, chartData } = useMemo(() => {
-    if (!data) return { tableData: [], chartData: [] };
+  const chartData = useMemo(() => {
+    if (!data) return [];
 
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
     
-    const tableDataForMonth = data
+    return data
       .filter(item => item.month === selectedMonthStr && (item.inspectionsCount > 0 || item.clandestineCount > 0))
       .map(item => ({
-        district: item.district,
-        inspectionsCount: item.inspectionsCount,
-        clandestineCount: item.clandestineCount,
+        name: item.district,
+        Inspecciones: item.inspectionsCount,
+        Clandestinos: item.clandestineCount,
       }));
-
-    const interval = {
-        start: firstAvailableDate,
-        end: new Date(),
-    };
-    const monthsInInterval = eachMonthOfInterval(interval);
-    
-    const monthlyTotals = monthsInInterval.map(month => {
-        const monthStart = startOfMonth(month);
-        const monthEnd = endOfMonth(month);
-        
-        let totalInspections = 0;
-        let totalClandestine = 0;
-
-        data.forEach(item => {
-            const itemDate = parseISO(item.month + '-01T00:00:00');
-            if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
-                totalInspections += item.inspectionsCount;
-                totalClandestine += item.clandestineCount;
-            }
-        });
-
-        return {
-            name: format(month, 'MMM', { locale: es }),
-            Inspecciones: totalInspections,
-            Clandestinos: totalClandestine,
-        };
-    });
-
-    return { tableData: tableDataForMonth, chartData: monthlyTotals };
 
   }, [data, selectedDate]);
   
+  const tableData = chartData.map(item => ({
+      district: item.name,
+      inspectionsCount: item.Inspecciones,
+      clandestineCount: item.Clandestinos,
+  }));
+
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
@@ -142,7 +117,7 @@ export function InspectionsClandestineData() {
                           </TableRow>
                           </TableHeader>
                           <TableBody>
-                          {tableData.map((item, index) => (
+                          {tableData.map((item) => (
                               <TableRow key={item.district}>
                               <TableCell className="font-medium">{item.district}</TableCell>
                               <TableCell className="text-right">{item.inspectionsCount}</TableCell>
@@ -161,14 +136,16 @@ export function InspectionsClandestineData() {
       <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-              <CardTitle>Comparativo Anual por Mes</CardTitle>
+              <CardTitle>Comparativo por Distrito</CardTitle>
               <CardDescription>
-                  Comparación de totales de inspecciones y clandestinos.
+                  Comparación de inspecciones y clandestinos del mes.
               </CardDescription>
           </CardHeader>
           <CardContent>
               {isLoading ? (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
+              ) : chartData.length === 0 ? (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
               ) : (
                   <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
