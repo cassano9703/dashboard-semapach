@@ -1,5 +1,6 @@
 import { DailyCollectionCRUD } from "@/components/admin/daily-collection-crud";
 import { DistrictProgressCRUD } from "@/components/admin/district-progress-crud";
+import { InspectionsClandestineCRUD } from "@/components/admin/inspections-clandestine-crud";
 import { Recovered12PlusCRUD } from "@/components/admin/recovered-12-plus-crud";
 import { Recovered2to3CRUD } from "@/components/admin/recovered-2-to-3-crud";
 import { RecoveredServicesCRUD } from "@/components/admin/recovered-services-crud";
@@ -18,8 +19,11 @@ export default function AdminPage() {
       <DailyCollectionCRUD />
       <DistrictProgressCRUD />
       <RecoveredServicesCRUD />
+      <InspectionsClandestineCRUD />
       <Recovered12PlusCRUD />
       <Recovered2to3CRUD />
     </div>
   );
 }
+
+    

@@ -154,7 +154,7 @@ export function InspectionsClandestineData() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {tableData.map((item) => (
+                        {tableData.map((item, index) => (
                             <TableRow key={item.district}>
                             <TableCell className="font-medium">{item.district}</TableCell>
                             <TableCell className="text-right">{item.inspectionsCount}</TableCell>
@@ -200,3 +200,4 @@ export function InspectionsClandestineData() {
   );
 }
 
+    
