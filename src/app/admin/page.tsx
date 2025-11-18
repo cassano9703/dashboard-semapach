@@ -4,6 +4,7 @@ import { InspectionsClandestineCRUD } from "@/components/admin/inspections-cland
 import { Recovered12PlusCRUD } from "@/components/admin/recovered-12-plus-crud";
 import { Recovered2to3CRUD } from "@/components/admin/recovered-2-to-3-crud";
 import { RecoveredServicesCRUD } from "@/components/admin/recovered-services-crud";
+import { ClosedContractsCRUD } from "@/components/admin/closed-contracts-crud";
 
 export default function AdminPage() {
   return (
@@ -20,10 +21,9 @@ export default function AdminPage() {
       <DistrictProgressCRUD />
       <RecoveredServicesCRUD />
       <InspectionsClandestineCRUD />
+      <ClosedContractsCRUD />
       <Recovered12PlusCRUD />
       <Recovered2to3CRUD />
     </div>
   );
 }
-
-    
