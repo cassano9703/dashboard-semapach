@@ -36,21 +36,6 @@ import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 
-const allDistricts = [
-    "Alto Laran",
-    "Chavin",
-    "Chincha Alta",
-    "Chincha Baja",
-    "El Carmen",
-    "Grocio Prado",
-    "Pueblo Nuevo",
-    "San Clemente",
-    "San Juan de Yanac",
-    "San Pedro de Huacarpana",
-    "Sunampe",
-    "Tambo de Mora",
-];
-
 export function InspectionsClandestineData() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const firestore = useFirestore();
@@ -66,14 +51,15 @@ export function InspectionsClandestineData() {
     if (!data) return { tableData: [], chartData: [] };
 
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
-    const tableDataForMonth = allDistricts.map(district => {
-      const record = data.find(item => item.month === selectedMonthStr && item.district === district);
-      return {
-        district,
-        inspectionsCount: record?.inspectionsCount || 0,
-        clandestineCount: record?.clandestineCount || 0,
-      };
-    });
+    
+    // Filter data for the table: only show rows with non-zero counts for the selected month
+    const tableDataForMonth = data
+      .filter(item => item.month === selectedMonthStr && (item.inspectionsCount > 0 || item.clandestineCount > 0))
+      .map(item => ({
+        district: item.district,
+        inspectionsCount: item.inspectionsCount,
+        clandestineCount: item.clandestineCount,
+      }));
 
     const interval = {
         start: firstAvailableDate,
@@ -144,6 +130,8 @@ export function InspectionsClandestineData() {
                 <div className="relative max-h-96 overflow-y-auto">
                     {isLoading ? (
                     <div className="text-center p-8">Cargando datos...</div>
+                    ) : tableData.length === 0 ? (
+                      <div className="text-center p-8 text-muted-foreground">No hay datos con valores para el mes seleccionado.</div>
                     ) : (
                     <Table>
                         <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
@@ -199,5 +187,3 @@ export function InspectionsClandestineData() {
     </div>
   );
 }
-
-    
