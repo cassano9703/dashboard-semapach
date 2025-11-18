@@ -16,6 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Rectangle,
+} from 'recharts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
@@ -45,71 +56,105 @@ export function ClosedContractsData() {
       .map((item, index) => ({
         ...item,
         item: index + 1,
+        name: item.district,
+        Cantidad: item.quantity,
       }));
 
   }, [data, selectedDate]);
+  
+  const chartData = tableData;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <CardTitle>Resumen Mensual de Contratos Cerrados</CardTitle>
-              <CardDescription>
-                Datos de contratos cerrados para el mes seleccionado.
-              </CardDescription>
-            </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={{ after: new Date() }}
-                  initialFocus
-                  locale={es}
-                  defaultMonth={selectedDate}
-                />
-              </PopoverContent>
-            </Popover>
-        </div>
-      </CardHeader>
-      <CardContent>
-         <div className="border rounded-lg overflow-hidden">
-              <div className="relative max-h-96 overflow-y-auto">
-                  {isLoading ? (
-                  <div className="text-center p-8">Cargando datos...</div>
-                  ) : tableData.length === 0 ? (
-                    <div className="text-center p-8 text-muted-foreground">No hay contratos cerrados para el mes seleccionado.</div>
-                  ) : (
-                  <Table>
-                      <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
-                      <TableRow>
-                          <TableHead className="w-[80px]">Ítem</TableHead>
-                          <TableHead>Distrito</TableHead>
-                          <TableHead className="w-[150px] text-right">Cantidad</TableHead>
-                      </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                      {tableData.map((item) => (
-                          <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.item}</TableCell>
-                          <TableCell>{item.district}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                          </TableRow>
-                      ))}
-                      </TableBody>
-                  </Table>
-                  )}
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Resumen Mensual de Contratos Cerrados</CardTitle>
+                <CardDescription>
+                  Datos de contratos cerrados para el mes seleccionado.
+                </CardDescription>
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    disabled={{ after: new Date() }}
+                    initialFocus
+                    locale={es}
+                    defaultMonth={selectedDate}
+                  />
+                </PopoverContent>
+              </Popover>
           </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden">
+                <div className="relative max-h-96 overflow-y-auto">
+                    {isLoading ? (
+                    <div className="text-center p-8">Cargando datos...</div>
+                    ) : tableData.length === 0 ? (
+                      <div className="text-center p-8 text-muted-foreground">No hay contratos cerrados para el mes seleccionado.</div>
+                    ) : (
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
+                        <TableRow>
+                            <TableHead className="w-[80px]">Ítem</TableHead>
+                            <TableHead>Distrito</TableHead>
+                            <TableHead className="w-[150px] text-right">Cantidad</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {tableData.map((item) => (
+                            <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.item}</TableCell>
+                            <TableCell>{item.district}</TableCell>
+                            <TableCell className="text-right">{item.quantity}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    )}
+                </div>
+            </div>
+        </CardContent>
+      </Card>
+      <Card>
+          <CardHeader>
+              <CardTitle>Comparativo por Distrito</CardTitle>
+              <CardDescription>
+                  Gráfico de contratos cerrados en el mes.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              {isLoading ? (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
+              ) : chartData.length === 0 ? (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
+              ) : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip
+                            contentStyle={{ fontSize: '12px' }}
+                        />
+                        <Legend />
+                        <Bar dataKey="Cantidad" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
+                    </BarChart>
+                  </ResponsiveContainer>
+              )}
+          </CardContent>
+        </Card>
+    </div>
   );
 }
