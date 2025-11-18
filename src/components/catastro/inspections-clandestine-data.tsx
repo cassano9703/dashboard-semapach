@@ -26,15 +26,18 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  LineChart,
+  Line,
 } from 'recharts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfMonth, eachMonthOfInterval, parseISO, isWithinInterval, endOfMonth } from 'date-fns';
+import { format, startOfMonth, eachMonthOfInterval, parseISO, isWithinInterval, endOfMonth, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { ChartContainer, ChartTooltipContent } from '../ui/chart';
 
 export function InspectionsClandestineData() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -46,7 +49,7 @@ export function InspectionsClandestineData() {
   );
   const { data, isLoading } = useCollection(dataRef);
 
-  const chartData = useMemo(() => {
+  const chartDataForMonth = useMemo(() => {
     if (!data) return [];
 
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
@@ -61,11 +64,39 @@ export function InspectionsClandestineData() {
 
   }, [data, selectedDate]);
   
-  const tableData = chartData.map(item => ({
-      district: item.name,
-      inspectionsCount: item.Inspecciones,
-      clandestineCount: item.Clandestinos,
-  }));
+  const tableData = chartDataForMonth;
+  
+  const yearlyChartData = useMemo(() => {
+    if (!data) return [];
+
+    const yearStart = startOfYear(selectedDate);
+    const monthsInYear = eachMonthOfInterval({
+      start: yearStart,
+      end: endOfMonth(new Date()),
+    });
+
+    let accumulatedInspections = 0;
+    let accumulatedClandestines = 0;
+
+    return monthsInYear.map(month => {
+      const monthStr = format(month, 'yyyy-MM');
+      const recordsForMonth = data.filter(item => item.month === monthStr);
+      
+      const monthlyInspections = recordsForMonth.reduce((sum, item) => sum + item.inspectionsCount, 0);
+      const monthlyClandestines = recordsForMonth.reduce((sum, item) => sum + item.clandestineCount, 0);
+
+      accumulatedInspections += monthlyInspections;
+      accumulatedClandestines += monthlyClandestines;
+
+      return {
+        name: format(month, 'MMM', { locale: es }),
+        'Inspecciones Mensuales': monthlyInspections,
+        'Clandestinos Mensuales': monthlyClandestines,
+        'Acumulado Inspecciones': accumulatedInspections,
+        'Acumulado Clandestinos': accumulatedClandestines,
+      };
+    });
+  }, [data, selectedDate]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -119,7 +150,7 @@ export function InspectionsClandestineData() {
                           <TableBody>
                           {tableData.map((item) => (
                               <TableRow key={item.district}>
-                              <TableCell className="font-medium">{item.district}</TableCell>
+                              <TableCell className="font-medium">{item.name}</TableCell>
                               <TableCell className="text-right">{item.inspectionsCount}</TableCell>
                               <TableCell className="text-right">{item.clandestineCount}</TableCell>
                               </TableRow>
@@ -144,11 +175,11 @@ export function InspectionsClandestineData() {
           <CardContent>
               {isLoading ? (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
-              ) : chartData.length === 0 ? (
+              ) : chartDataForMonth.length === 0 ? (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
               ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
+                  <BarChart data={chartDataForMonth}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis fontSize={12} tickLine={false} axisLine={false} />
@@ -161,6 +192,40 @@ export function InspectionsClandestineData() {
                   </BarChart>
                   </ResponsiveContainer>
               )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="lg:col-span-5">
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolución Anual de Inspecciones y Clandestinos</CardTitle>
+            <CardDescription>
+              Muestra el total mensual y el acumulado a lo largo del año seleccionado.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-[250px]">Cargando datos...</div>
+            ) : yearlyChartData.length === 0 ? (
+              <div className="flex justify-center items-center h-[250px] text-muted-foreground">
+                No hay datos para el año seleccionado.
+              </div>
+            ) : (
+              <ChartContainer config={{}} className="h-[300px] w-full">
+                <LineChart data={yearlyChartData} margin={{ left: 12, right: 12 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                  <Line dataKey="Inspecciones Mensuales" type="monotone" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={true} />
+                  <Line dataKey="Clandestinos Mensuales" type="monotone" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={true} />
+                  <Line dataKey="Acumulado Inspecciones" type="monotone" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                  <Line dataKey="Acumulado Clandestinos" type="monotone" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                </LineChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>
