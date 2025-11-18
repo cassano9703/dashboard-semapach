@@ -67,27 +67,33 @@ export function InspectionsClandestineData() {
   const tableData = chartDataForMonth;
   
   const yearlyChartData = useMemo(() => {
-    if (!data) return [];
-
+    if (!data || data.length === 0) return [];
+  
+    // Find the first month with data in the current year
     const yearStart = startOfYear(selectedDate);
+    const firstRecordOfMonth = data
+        .filter(d => d.month.startsWith(format(yearStart, 'yyyy')))
+        .map(d => parseISO(`${d.month}-01`))
+        .sort((a, b) => a.getTime() - b.getTime())[0] || yearStart;
+
     const monthsInYear = eachMonthOfInterval({
-      start: yearStart,
+      start: firstRecordOfMonth,
       end: endOfMonth(new Date()),
     });
-
+  
     let accumulatedInspections = 0;
     let accumulatedClandestines = 0;
-
+  
     return monthsInYear.map(month => {
       const monthStr = format(month, 'yyyy-MM');
       const recordsForMonth = data.filter(item => item.month === monthStr);
       
       const monthlyInspections = recordsForMonth.reduce((sum, item) => sum + item.inspectionsCount, 0);
       const monthlyClandestines = recordsForMonth.reduce((sum, item) => sum + item.clandestineCount, 0);
-
+  
       accumulatedInspections += monthlyInspections;
       accumulatedClandestines += monthlyClandestines;
-
+  
       return {
         name: format(month, 'MMM', { locale: es }),
         'Inspecciones Mensuales': monthlyInspections,
@@ -149,10 +155,10 @@ export function InspectionsClandestineData() {
                           </TableHeader>
                           <TableBody>
                           {tableData.map((item) => (
-                              <TableRow key={item.district}>
+                              <TableRow key={item.name}>
                               <TableCell className="font-medium">{item.name}</TableCell>
-                              <TableCell className="text-right">{item.inspectionsCount}</TableCell>
-                              <TableCell className="text-right">{item.clandestineCount}</TableCell>
+                              <TableCell className="text-right">{item.Inspecciones}</TableCell>
+                              <TableCell className="text-right">{item.Clandestinos}</TableCell>
                               </TableRow>
                           ))}
                           </TableBody>
