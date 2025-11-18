@@ -31,7 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, eachMonthOfInterval, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -62,7 +62,24 @@ export function ClosedContractsData() {
 
   }, [data, selectedDate]);
   
-  const chartData = tableData;
+  const chartData = useMemo(() => {
+    if (!data) return [];
+
+    const yearStart = startOfYear(selectedDate);
+    const yearEnd = endOfYear(selectedDate);
+    const monthsInYear = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+
+    return monthsInYear.map(month => {
+        const monthStr = format(month, 'yyyy-MM');
+        const recordsForMonth = data.filter(item => item.month === monthStr);
+        const totalQuantity = recordsForMonth.reduce((sum, item) => sum + item.quantity, 0);
+
+        return {
+            name: format(month, 'MMM', { locale: es }),
+            Cantidad: totalQuantity,
+        };
+    }).filter(item => item.Cantidad > 0);
+  }, [data, selectedDate]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -129,16 +146,16 @@ export function ClosedContractsData() {
       </Card>
       <Card>
           <CardHeader>
-              <CardTitle>Comparativo por Distrito</CardTitle>
+              <CardTitle>Comparativo Mensual</CardTitle>
               <CardDescription>
-                  Gráfico de contratos cerrados en el mes.
+                  Gráfico de contratos cerrados en el año.
               </CardDescription>
           </CardHeader>
           <CardContent>
               {isLoading ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
+                  <div className="h-[350px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
               ) : chartData.length === 0 ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
               ) : (
                   <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={chartData}>
