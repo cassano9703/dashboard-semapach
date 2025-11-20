@@ -219,7 +219,8 @@ export function DistrictProgress() {
                 </TableBody>
               </Table>
             </div>
-          </CardContent>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
