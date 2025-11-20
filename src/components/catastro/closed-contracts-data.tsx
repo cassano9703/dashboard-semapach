@@ -26,15 +26,18 @@ import {
   Legend,
   ResponsiveContainer,
   Rectangle,
+  LineChart,
+  Line,
 } from 'recharts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, eachMonthOfInterval, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
+import { format, eachMonthOfInterval, startOfYear, endOfYear, parseISO, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { ChartContainer, ChartTooltipContent } from '../ui/chart';
 
 export function ClosedContractsData() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -80,6 +83,39 @@ export function ClosedContractsData() {
         };
     }).filter(item => item.Cantidad > 0);
   }, [data, selectedDate]);
+
+  const yearlyChartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+  
+    const yearStart = startOfYear(selectedDate);
+    const firstRecordOfMonth = data
+        .filter(d => d.month.startsWith(format(yearStart, 'yyyy')))
+        .map(d => parseISO(`${d.month}-01`))
+        .sort((a, b) => a.getTime() - b.getTime())[0] || yearStart;
+
+    const monthsInYear = eachMonthOfInterval({
+      start: firstRecordOfMonth,
+      end: endOfMonth(new Date()),
+    });
+  
+    let accumulatedQuantity = 0;
+  
+    return monthsInYear.map(month => {
+      const monthStr = format(month, 'yyyy-MM');
+      const recordsForMonth = data.filter(item => item.month === monthStr);
+      
+      const monthlyQuantity = recordsForMonth.reduce((sum, item) => sum + item.quantity, 0);
+  
+      accumulatedQuantity += monthlyQuantity;
+  
+      return {
+        name: format(month, 'MMM', { locale: es }),
+        'Cantidad Mensual': monthlyQuantity,
+        'Acumulado Anual': accumulatedQuantity,
+      };
+    });
+  }, [data, selectedDate]);
+
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -172,6 +208,38 @@ export function ClosedContractsData() {
               )}
           </CardContent>
         </Card>
+
+        <div className="lg:col-span-2">
+            <Card>
+            <CardHeader>
+                <CardTitle>Evolución Anual de Contratos Cerrados</CardTitle>
+                <CardDescription>
+                Muestra la cantidad mensual y el acumulado a lo largo del año.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                <div className="flex justify-center items-center h-[250px]">Cargando datos...</div>
+                ) : yearlyChartData.length === 0 ? (
+                <div className="flex justify-center items-center h-[250px] text-muted-foreground">
+                    No hay datos para el año seleccionado.
+                </div>
+                ) : (
+                <ChartContainer config={{}} className="h-[300px] w-full">
+                    <LineChart data={yearlyChartData} margin={{ left: 12, right: 12 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line dataKey="Cantidad Mensual" type="monotone" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={true} />
+                    <Line dataKey="Acumulado Anual" type="monotone" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={true} />
+                    </LineChart>
+                </ChartContainer>
+                )}
+            </CardContent>
+            </Card>
+      </div>
     </div>
   );
 }
