@@ -106,101 +106,97 @@ export function InspectionsClandestineData() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div>
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <CardTitle>Resumen Mensual</CardTitle>
-                  <CardDescription>
-                    Datos de inspecciones y clandestinos para el mes seleccionado.
-                  </CardDescription>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      disabled={{ after: new Date() }}
-                      initialFocus
-                      locale={es}
-                      defaultMonth={selectedDate}
-                    />
-                  </PopoverContent>
-                </Popover>
-            </div>
-          </CardHeader>
-          <CardContent>
-             <div className="border rounded-lg overflow-hidden">
-                  <div className="relative max-h-96 overflow-y-auto">
-                      {isLoading ? (
-                      <div className="text-center p-8">Cargando datos...</div>
-                      ) : tableData.length === 0 ? (
-                        <div className="text-center p-8 text-muted-foreground">No hay datos con valores para el mes seleccionado.</div>
-                      ) : (
-                      <Table>
-                          <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
-                          <TableRow>
-                              <TableHead>Distrito</TableHead>
-                              <TableHead className="w-[150px] text-right">Nº de Inspecciones</TableHead>
-                              <TableHead className="w-[120px] text-right">Clandestinos</TableHead>
-                          </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                          {tableData.map((item) => (
-                              <TableRow key={item.name}>
-                              <TableCell className="font-medium">{item.name}</TableCell>
-                              <TableCell className="text-right">{item.Inspecciones}</TableCell>
-                              <TableCell className="text-right">{item.Clandestinos}</TableCell>
-                              </TableRow>
-                          ))}
-                          </TableBody>
-                      </Table>
-                      )}
-                  </div>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Resumen Mensual</CardTitle>
+                <CardDescription>
+                  Datos de inspecciones y clandestinos para el mes seleccionado.
+                </CardDescription>
               </div>
-          </CardContent>
-        </Card>
-      </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    disabled={{ after: new Date() }}
+                    initialFocus
+                    locale={es}
+                    defaultMonth={selectedDate}
+                  />
+                </PopoverContent>
+              </Popover>
+          </div>
+        </CardHeader>
+        <CardContent>
+           <div className="border rounded-lg overflow-hidden">
+                <div className="relative h-[300px] overflow-y-auto">
+                    {isLoading ? (
+                    <div className="text-center p-8">Cargando datos...</div>
+                    ) : tableData.length === 0 ? (
+                      <div className="text-center p-8 text-muted-foreground">No hay datos con valores para el mes seleccionado.</div>
+                    ) : (
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
+                        <TableRow>
+                            <TableHead>Distrito</TableHead>
+                            <TableHead className="w-[150px] text-right">Nº de Inspecciones</TableHead>
+                            <TableHead className="w-[120px] text-right">Clandestinos</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {tableData.map((item) => (
+                            <TableRow key={item.name}>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell className="text-right">{item.Inspecciones}</TableCell>
+                            <TableCell className="text-right">{item.Clandestinos}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    )}
+                </div>
+            </div>
+        </CardContent>
+      </Card>
       
-      <div>
-        <Card>
-          <CardHeader>
-              <CardTitle>Comparativo por Distrito</CardTitle>
-              <CardDescription>
-                  Comparación de inspecciones y clandestinos del mes.
-              </CardDescription>
-          </CardHeader>
-          <CardContent>
-              {isLoading ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
-              ) : chartDataForMonth.length === 0 ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
-              ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartDataForMonth}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip
-                          contentStyle={{ fontSize: '12px' }}
-                      />
-                      <Legend />
-                      <Bar dataKey="Inspecciones" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
-                      <Bar dataKey="Clandestinos" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
-                  </BarChart>
-                  </ResponsiveContainer>
-              )}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+            <CardTitle>Comparativo por Distrito</CardTitle>
+            <CardDescription>
+                Comparación de inspecciones y clandestinos del mes.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {isLoading ? (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
+            ) : chartDataForMonth.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
+            ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartDataForMonth}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip
+                        contentStyle={{ fontSize: '12px' }}
+                    />
+                    <Legend />
+                    <Bar dataKey="Inspecciones" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
+                    <Bar dataKey="Clandestinos" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
+                </BarChart>
+                </ResponsiveContainer>
+            )}
+        </CardContent>
+      </Card>
 
       <div className="lg:col-span-2">
         <Card>
