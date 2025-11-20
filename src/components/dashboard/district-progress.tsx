@@ -137,22 +137,22 @@ export function DistrictProgress() {
 
   return (
     <>
-       <style>{`
+      <style>{`
         .no-hover:hover {
           background-color: inherit !important;
         }
       `}</style>
       <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
-            <p className="text-muted-foreground">
-              {lastUpdatedText}
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleDownloadPdf}>
-            <Download className="mr-2 h-4 w-4" />
-            Descargar PDF
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
+          <p className="text-muted-foreground">
+            {lastUpdatedText}
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleDownloadPdf}>
+          <Download className="mr-2 h-4 w-4" />
+          Descargar PDF
+        </Button>
       </div>
       <Card>
         <CardContent className="p-0">
