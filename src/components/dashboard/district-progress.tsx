@@ -1,4 +1,5 @@
-'use client';
+"use client";
+
 import { useMemo, useRef } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -136,13 +137,13 @@ export function DistrictProgress() {
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <style>{`
         .no-hover:hover {
           background-color: inherit !important;
         }
       `}</style>
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
           <p className="text-muted-foreground">
@@ -220,6 +221,6 @@ export function DistrictProgress() {
             </div>
           </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
