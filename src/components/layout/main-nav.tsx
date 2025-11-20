@@ -34,6 +34,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +44,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: React.ElementType;
-  subItems?: Omit<NavItem, 'subItems' | 'icon'>[];
+  subItems?: Omit<NavItem, 'subItems'>[];
 };
 
 const allNavItems: NavItem[] = [
@@ -51,19 +54,22 @@ const allNavItems: NavItem[] = [
     label: 'Cobranza',
     icon: Briefcase,
     subItems: [
-      { href: '/recaudacion', label: 'Recaudación diaria' },
-      { href: '/avance-distritos', label: 'Avance de distritos' },
+      { href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp },
+      { href: '/avance-distritos', label: 'Avance de distritos', icon: Target },
       {
         href: '/suspendidos-recuperados',
         label: 'Suspendidos Recuperados',
+        icon: History,
       },
       {
         href: '/recuperados-12-mas',
         label: 'Recuperados 12 a mas',
+        icon: Clock3,
       },
       {
         href: '/recuperados-2-3-meses',
         label: 'Recuperados 2 a 3 meses',
+        icon: ClipboardList,
       },
     ],
   },
@@ -76,10 +82,12 @@ const allNavItems: NavItem[] = [
       {
         href: '/catastro/clandestinos-e-inspecciones',
         label: 'Clandestinos e Inspecciones',
+        icon: FileLock,
       },
       {
         href: '/catastro/contratos-cerrados',
         label: 'Contratos Cerrados',
+        icon: ClipboardCheck,
       },
     ],
   },
@@ -110,13 +118,6 @@ export function MainNav() {
     setOpenCollapsibles(prev => ({...prev, [href]: !prev[href]}));
   };
 
-  const isRouteActive = (href: string, isParent = false) => {
-    if (isParent) {
-      return pathname.startsWith(href);
-    }
-    return pathname === href;
-  }
-
   return (
     <>
       <SidebarHeader className="border-b">
@@ -129,45 +130,47 @@ export function MainNav() {
         <SidebarMenu>
           {navItems.map((item) =>
             item.subItems ? (
-              <Collapsible key={item.href} open={openCollapsibles[item.href] || false} onOpenChange={() => handleCollapsibleToggle(item.href)} className="w-full">
+              <Collapsible key={item.href} open={openCollapsibles[item.href] || false} onOpenChange={() => handleCollapsibleToggle(item.href)}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <button className={cn("relative flex w-full items-center justify-between rounded-md p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", isRouteActive(item.href, true) && "text-sidebar-accent-foreground font-medium")}>
-                       {isRouteActive(item.href, true) && <div className="absolute left-0 h-6 w-1 bg-primary rounded-r-full" />}
-                       <div className='flex items-center gap-3 ml-2'>
+                    <SidebarMenuButton
+                      href={item.href}
+                      isActive={isSubItemActive(item.subItems)}
+                      className="w-full justify-between"
+                    >
+                      <div className="flex items-center gap-3">
                         <item.icon className="h-5 w-5" />
                         <span>{item.label}</span>
-                       </div>
-                       <ChevronDown className={cn("h-4 w-4 transition-transform", openCollapsibles[item.href] && "rotate-180")} />
-                    </button>
+                      </div>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", openCollapsibles[item.href] && "rotate-180")} />
+                    </SidebarMenuButton>
                   </CollapsibleTrigger>
                 </SidebarMenuItem>
                 <CollapsibleContent>
-                    <ul className='flex w-full min-w-0 flex-col gap-1 py-1 pl-12'>
-                       {item.subItems.map((subItem) => (
-                         <SidebarMenuItem key={subItem.href}>
-                           <Link
-                            href={subItem.href}
-                            className={cn(
-                              'block w-full rounded-md p-2 text-sm text-left hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                              isRouteActive(subItem.href) &&
-                                'bg-sidebar-accent text-sidebar-accent-foreground'
-                            )}
-                          >
-                            {subItem.label}
-                           </Link>
-                         </SidebarMenuItem>
-                       ))}
-                    </ul>
+                  <SidebarMenuSub>
+                    {item.subItems.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.href}>
+                        <SidebarMenuSubButton
+                          href={subItem.href}
+                          isActive={pathname === subItem.href}
+                        >
+                          <subItem.icon className="h-4 w-4" />
+                          <span>{subItem.label}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
             ) : (
               <SidebarMenuItem key={item.href}>
-                 <Link href={item.href} className={cn("relative flex w-full items-center gap-3 ml-2 rounded-md p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", isRouteActive(item.href) && "text-sidebar-accent-foreground font-medium")}>
-                    {isRouteActive(item.href) && <div className="absolute left-[-6px] h-6 w-1 bg-primary rounded-r-full" />}
-                    <item.icon className="h-5 w-5"/>
-                    <span>{item.label}</span>
-                 </Link>
+                <SidebarMenuButton
+                  href={item.href}
+                  isActive={pathname === item.href}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             )
           )}
