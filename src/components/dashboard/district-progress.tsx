@@ -1,6 +1,5 @@
-
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
@@ -14,16 +13,17 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { CheckCircle, Download } from 'lucide-react';
+import { Button } from '../ui/button';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const formatCurrency = (value: number) =>
-  `S/ ${value.toLocaleString('es-PE', {
+  `${value.toLocaleString('es-PE', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })}`;
@@ -45,6 +45,7 @@ const districtsInOrder = [
 
 export function DistrictProgress() {
   const firestore = useFirestore();
+  const tableRef = useRef(null);
 
   const districtProgressRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'district_progress')) : null),
@@ -67,14 +68,17 @@ export function DistrictProgress() {
 
     return districtsInOrder.map((districtName) => {
       const data = dataMap.get(districtName);
+      const recovered = data?.recovered || 0;
+      const monthlyGoal = data?.monthlyGoal || 0;
+      const progress = monthlyGoal > 0 ? (recovered / monthlyGoal) * 100 : 0;
+      const faltante = monthlyGoal - recovered;
+
       return {
         district: districtName,
-        recovered: data?.recovered || 0,
-        monthlyGoal: data?.monthlyGoal || 0,
-        progress:
-          data && data.monthlyGoal > 0
-            ? (data.recovered / data.monthlyGoal) * 100
-            : 0,
+        recovered: recovered,
+        monthlyGoal: monthlyGoal,
+        progress: progress,
+        faltante: faltante > 0 ? faltante : 0,
       };
     });
   }, [districtProgressData]);
@@ -96,75 +100,125 @@ export function DistrictProgress() {
   const lastUpdatedText = lastUpdated
     ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL 'a las' hh:mm a", { locale: es })}`
     : 'Datos para el mes actual.';
+    
+  const handleDownloadPdf = () => {
+    if (!tableRef.current) return;
 
+    // Temporarily remove hover effects for capture
+    const tableRows = (tableRef.current as HTMLElement).querySelectorAll('tr');
+    tableRows.forEach(row => row.classList.add('no-hover'));
+
+    html2canvas(tableRef.current, {
+        scale: 2, // Increase scale for better quality
+    }).then((canvas) => {
+        // Restore hover effects
+        tableRows.forEach(row => row.classList.remove('no-hover'));
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        const headerText = "Avance de Meta Mensual por Distrito";
+        const subHeaderText = lastUpdatedText;
+        
+        pdf.setFontSize(18);
+        pdf.text(headerText, 14, 20);
+        pdf.setFontSize(10);
+        pdf.setTextColor(100);
+        pdf.text(subHeaderText, 14, 28);
+        
+        pdf.addImage(imgData, 'PNG', 10, 35, pdfWidth - 20, pdfHeight - 20);
+
+        const monthYear = format(new Date(), 'yyyy-MM');
+        pdf.save(`avance-distritos-${monthYear}.pdf`);
+    });
+  };
 
   return (
     <>
-      <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
-          <p className="text-muted-foreground">
-            {lastUpdatedText}
-          </p>
+       <style>{`
+        .no-hover:hover {
+          background-color: inherit !important;
+        }
+      `}</style>
+      <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
+            <p className="text-muted-foreground">
+              {lastUpdatedText}
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleDownloadPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Descargar PDF
+          </Button>
       </div>
       <Card>
-        <CardHeader>
-          <CardTitle>Progreso de Distritos</CardTitle>
-          <CardDescription>
-            Resumen del avance de recaudación por distrito para el mes en curso.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader className="bg-table-header text-table-header-foreground">
-                <TableRow>
-                  <TableHead className="w-[200px]">Distrito</TableHead>
-                  <TableHead>Progreso</TableHead>
-                  <TableHead className="text-right">Recuperado</TableHead>
-                  <TableHead className="text-right">Meta</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            <div ref={tableRef}>
+              <Table>
+                <TableHeader className="bg-table-header text-table-header-foreground">
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">
-                      Cargando datos...
-                    </TableCell>
+                    <TableHead className="w-[200px]">Distrito</TableHead>
+                    <TableHead className="text-center">Recuperado</TableHead>
+                    <TableHead className="text-center">Meta</TableHead>
+                    <TableHead>Avance</TableHead>
+                    <TableHead className="text-right">Faltante</TableHead>
                   </TableRow>
-                ) : dataForCurrentMonth.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">
-                      No hay datos de avance para el mes actual.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  dataForCurrentMonth.map((item) => (
-                    <TableRow
-                      key={item.district}
-                      className={item.progress >= 100 ? 'bg-green-100 dark:bg-green-900/30' : ''}
-                    >
-                      <TableCell className="font-medium">{item.district}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-4">
-                          <Progress value={item.progress} className="w-full" />
-                          <span className="text-sm font-medium w-16 text-right">
-                            {item.progress.toFixed(1)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(item.recovered)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(item.monthlyGoal)}
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center h-24">
+                        Cargando datos...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+                  ) : dataForCurrentMonth.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center h-24">
+                        No hay datos de avance para el mes actual.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    dataForCurrentMonth.map((item) => (
+                      <TableRow
+                        key={item.district}
+                        className={item.progress >= 100 ? 'bg-green-100 dark:bg-green-900/30' : ''}
+                      >
+                        <TableCell className="font-medium">{item.district}</TableCell>
+                        <TableCell className="text-center font-bold">{formatCurrency(item.recovered)}</TableCell>
+                        <TableCell className="text-center">{formatCurrency(item.monthlyGoal)}</TableCell>
+                        <TableCell>
+                          {item.progress >= 100 ? (
+                              <div className="flex items-center gap-2 text-green-600 font-semibold">
+                                  <CheckCircle className="h-5 w-5" />
+                                  <span>Meta Cumplida</span>
+                              </div>
+                          ) : (
+                              <div className="flex items-center gap-4">
+                                <Progress value={item.progress} className="w-full h-3" />
+                                <span className="text-sm font-medium w-16 text-right">
+                                  {item.progress.toFixed(0)}%
+                                </span>
+                              </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          {item.progress >= 100 ? (
+                            <span className="text-green-600">¡Superado!</span>
+                          ) : (
+                            <span className="text-orange-500">{formatCurrency(item.faltante)}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
       </Card>
     </>
   );
