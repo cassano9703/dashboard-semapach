@@ -111,7 +111,7 @@ export function InspectionsClandestineData() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <CardTitle>Resumen Mensual por Distrito</CardTitle>
+                  <CardTitle>Resumen Mensual</CardTitle>
                   <CardDescription>
                     Datos de inspecciones y clandestinos para el mes seleccionado.
                   </CardDescription>
