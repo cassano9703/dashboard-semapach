@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import {
   Table,
@@ -25,8 +26,14 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download } from 'lucide-react';
+import { CheckCircle2, Download, Goal, TrendingUp } from 'lucide-react';
 import { Button } from '../ui/button';
+
+const formatCurrency = (value: number) =>
+  `S/ ${value.toLocaleString('es-PE', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
 
 export function DistrictProgress() {
   const firestore = useFirestore();
@@ -52,7 +59,8 @@ export function DistrictProgress() {
         progress:
           item.monthlyGoal > 0 ? (item.recovered / item.monthlyGoal) * 100 : 0,
         difference: Math.max(0, item.monthlyGoal - item.recovered),
-      }));
+      }))
+      .sort((a, b) => b.progress - a.progress);
   }, [districtProgressData]);
 
   const lastUpdated = useMemo(() => {
@@ -78,7 +86,7 @@ export function DistrictProgress() {
     
     html2canvas(input, { scale: 2 }).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('l', 'mm', 'a4', true);
+        const pdf = new jsPDF('p', 'mm', 'a4', true);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
@@ -102,88 +110,76 @@ export function DistrictProgress() {
     : 'Datos para el mes actual.';
 
   return (
-    <Card ref={pdfRef}>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-                <CardTitle>Avance de Meta Mensual por Distrito</CardTitle>
-                <CardDescription>
-                  {lastUpdatedText}
-                </CardDescription>
-            </div>
-            <Button id="download-pdf-button" onClick={handleDownloadPdf} size="sm" variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Descargar PDF
-            </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <div ref={pdfRef}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6">
+          <div>
+              <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
+              <p className="text-muted-foreground">
+                {lastUpdatedText}
+              </p>
+          </div>
+          <Button id="download-pdf-button" onClick={handleDownloadPdf} size="sm" variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Descargar PDF
+          </Button>
+      </div>
+
         {isLoading ? (
           <div className="flex justify-center items-center h-[280px]">
             Cargando datos...
           </div>
         ) : dataForCurrentMonth.length === 0 ? (
-          <div className="flex justify-center items-center h-[280px] text-muted-foreground">
-              No hay datos de avance para el mes actual.
-          </div>
+          <Card>
+            <CardContent className="flex justify-center items-center h-[280px]">
+                <p className="text-muted-foreground">
+                    No hay datos de avance para el mes actual.
+                </p>
+            </CardContent>
+          </Card>
         ) : (
-            <div className="flex flex-col">
-              <Table>
-                <TableHeader className="bg-table-header text-table-header-foreground">
-                  <TableRow>
-                    <TableHead>Distrito</TableHead>
-                    <TableHead className="w-[120px] text-right">Recuperado</TableHead>
-                    <TableHead className="w-[120px] text-right">Meta</TableHead>
-                    <TableHead className="w-[200px]">Avance</TableHead>
-                    <TableHead className="w-[150px] text-right">Faltante</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dataForCurrentMonth.map((item) => {
-                    const goalReached =
-                      item.recovered >= item.monthlyGoal && item.monthlyGoal > 0;
-                    return (
-                      <TableRow
-                        key={item.id}
-                        className={cn(
-                          goalReached && 'bg-green-50 dark:bg-green-900/20'
-                        )}
-                      >
-                        <TableCell className="font-medium">
-                          {item.district}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                          {item.recovered.toLocaleString('es-PE')}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {item.monthlyGoal.toLocaleString('es-PE')}
-                        </TableCell>
-                        <TableCell>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {dataForCurrentMonth.map((item) => {
+                const goalReached =
+                  item.recovered >= item.monthlyGoal && item.monthlyGoal > 0;
+                return (
+                  <Card key={item.id} className={cn("flex flex-col", goalReached && 'border-green-600 bg-green-50 dark:bg-green-950/30')}>
+                      <CardHeader className="pb-4">
+                          <CardTitle className="text-lg">{item.district}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow space-y-4">
+                          <div className="flex justify-between items-baseline">
+                              <span className="text-sm text-muted-foreground">Recuperado</span>
+                              <span className="text-2xl font-bold">{formatCurrency(item.recovered)}</span>
+                          </div>
+                          <div className="flex justify-between items-baseline">
+                              <span className="text-sm text-muted-foreground">Meta</span>
+                              <span className="text-lg font-semibold text-muted-foreground">{formatCurrency(item.monthlyGoal)}</span>
+                          </div>
                           {goalReached ? (
-                            <div className="flex items-center gap-2 text-green-600 font-semibold">
-                              <CheckCircle2 className="h-5 w-5" />
-                              <span>Meta Cumplida</span>
-                            </div>
+                              <div className="flex items-center gap-2 text-green-600 font-semibold pt-2">
+                                  <CheckCircle2 className="h-5 w-5" />
+                                  <span>Meta Cumplida y Superada</span>
+                              </div>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <Progress value={item.progress} className="h-2" />
-                              <span className="text-xs font-semibold text-muted-foreground w-10 text-right">
-                                {Math.round(item.progress)}%
-                              </span>
-                            </div>
+                              <div className="space-y-1 pt-2">
+                                  <div className="flex justify-between items-center text-sm">
+                                      <span>Avance</span>
+                                      <span className="font-semibold">{Math.round(item.progress)}%</span>
+                                  </div>
+                                  <Progress value={item.progress} className="h-2" />
+                              </div>
                           )}
-                        </TableCell>
-                        <TableCell className={cn("text-right font-medium", goalReached ? "text-green-600" : "text-amber-600")}>
-                          {goalReached ? '¡Superado!' : `${item.difference.toLocaleString('es-PE')}`}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                      </CardContent>
+                      <CardFooter>
+                          <p className={cn("text-sm font-medium w-full text-center", goalReached ? "text-green-700 dark:text-green-400" : "text-amber-600 dark:text-amber-400")}>
+                            {goalReached ? `¡Superado por ${formatCurrency(item.recovered - item.monthlyGoal)}!` : `Faltan ${formatCurrency(item.difference)}`}
+                          </p>
+                      </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
