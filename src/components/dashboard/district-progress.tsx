@@ -81,7 +81,7 @@ export function DistrictProgress() {
         progress: progress,
         faltante: faltante > 0 ? faltante : 0,
       };
-    });
+    }).filter(item => item.recovered > 0 || item.monthlyGoal > 0);
   }, [districtProgressData]);
 
   const lastUpdated = useMemo(() => {
