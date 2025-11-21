@@ -18,7 +18,8 @@ import {
   Clock3,
   ClipboardList,
   FileLock,
-  FileText
+  FileText,
+  Building,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,6 +52,7 @@ type NavItem = {
 
 const allNavItems: NavItem[] = [
   { href: '/', label: 'Inicio', icon: Home },
+  { href: '/oficina-cobranza', label: 'Oficina de Cobranza', icon: Building },
   {
     href: '/cobranza',
     label: 'Cobranza',
