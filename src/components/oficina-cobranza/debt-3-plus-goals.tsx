@@ -6,7 +6,8 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import { Progress } from '../ui/progress';
 
 interface Debt3PlusGoalsProps {
   selectedDate: Date;
@@ -43,34 +44,46 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     return dbtGoals.slice(7, 10);
   }, [goalsData, selectedDate]);
 
-  const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
-    const hasData = proposed !== undefined;
-    const hasExecutedData = executed !== undefined;
-    
-    let statusElement: React.ReactNode;
+  const renderGoalRow = (title: string, initialAmount: number | undefined, currentAmount: number | undefined) => {
+    const hasData = initialAmount !== undefined && initialAmount > 0;
+    const hasCurrentData = currentAmount !== undefined;
+    const goalMet = hasData && hasCurrentData && currentAmount <= 0;
 
-    if (hasData) {
-      if (!hasExecutedData) {
-        statusElement = <Clock className="h-5 w-5 text-yellow-500" />;
-      } else if (executed <= proposed) {
-        statusElement = <CheckCircle className="h-5 w-5 text-green-600" />;
-      } else {
-        statusElement = <XCircle className="h-5 w-5 text-red-600" />;
-      }
-    } else {
-      statusElement = <span>-</span>;
+    let progress = 0;
+    if(hasData && hasCurrentData){
+        const reduction = initialAmount - currentAmount;
+        if(reduction > 0) {
+            progress = Math.min((reduction / initialAmount) * 100, 100);
+        }
     }
+
 
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
-            {hasData ? formatCurrency(proposed) : '-'}
+            {hasData ? formatCurrency(initialAmount) : '-'}
         </div>
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
-            {hasExecutedData ? formatCurrency(executed) : '-'}
+            {hasCurrentData ? formatCurrency(currentAmount) : '-'}
         </div>
-        <div className={`col-span-1 flex justify-center items-center`}>{statusElement}</div>
+        <div className="col-span-1 flex items-center gap-2">
+           {hasData && hasCurrentData ? (
+                goalMet ? (
+                     <div className="flex items-center gap-2 w-full text-green-600">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-semibold">Saldado</span>
+                    </div>
+                ) : (
+                    <>
+                        <Progress value={progress} className="w-full h-2" />
+                        <span className="text-xs font-medium">{progress.toFixed(0)}%</span>
+                    </>
+                )
+            ) : (
+                <span className="w-full text-center">-</span>
+            )}
+        </div>
       </div>
     );
   };
@@ -89,7 +102,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
               <div className="col-span-1">Mes</div>
               <div className="col-span-1 text-right">Monto Inicial</div>
               <div className="col-span-1 text-right">Monto Actual</div>
-              <div className="col-span-1 text-center">Estado</div>
+              <div className="col-span-1 text-center">Reducción</div>
           </div>
         {debtGoals.map((goal, index) =>
           renderGoalRow(

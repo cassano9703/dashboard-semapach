@@ -6,7 +6,8 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface CollectionDebtGoalsProps {
   selectedDate: Date;
@@ -46,21 +47,14 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
     const hasData = proposed !== undefined && proposed > 0;
-    const hasExecutedData = executed !== undefined && executed > 0;
-
-    let statusElement: React.ReactNode;
-
-    if (hasData) {
-      if (!hasExecutedData) {
-        statusElement = <Clock className="h-5 w-5 text-yellow-500" />;
-      } else if (executed >= proposed) {
-        statusElement = <CheckCircle className="h-5 w-5 text-green-600" />;
-      } else {
-        statusElement = <XCircle className="h-5 w-5 text-red-600" />;
-      }
-    } else {
-        statusElement = <span>-</span>;
+    const hasExecutedData = executed !== undefined;
+    
+    let progress = 0;
+    if (hasData && hasExecutedData) {
+        progress = Math.min((executed / proposed) * 100, 100);
     }
+
+    const goalMet = hasData && hasExecutedData && executed >= proposed;
 
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
@@ -71,7 +65,23 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
             {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
-        <div className={`col-span-1 flex justify-center items-center`}>{statusElement}</div>
+        <div className="col-span-1 flex items-center gap-2">
+            {hasData && hasExecutedData ? (
+                goalMet ? (
+                     <div className="flex items-center gap-2 w-full text-green-600">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-semibold">Cumplido</span>
+                    </div>
+                ) : (
+                    <>
+                        <Progress value={progress} className="w-full h-2" />
+                        <span className="text-xs font-medium">{progress.toFixed(0)}%</span>
+                    </>
+                )
+            ) : (
+                <span className="w-full text-center">-</span>
+            )}
+        </div>
       </div>
     );
   };
@@ -90,7 +100,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
               <div className="col-span-1">Mes</div>
               <div className="col-span-1 text-right">Meta Propuesta</div>
               <div className="col-span-1 text-right">Meta Ejecutada</div>
-              <div className="col-span-1 text-center">Estado</div>
+              <div className="col-span-1 text-center">Avance</div>
           </div>
         {collectionGoals.map((goal, index) =>
           renderGoalRow(
