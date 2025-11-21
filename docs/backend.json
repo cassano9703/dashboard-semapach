@@ -252,6 +252,37 @@
         "inspectionsCount",
         "clandestineCount"
       ]
+    },
+    "MonthlyGoal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MonthlyGoal",
+      "type": "object",
+      "description": "Represents a monthly goal, which can be for collection or debt recovery.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the goal record." },
+        "month": { "type": "string", "description": "The month of the goal, in YYYY-MM format." },
+        "goalType": { "type": "string", "enum": ["collection", "debt_3_plus"], "description": "Type of the goal." },
+        "proposedAmount": { "type": "number", "description": "The proposed goal amount." },
+        "executedAmount": { "type": "number", "description": "The amount executed towards the goal." },
+        "amountToReach": { "type": "number", "description": "For debt goals, the target amount to reach." },
+        "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
+      },
+      "required": ["month", "goalType", "proposedAmount"]
+    },
+    "ServiceOperation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ServiceOperation",
+      "type": "object",
+      "description": "Represents service operations like cuts and reconnections.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the record." },
+        "month": { "type": "string", "description": "The month of the operation, in YYYY-MM format." },
+        "operationType": { "type": "string", "enum": ["cut", "reconnection"], "description": "Type of operation." },
+        "entity": { "type": "string", "enum": ["servis", "semapach"], "description": "The entity performing the operation." },
+        "quantity": { "type": "number", "description": "The number of operations performed." },
+        "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
+      },
+      "required": ["month", "operationType", "entity", "quantity"]
     }
   },
   "auth": {
@@ -372,6 +403,24 @@
               "description": "The unique ID of the closed contract record."
             }
           ]
+        }
+      },
+      {
+        "path": "/monthly_goals/{goalId}",
+        "definition": {
+          "entityName": "MonthlyGoal",
+          "schema": { "$ref": "#/backend/entities/MonthlyGoal" },
+          "description": "Stores monthly goals for collection or debt recovery.",
+          "params": [{ "name": "goalId", "description": "The unique ID of the monthly goal document." }]
+        }
+      },
+      {
+        "path": "/service_operations/{operationId}",
+        "definition": {
+          "entityName": "ServiceOperation",
+          "schema": { "$ref": "#/backend/entities/ServiceOperation" },
+          "description": "Stores records of service operations like cuts and reconnections.",
+          "params": [{ "name": "operationId", "description": "The unique ID of the service operation document." }]
         }
       }
     ],

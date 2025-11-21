@@ -3,6 +3,8 @@ import { DistrictProgressCRUD } from "@/components/admin/district-progress-crud"
 import { Recovered12PlusCRUD } from "@/components/admin/recovered-12-plus-crud";
 import { Recovered2to3CRUD } from "@/components/admin/recovered-2-to-3-crud";
 import { RecoveredServicesCRUD } from "@/components/admin/recovered-services-crud";
+import { MonthlyGoalsCRUD } from "@/components/admin/monthly-goals-crud";
+import { ServiceOperationsCRUD } from "@/components/admin/service-operations-crud";
 
 export default function AdminCobranzaPage() {
   return (
@@ -20,6 +22,8 @@ export default function AdminCobranzaPage() {
       <RecoveredServicesCRUD />
       <Recovered12PlusCRUD />
       <Recovered2to3CRUD />
+      <MonthlyGoalsCRUD />
+      <ServiceOperationsCRUD />
     </div>
   );
 }
