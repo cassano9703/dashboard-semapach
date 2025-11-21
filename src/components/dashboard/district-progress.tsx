@@ -180,11 +180,11 @@ export function DistrictProgress() {
                 <Table>
                   <TableHeader className="bg-table-header text-table-header-foreground">
                     <TableRow>
-                      <TableHead className="w-[200px]">Distrito</TableHead>
-                      <TableHead className="text-center">Recuperado</TableHead>
-                      <TableHead className="text-center">Meta</TableHead>
-                      <TableHead>Avance</TableHead>
-                      <TableHead className="text-right">Faltante</TableHead>
+                      <TableHead className="w-[200px] py-4">Distrito</TableHead>
+                      <TableHead className="text-center py-4">Recuperado</TableHead>
+                      <TableHead className="text-center py-4">Meta</TableHead>
+                      <TableHead className="py-4">Avance</TableHead>
+                      <TableHead className="text-right py-4">Faltante</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
