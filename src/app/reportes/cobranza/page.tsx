@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { OverallProgress } from '@/components/oficina-cobranza/overall-progress';
+import { CollectionDebtGoals } from '@/components/oficina-cobranza/collection-debt-goals';
+import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-operations-summary';
-import { DistrictProgress } from '@/components/dashboard/district-progress';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 
 export default function ReportesCobranzaPage() {
@@ -13,12 +13,12 @@ export default function ReportesCobranzaPage() {
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">Reporte de Oficina de Cobranza</h1>
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 flex flex-col gap-6">
-          <OverallProgress selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="lg:col-span-1 flex flex-col gap-6">
+            <CollectionDebtGoals selectedDate={selectedDate} />
         </div>
-        <div className="xl:col-span-1 flex flex-col gap-6">
-           <DistrictProgress />
+        <div className="lg:col-span-1 flex flex-col gap-6">
+           <DistrictProgressChart />
         </div>
       </div>
       
