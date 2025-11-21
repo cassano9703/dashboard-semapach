@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -235,6 +236,11 @@ export function DistrictProgress() {
                       ))
                     )}
                   </TableBody>
+                  <TableFooter>
+                    <TableRow className="bg-table-header hover:bg-table-header">
+                        <TableCell colSpan={5} className="py-1"></TableCell>
+                    </TableRow>
+                  </TableFooter>
                 </Table>
             </div>
           </CardContent>
