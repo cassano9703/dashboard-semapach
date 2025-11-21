@@ -229,11 +229,12 @@ export function ClosedContractsData() {
                     <LineChart data={yearlyChartData} margin={{ left: 12, right: 12 }}>
                     <CartesianGrid vertical={false} />
                     <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis yAxisId="right" orientation="right" tickLine={false} axisLine={false} tickMargin={8} />
                     <Tooltip content={<ChartTooltipContent />} />
                     <Legend />
-                    <Line dataKey="Cantidad Mensual" type="monotone" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={true} />
-                    <Line dataKey="Acumulado Anual" type="monotone" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={true} />
+                    <Bar yAxisId="left" dataKey="Cantidad Mensual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                    <Line yAxisId="right" dataKey="Acumulado Anual" type="monotone" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={true} />
                     </LineChart>
                 </ChartContainer>
                 )}
