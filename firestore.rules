@@ -109,6 +109,15 @@ service cloud.firestore {
     }
 
     /**
+     * @description Allows read access to any user and write access to authenticated users for annual goals.
+     * @path /annual_goals/{goalId}
+     */
+    match /annual_goals/{goalId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
      * @description Allows read access to any user and write access to authenticated users for service operations.
      * @path /service_operations/{operationId}
      */
@@ -128,3 +137,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
