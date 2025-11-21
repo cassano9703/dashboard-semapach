@@ -17,8 +17,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  BarChart,
+  ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -31,7 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfYear, endOfYear, eachMonthOfInterval } from 'date-fns';
+import { format, startOfYear, endOfYear, eachMonthOfInterval, parseISO, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -53,6 +54,7 @@ export function ClosedContractsData() {
     
     return data
       .filter(item => item.month === selectedMonthStr && item.quantity > 0)
+      .sort((a, b) => b.quantity - a.quantity)
       .map((item, index) => ({
         ...item,
         item: index + 1,
@@ -62,23 +64,30 @@ export function ClosedContractsData() {
 
   }, [data, selectedDate]);
   
-  const chartData = useMemo(() => {
-    if (!data) return [];
-
+  const yearlyChartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+  
     const yearStart = startOfYear(selectedDate);
-    const yearEnd = endOfYear(selectedDate);
-    const monthsInYear = eachMonthOfInterval({ start: yearStart, end: yearEnd });
-
+    const monthsInYear = eachMonthOfInterval({
+      start: yearStart,
+      end: new Date(), 
+    });
+  
+    let accumulatedQuantity = 0;
+  
     return monthsInYear.map(month => {
-        const monthStr = format(month, 'yyyy-MM');
-        const recordsForMonth = data.filter(item => item.month === monthStr);
-        const totalQuantity = recordsForMonth.reduce((sum, item) => sum + item.quantity, 0);
-
-        return {
-            name: format(month, 'MMM', { locale: es }),
-            Cantidad: totalQuantity,
-        };
-    }).filter(item => item.Cantidad > 0);
+      const monthStr = format(month, 'yyyy-MM');
+      const recordsForMonth = data.filter(item => item.month === monthStr);
+      const monthlyQuantity = recordsForMonth.reduce((sum, item) => sum + item.quantity, 0);
+  
+      accumulatedQuantity += monthlyQuantity;
+  
+      return {
+        name: format(month, 'MMM', { locale: es }),
+        'Cantidad Mensual': monthlyQuantity,
+        'Acumulado Anual': accumulatedQuantity,
+      };
+    }).filter(item => item['Cantidad Mensual'] > 0 || item['Acumulado Anual'] > 0);
   }, [data, selectedDate]);
 
 
@@ -147,28 +156,27 @@ export function ClosedContractsData() {
       </Card>
       <Card>
           <CardHeader>
-              <CardTitle>Comparativo Mensual</CardTitle>
+              <CardTitle>Evolución Anual de Contratos Cerrados</CardTitle>
               <CardDescription>
-                  Gráfico de contratos cerrados en el año.
+                  Comparativo mensual y acumulado del año.
               </CardDescription>
           </CardHeader>
           <CardContent>
               {isLoading ? (
                   <div className="h-[350px] flex items-center justify-center text-muted-foreground">Cargando datos del gráfico...</div>
-              ) : chartData.length === 0 ? (
+              ) : yearlyChartData.length === 0 ? (
                 <div className="h-[350px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en el gráfico.</div>
               ) : (
                   <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartData}>
+                    <ComposedChart data={yearlyChartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip
-                            contentStyle={{ fontSize: '12px' }}
-                        />
+                        <Tooltip contentStyle={{ fontSize: '12px' }} />
                         <Legend />
-                        <Bar dataKey="Cantidad" fill="hsl(var(--chart-1))" activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
-                    </BarChart>
+                        <Bar dataKey="Cantidad Mensual" barSize={20} fill="hsl(var(--chart-1))" />
+                        <Line type="monotone" dataKey="Acumulado Anual" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                    </ComposedChart>
                   </ResponsiveContainer>
               )}
           </CardContent>
