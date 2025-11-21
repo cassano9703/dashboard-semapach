@@ -5,6 +5,8 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import {
   Table,
@@ -50,7 +52,7 @@ export function ClosedContractsData({ selectedDate, onDateChange }: ClosedContra
 
   const tableData = useMemo(() => {
     if (!data) return [];
-
+    
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
     
     return data
