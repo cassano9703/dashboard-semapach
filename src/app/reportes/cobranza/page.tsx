@@ -8,7 +8,7 @@ import { RecoveredComparisonChart } from '@/components/dashboard/recovered-compa
 import { Debt3PlusGoals } from '@/components/oficina-cobranza/debt-3-plus-goals';
 
 export default function ReportesCobranzaPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 7, 1));
 
   return (
     <div className="flex flex-col gap-8">

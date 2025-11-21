@@ -31,13 +31,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     );
   }, [firestore, selectedDate]);
 
-  // const { data: goalsData, isLoading } = useCollection(goalsRef);
-  const isLoading = false;
-  const goalsData = [
-      { month: '2024-08', proposedAmount: 2850000, executedAmount: 2900000, goalType: 'collection' },
-      { month: '2024-09', proposedAmount: 2850000, executedAmount: 2800000, goalType: 'collection' },
-      { month: '2024-10', proposedAmount: 2950000, executedAmount: 0, goalType: 'collection' },
-  ];
+  const { data: goalsData, isLoading } = useCollection(goalsRef);
 
 
   const collectionGoals = useMemo(() => {
@@ -107,7 +101,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
           </div>
         {collectionGoals.map((goal, index) =>
           renderGoalRow(
-            format(new Date(2024, index + 7, 1), 'LLLL', { locale: es }),
+            format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
             goal?.proposedAmount,
             goal?.executedAmount
           )
