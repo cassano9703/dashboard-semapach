@@ -8,6 +8,7 @@ import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle } from 'lucide-react';
 import { Progress } from '../ui/progress';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface Debt3PlusGoalsProps {
   selectedDate: Date;
@@ -50,8 +51,10 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     const goalMet = hasData && hasCurrentData && currentAmount <= 0;
 
     let progress = 0;
+    let reductionAmount = 0;
     if(hasData && hasCurrentData){
         const reduction = initialAmount - currentAmount;
+        reductionAmount = reduction;
         if(reduction > 0) {
             progress = Math.min((reduction / initialAmount) * 100, 100);
         }
@@ -75,14 +78,16 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                         <span className="font-semibold">Saldado</span>
                     </div>
                 ) : (
-                    <div className="w-full flex flex-col items-start gap-1">
-                       <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full bg-secondary rounded-full h-2 overflow-hidden cursor-pointer">
                           <Progress value={progress} className="h-2" />
-                       </div>
-                       <span className="text-xs text-blue-600 font-medium">
-                          Reducido {progress.toFixed(0)}%
-                       </span>
-                    </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reducido en {formatCurrency(reductionAmount)} ({progress.toFixed(0)}%)</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )
             ) : (
                 <span className="w-full text-center">-</span>
