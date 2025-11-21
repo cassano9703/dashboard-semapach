@@ -45,7 +45,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: React.ElementType;
-  subItems?: Omit<NavItem, 'subItems'>[];
+  subItems?: Omit<NavItem, 'subItems' | 'isCollapsible'>[];
   isCollapsible?: boolean;
 };
 
@@ -118,7 +118,19 @@ const allNavItems: NavItem[] = [
       },
     ]
   },
-  { href: '/reportes', label: 'Reportes', icon: FileText },
+  { 
+    href: '/reportes', 
+    label: 'Reportes', 
+    icon: FileText,
+    isCollapsible: true,
+    subItems: [
+      {
+        href: '/reportes/cobranza',
+        label: 'Cobranza',
+        icon: Briefcase
+      }
+    ]
+  },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
@@ -162,10 +174,10 @@ export function MainNav() {
                   <CollapsibleTrigger asChild>
                     <Button
                         variant="ghost"
-                        data-active={isSubItemActive(item.subItems)}
+                        data-active={pathname.startsWith(item.href) && isSubItemActive(item.subItems)}
                         className={cn(
                             'w-full justify-between h-8 text-sm p-2 text-left flex items-center gap-2 overflow-hidden rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                            isSubItemActive(item.subItems) && 'font-medium bg-sidebar-accent text-sidebar-accent-foreground'
+                            pathname.startsWith(item.href) && isSubItemActive(item.subItems) && 'font-medium bg-sidebar-accent text-sidebar-accent-foreground'
                         )}
                         >
                         <div className="flex items-center gap-3">
