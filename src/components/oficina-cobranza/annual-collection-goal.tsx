@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Target } from 'lucide-react';
 
 interface AnnualCollectionGoalProps {
   selectedDate: Date;
@@ -81,7 +82,10 @@ export function AnnualCollectionGoal({ selectedDate }: AnnualCollectionGoalProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Meta Anual de Recaudación ({currentYear})</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+            <Target className="h-6 w-6" />
+            Meta Anual de Recaudación ({currentYear})
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -89,14 +93,16 @@ export function AnnualCollectionGoal({ selectedDate }: AnnualCollectionGoalProps
             <span className="text-muted-foreground">Avance Total</span>
             <span className="font-semibold">{formatCurrency(accumulated)}</span>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-                <Progress value={progress} className="h-3" />
-            </TooltipTrigger>
-            <TooltipContent>
-                <p>Faltan {formatCurrency(missingAmount)} para la meta anual</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                  <Progress value={progress} className="h-3 [&>div]:bg-chart-2" />
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>Faltan {formatCurrency(missingAmount)} para la meta anual</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex justify-between items-baseline text-sm">
             <span className="text-muted-foreground">Meta Anual</span>
             <span className="font-semibold">{formatCurrency(annualGoal)}</span>
