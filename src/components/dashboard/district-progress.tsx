@@ -238,7 +238,7 @@ export function DistrictProgress() {
                   </TableBody>
                   <TableFooter>
                     <TableRow className="bg-table-header hover:bg-table-header">
-                        <TableCell colSpan={5} className="py-8"></TableCell>
+                        <TableCell colSpan={5} className="p-0"></TableCell>
                     </TableRow>
                   </TableFooter>
                 </Table>
