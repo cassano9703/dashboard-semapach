@@ -39,12 +39,14 @@ import {
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 type NavItem = {
   href: string;
   label: string;
   icon: React.ElementType;
   subItems?: Omit<NavItem, 'subItems'>[];
+  isCollapsible?: boolean;
 };
 
 const allNavItems: NavItem[] = [
@@ -53,6 +55,7 @@ const allNavItems: NavItem[] = [
     href: '/cobranza',
     label: 'Cobranza',
     icon: Briefcase,
+    isCollapsible: true,
     subItems: [
       { href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp },
       { href: '/avance-distritos', label: 'Avance de distritos', icon: Target },
@@ -78,6 +81,7 @@ const allNavItems: NavItem[] = [
     href: '/catastro',
     label: 'Catastro',
     icon: Map,
+    isCollapsible: true,
     subItems: [
       {
         href: '/catastro/clandestinos-e-inspecciones',
@@ -95,6 +99,7 @@ const allNavItems: NavItem[] = [
     href: '/admin',
     label: 'Administración',
     icon: Database,
+    isCollapsible: true,
     subItems: [
       {
         href: '/admin/cobranza',
@@ -116,6 +121,40 @@ const allNavItems: NavItem[] = [
   { href: '/reportes', label: 'Reportes', icon: FileText },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
+
+const CollapsibleNavButton = ({
+  item,
+  pathname,
+  isOpen,
+}: {
+  item: NavItem;
+  pathname: string;
+  isOpen: boolean;
+}) => {
+  const isActive = item.subItems
+    ? item.subItems.some((sub) => pathname.startsWith(sub.href))
+    : pathname.startsWith(item.href);
+
+  return (
+    <Button
+      variant="ghost"
+      data-active={isActive}
+      className={cn(
+        'w-full justify-between h-8 text-sm p-2 text-left flex items-center gap-2 overflow-hidden rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        isActive && 'font-medium bg-sidebar-accent text-sidebar-accent-foreground'
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <item.icon className="h-5 w-5" />
+        <span>{item.label}</span>
+      </div>
+      <ChevronDown
+        className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}
+      />
+    </Button>
+  );
+};
+
 
 export function MainNav() {
   const pathname = usePathname();
@@ -154,17 +193,11 @@ export function MainNav() {
               <Collapsible key={item.href} open={openCollapsibles[item.href] || false} onOpenChange={() => handleCollapsibleToggle(item.href)}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      href={item.href}
-                      isActive={pathname.startsWith(item.href)}
-                      className="w-full justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.label}</span>
-                      </div>
-                      <ChevronDown className={cn("h-4 w-4 transition-transform", openCollapsibles[item.href] && "rotate-180")} />
-                    </SidebarMenuButton>
+                     <CollapsibleNavButton
+                      item={item}
+                      pathname={pathname}
+                      isOpen={openCollapsibles[item.href] || false}
+                    />
                   </CollapsibleTrigger>
                 </SidebarMenuItem>
                 <CollapsibleContent>
