@@ -6,6 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface CollectionDebtGoalsProps {
   selectedDate: Date;
@@ -22,7 +23,6 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
 
   const goalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Simplified query to fetch all goals
     return query(collection(firestore, 'monthly_goals'));
   }, [firestore]);
 
@@ -37,12 +37,10 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
       goalsData
       .filter(goal => goal.month.startsWith(currentYear) && goal.goalType === 'collection')
       .forEach(goal => {
-        // Use parseISO because the month string is in yyyy-MM format
         const monthIndex = getMonth(parseISO(goal.month + '-01T12:00:00Z'));
         collGoals[monthIndex] = goal;
       });
     }
-    // Filter for August (7), September (8), October (9)
     return collGoals.slice(7, 10);
   }, [goalsData, selectedDate]);
 
@@ -50,20 +48,18 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     const hasData = proposed !== undefined && proposed > 0;
     const hasExecutedData = executed !== undefined && executed > 0;
 
-    let status = 'sin datos';
-    let statusColor = 'text-muted-foreground';
+    let statusElement: React.ReactNode;
 
     if (hasData) {
       if (!hasExecutedData) {
-        status = 'pendiente';
-        statusColor = 'text-yellow-600';
+        statusElement = <Clock className="h-5 w-5 text-yellow-500" />;
       } else if (executed >= proposed) {
-        status = 'cumplió';
-        statusColor = 'text-green-600';
+        statusElement = <CheckCircle className="h-5 w-5 text-green-600" />;
       } else {
-        status = 'no cumplió';
-        statusColor = 'text-red-600';
+        statusElement = <XCircle className="h-5 w-5 text-red-600" />;
       }
+    } else {
+        statusElement = <span>-</span>;
     }
 
     return (
@@ -75,7 +71,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
             {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
-        <div className={`col-span-1 text-center font-semibold ${statusColor}`}>{status}</div>
+        <div className={`col-span-1 flex justify-center items-center`}>{statusElement}</div>
       </div>
     );
   };
