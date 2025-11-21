@@ -89,6 +89,8 @@ export function DistrictProgress() {
     const currentMonthStr = format(new Date(), 'yyyy-MM');
     const dataForMonth = districtProgressData.filter((item: any) => item.month === currentMonthStr);
     
+    if (dataForMonth.length === 0) return null;
+
     const latestTimestamp = dataForMonth.reduce((latest, item) => {
       if (!item.updatedAt) return latest;
       const itemTimestamp = item.updatedAt.toDate();
@@ -111,6 +113,7 @@ export function DistrictProgress() {
 
     html2canvas(tableRef.current, {
         scale: 2, // Increase scale for better quality
+        backgroundColor: null, // Use transparent background for canvas
     }).then((canvas) => {
         // Restore hover effects
         tableRows.forEach(row => row.classList.remove('no-hover'));
@@ -118,18 +121,26 @@ export function DistrictProgress() {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
         
-        const headerText = "Avance de Meta Mensual por Distrito";
-        const subHeaderText = lastUpdatedText;
+        const headerText = "AVANCE DE META MENSUAL POR DISTRITO";
         
-        pdf.setFontSize(18);
-        pdf.text(headerText, 14, 20);
+        pdf.setFontSize(16);
+        pdf.text(headerText, pdf.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        
         pdf.setFontSize(10);
         pdf.setTextColor(100);
-        pdf.text(subHeaderText, 14, 28);
+        pdf.text(lastUpdatedText, pdf.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
         
-        pdf.addImage(imgData, 'PNG', 10, 35, pdfWidth - 20, pdfHeight - 20);
+        let pdfHeightPosition = 35;
+        // Check if there is enough space, if not, add a new page
+        if (pdfHeightPosition + imgHeight > pdf.internal.pageSize.getHeight() - 15) {
+            pdf.addPage();
+            pdfHeightPosition = 15;
+        }
+
+        pdf.addImage(imgData, 'PNG', 10, pdfHeightPosition, pdfWidth - 20, imgHeight);
 
         const monthYear = format(new Date(), 'yyyy-MM');
         pdf.save(`avance-distritos-${monthYear}.pdf`);
@@ -145,7 +156,7 @@ export function DistrictProgress() {
       `}</style>
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Avance de Meta Mensual por Distrito</h1>
+          <h1 className="text-2xl font-bold tracking-tight uppercase">Avance de Meta Mensual por Distrito</h1>
           <p className="text-muted-foreground">
             {lastUpdatedText}
           </p>
@@ -157,11 +168,10 @@ export function DistrictProgress() {
       </div>
       <Card>
         <CardContent className="p-0">
-          <div className="border rounded-lg overflow-hidden">
-            <div ref={tableRef}>
+          <div className="border rounded-lg overflow-hidden" ref={tableRef}>
               <Table>
                 <TableHeader className="bg-table-header text-table-header-foreground">
-                  <TableRow>
+                  <TableRow className="no-hover">
                     <TableHead className="w-[200px]">Distrito</TableHead>
                     <TableHead className="text-center">Recuperado</TableHead>
                     <TableHead className="text-center">Meta</TableHead>
@@ -186,7 +196,7 @@ export function DistrictProgress() {
                     dataForCurrentMonth.map((item) => (
                       <TableRow
                         key={item.district}
-                        className={item.progress >= 100 ? 'bg-green-100 dark:bg-green-900/30' : ''}
+                        className={item.progress >= 100 ? 'bg-green-100/70 dark:bg-green-900/20' : ''}
                       >
                         <TableCell className="font-medium">{item.district}</TableCell>
                         <TableCell className="text-center font-bold">{formatCurrency(item.recovered)}</TableCell>
@@ -199,7 +209,7 @@ export function DistrictProgress() {
                               </div>
                           ) : (
                               <div className="flex items-center gap-4">
-                                <Progress value={item.progress} className="w-full h-3" />
+                                <Progress value={item.progress} className="w-full h-2" />
                                 <span className="text-sm font-medium w-16 text-right">
                                   {item.progress.toFixed(0)}%
                                 </span>
@@ -218,7 +228,6 @@ export function DistrictProgress() {
                   )}
                 </TableBody>
               </Table>
-            </div>
           </div>
         </CardContent>
       </Card>
