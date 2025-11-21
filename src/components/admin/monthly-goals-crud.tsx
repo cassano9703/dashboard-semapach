@@ -118,6 +118,7 @@ export function MonthlyGoalsCRUD() {
   const [executedAmount, setExecutedAmount] = useState('');
   const [amountToReach, setAmountToReach] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
   
   const sortedData = data
@@ -234,7 +235,7 @@ export function MonthlyGoalsCRUD() {
         <div className="grid grid-cols-1 md:grid-cols-5 items-end gap-4 p-4 border rounded-lg">
           <div className="grid gap-2">
             <Label htmlFor="month">Mes</Label>
-             <Popover>
+             <Popover open={isMonthPickerOpen} onOpenChange={setIsMonthPickerOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
@@ -246,7 +247,13 @@ export function MonthlyGoalsCRUD() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <MonthPicker selected={date} onSelect={setDate} />
+                <MonthPicker 
+                  selected={date} 
+                  onSelect={(selectedDate) => {
+                    setDate(selectedDate);
+                    setIsMonthPickerOpen(false);
+                  }} 
+                />
               </PopoverContent>
             </Popover>
           </div>
