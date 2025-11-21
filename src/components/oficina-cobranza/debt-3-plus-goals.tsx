@@ -42,7 +42,8 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
         dbtGoals[monthIndex] = goal;
       });
     }
-    return dbtGoals;
+    // Filter for August (7), September (8), October (9)
+    return dbtGoals.slice(7, 10);
   }, [goalsData]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
@@ -92,7 +93,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
           </div>
         {debtGoals.map((goal, index) =>
           renderGoalRow(
-            format(new Date(2024, index, 1), 'LLLL', { locale: es }),
+            format(new Date(2024, index + 7, 1), 'LLLL', { locale: es }),
             goal?.proposedAmount,
             goal?.executedAmount
           )

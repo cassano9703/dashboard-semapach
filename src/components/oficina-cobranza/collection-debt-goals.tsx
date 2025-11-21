@@ -44,7 +44,8 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         }
       });
     }
-    return collGoals;
+    // Filter for August (7), September (8), October (9)
+    return collGoals.slice(7, 10);
   }, [goalsData]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
@@ -94,7 +95,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
           </div>
         {collectionGoals.map((goal, index) =>
           renderGoalRow(
-            format(new Date(2024, index, 1), 'LLLL', { locale: es }),
+            format(new Date(2024, index + 7, 1), 'LLLL', { locale: es }),
             goal?.proposedAmount,
             goal?.executedAmount
           )
