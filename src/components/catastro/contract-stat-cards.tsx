@@ -55,10 +55,10 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
         {Array.from({ length: 2 }).map((_, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/2 animate-pulse"></div>
             </CardContent>
           </Card>
         ))}

@@ -29,7 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfYear, eachMonthOfInterval, parseISO } from 'date-fns';
+import { format, startOfYear, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -66,7 +66,7 @@ export function ClosedContractsData({ selectedDate, onDateChange }: ClosedContra
   }, [data, selectedDate]);
   
   const yearlyChartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+    if (!data) return [];
   
     const yearStart = startOfYear(selectedDate);
     const monthsInYear = eachMonthOfInterval({
