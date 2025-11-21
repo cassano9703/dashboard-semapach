@@ -90,7 +90,7 @@ export function MonthlyGoalsCRUD() {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
-        description: 'Por favor, complete Mes, Tipo de Meta y Monto Propuesto.',
+        description: `Por favor, complete Mes, Tipo de Meta y ${goalType === 'debt_3_plus' ? 'Monto Inicial' : 'Monto Propuesto'}.`,
       });
       return;
     }
@@ -161,6 +161,13 @@ export function MonthlyGoalsCRUD() {
     }
   };
 
+  const labels = {
+    proposed: goalType === 'debt_3_plus' ? 'Monto Inicial (Deuda)' : 'Monto Propuesto',
+    executed: goalType === 'debt_3_plus' ? 'Monto Actual (Deuda)' : 'Monto Ejecutado',
+    proposedPlaceholder: goalType === 'debt_3_plus' ? '1000000.00' : '500000.00',
+    executedPlaceholder: goalType === 'debt_3_plus' ? '800000.00' : '550000.00',
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -209,12 +216,12 @@ export function MonthlyGoalsCRUD() {
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="proposedAmount">Monto Propuesto</Label>
-            <Input id="proposedAmount" placeholder="0.00" type="number" value={proposedAmount} onChange={e => setProposedAmount(e.target.value)} />
+            <Label htmlFor="proposedAmount">{labels.proposed}</Label>
+            <Input id="proposedAmount" placeholder={labels.proposedPlaceholder} type="number" value={proposedAmount} onChange={e => setProposedAmount(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="executedAmount">Monto Ejecutado</Label>
-            <Input id="executedAmount" placeholder="0.00" type="number" value={executedAmount} onChange={e => setExecutedAmount(e.target.value)} />
+            <Label htmlFor="executedAmount">{labels.executed}</Label>
+            <Input id="executedAmount" placeholder={labels.executedPlaceholder} type="number" value={executedAmount} onChange={e => setExecutedAmount(e.target.value)} />
           </div>
           <div className="flex items-end gap-2 col-span-full">
             <Button className="w-full" onClick={handleAddOrUpdate}>
@@ -235,8 +242,8 @@ export function MonthlyGoalsCRUD() {
                 <TableRow>
                   <TableHead>Mes</TableHead>
                   <TableHead>Tipo de Meta</TableHead>
-                  <TableHead>M. Propuesto</TableHead>
-                  <TableHead>M. Ejecutado</TableHead>
+                  <TableHead>M. Propuesto/Inicial</TableHead>
+                  <TableHead>M. Ejecutado/Actual</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
