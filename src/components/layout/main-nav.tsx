@@ -91,7 +91,28 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
-  { href: '/admin', label: 'Administración', icon: Database },
+  {
+    href: '/admin',
+    label: 'Administración',
+    icon: Database,
+    subItems: [
+      {
+        href: '/admin/cobranza',
+        label: 'Admin Cobranza',
+        icon: Briefcase,
+      },
+      {
+        href: '/admin/medicion',
+        label: 'Admin Medición',
+        icon: Gauge,
+      },
+       {
+        href: '/admin/catastro',
+        label: 'Admin Catastro',
+        icon: Map,
+      },
+    ]
+  },
   { href: '/reportes', label: 'Reportes', icon: FileText },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
@@ -101,7 +122,7 @@ export function MainNav() {
   const navItems = allNavItems;
 
   const isSubItemActive = (subItems: NavItem['subItems']) => {
-    return subItems?.some((item) => pathname === item.href);
+    return subItems?.some((item) => pathname.startsWith(item.href));
   };
   
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>(() => {
@@ -135,7 +156,7 @@ export function MainNav() {
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       href={item.href}
-                      isActive={isSubItemActive(item.subItems)}
+                      isActive={pathname.startsWith(item.href)}
                       className="w-full justify-between"
                     >
                       <div className="flex items-center gap-3">
