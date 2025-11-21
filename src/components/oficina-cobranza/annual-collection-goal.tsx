@@ -84,10 +84,10 @@ export function AnnualCollectionGoal({ selectedDate }: AnnualCollectionGoalProps
         <CardTitle>Meta Anual de Recaudación ({currentYear})</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center text-sm">
-            <span className="font-medium text-muted-foreground">Avance Total</span>
-            <span className="font-bold">{formatCurrency(accumulated)}</span>
+        <div className="space-y-2">
+          <div className="flex justify-between items-baseline text-sm">
+            <span className="text-muted-foreground">Avance Total</span>
+            <span className="font-semibold">{formatCurrency(accumulated)}</span>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -97,7 +97,7 @@ export function AnnualCollectionGoal({ selectedDate }: AnnualCollectionGoalProps
                 <p>Faltan {formatCurrency(missingAmount)} para la meta anual</p>
             </TooltipContent>
           </Tooltip>
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-baseline text-sm">
             <span className="text-muted-foreground">Meta Anual</span>
             <span className="font-semibold">{formatCurrency(annualGoal)}</span>
           </div>
