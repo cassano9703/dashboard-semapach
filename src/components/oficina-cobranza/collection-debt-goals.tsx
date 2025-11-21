@@ -50,8 +50,10 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     const hasExecutedData = executed !== undefined;
     
     let progress = 0;
+    let missingAmount = 0;
     if (hasData && hasExecutedData) {
         progress = Math.min((executed / proposed) * 100, 100);
+        missingAmount = proposed - executed;
     }
 
     const goalMet = hasData && hasExecutedData && executed >= proposed;
@@ -73,10 +75,14 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
                         <span className="font-semibold">Cumplido</span>
                     </div>
                 ) : (
-                    <>
-                        <Progress value={progress} className="w-full h-2" />
-                        <span className="text-xs font-medium">{progress.toFixed(0)}%</span>
-                    </>
+                    <div className="w-full flex flex-col items-start gap-1">
+                      <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                        <Progress value={progress} className="h-2" />
+                      </div>
+                      <span className="text-xs text-red-500 font-medium">
+                        Faltan {formatCurrency(missingAmount)}
+                      </span>
+                    </div>
                 )
             ) : (
                 <span className="w-full text-center">-</span>

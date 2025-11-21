@@ -75,10 +75,14 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                         <span className="font-semibold">Saldado</span>
                     </div>
                 ) : (
-                    <>
-                        <Progress value={progress} className="w-full h-2" />
-                        <span className="text-xs font-medium">{progress.toFixed(0)}%</span>
-                    </>
+                    <div className="w-full flex flex-col items-start gap-1">
+                       <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                          <Progress value={progress} className="h-2" />
+                       </div>
+                       <span className="text-xs text-blue-600 font-medium">
+                          Reducido {progress.toFixed(0)}%
+                       </span>
+                    </div>
                 )
             ) : (
                 <span className="w-full text-center">-</span>
