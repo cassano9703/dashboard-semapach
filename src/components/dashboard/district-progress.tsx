@@ -246,11 +246,11 @@ export function DistrictProgress() {
             </CardHeader>
             <CardContent>
                 {isLoading ? (
-                    <div className="h-[400px] flex items-center justify-center text-muted-foreground">Cargando gráfico...</div>
+                    <div className="h-[350px] flex items-center justify-center text-muted-foreground">Cargando gráfico...</div>
                 ) : sortedChartData.length === 0 ? (
-                    <div className="h-[400px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar.</div>
+                    <div className="h-[350px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar.</div>
                 ) : (
-                    <ChartContainer config={chartConfig} className="w-full h-[400px]">
+                    <ChartContainer config={chartConfig} className="w-full h-[350px]">
                         <ResponsiveContainer>
                             <RadialBarChart
                                 data={sortedChartData}
