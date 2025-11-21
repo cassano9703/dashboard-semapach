@@ -77,19 +77,19 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
                         <span className="font-semibold">Cumplido</span>
                     </div>
                 ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="relative w-full h-4">
-                        <Progress value={progress} className="h-4" />
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white mix-blend-difference">
-                          {progress.toFixed(0)}%
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Faltan {formatCurrency(missingAmount)}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <div className="flex items-center w-full gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Progress value={progress} className="h-2 flex-1" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Faltan {formatCurrency(missingAmount)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <span className="text-xs font-semibold text-muted-foreground w-10 text-right">
+                        {progress.toFixed(0)}%
+                    </span>
+                  </div>
                 )
             ) : (
                 <span className="w-full text-center">-</span>
