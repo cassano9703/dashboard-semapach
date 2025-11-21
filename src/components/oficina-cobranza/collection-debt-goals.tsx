@@ -31,7 +31,14 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     );
   }, [firestore, selectedDate]);
 
-  const { data: goalsData, isLoading } = useCollection(goalsRef);
+  // const { data: goalsData, isLoading } = useCollection(goalsRef);
+  const isLoading = false;
+  const goalsData = [
+      { month: '2024-08', proposedAmount: 2850000, executedAmount: 2900000, goalType: 'collection' },
+      { month: '2024-09', proposedAmount: 2850000, executedAmount: 2800000, goalType: 'collection' },
+      { month: '2024-10', proposedAmount: 2950000, executedAmount: 0, goalType: 'collection' },
+  ];
+
 
   const collectionGoals = useMemo(() => {
     const collGoals: any[] = Array(12).fill(null);
@@ -49,12 +56,17 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
   }, [goalsData]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
-    const hasData = proposed !== undefined && executed !== undefined;
+    const hasData = proposed !== undefined && executed !== undefined && proposed > 0;
+    const hasExecutedData = executed !== undefined && executed > 0;
+
     let status = 'sin datos';
     let statusColor = 'text-muted-foreground';
 
     if (hasData) {
-      if (executed >= proposed) {
+      if (!hasExecutedData) {
+        status = 'pendiente';
+        statusColor = 'text-yellow-600';
+      } else if (executed >= proposed) {
         status = 'cumplió';
         statusColor = 'text-green-600';
       } else {
@@ -70,7 +82,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
             {hasData ? formatCurrency(proposed) : '-'}
         </div>
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
-            {hasData ? formatCurrency(executed) : '-'}
+            {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
         <div className={`col-span-1 text-center font-semibold ${statusColor}`}>{status}</div>
       </div>
