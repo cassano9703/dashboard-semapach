@@ -264,7 +264,6 @@
         "goalType": { "type": "string", "enum": ["collection", "debt_3_plus"], "description": "Type of the goal." },
         "proposedAmount": { "type": "number", "description": "The proposed goal amount." },
         "executedAmount": { "type": "number", "description": "The amount executed towards the goal." },
-        "amountToReach": { "type": "number", "description": "For debt goals, the target amount to reach." },
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },
       "required": ["month", "goalType", "proposedAmount"]

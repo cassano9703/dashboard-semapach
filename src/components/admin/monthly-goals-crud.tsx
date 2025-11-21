@@ -59,7 +59,6 @@ export function MonthlyGoalsCRUD() {
   const [goalType, setGoalType] = useState('');
   const [proposedAmount, setProposedAmount] = useState('');
   const [executedAmount, setExecutedAmount] = useState('');
-  const [amountToReach, setAmountToReach] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   
@@ -72,7 +71,6 @@ export function MonthlyGoalsCRUD() {
     setGoalType('');
     setProposedAmount('');
     setExecutedAmount('');
-    setAmountToReach('');
     setEditingId(null);
   };
 
@@ -85,7 +83,6 @@ export function MonthlyGoalsCRUD() {
     setGoalType(item.goalType);
     setProposedAmount(item.proposedAmount.toString());
     setExecutedAmount(item.executedAmount?.toString() || '');
-    setAmountToReach(item.amountToReach?.toString() || '');
   };
 
   const handleAddOrUpdate = async () => {
@@ -108,7 +105,6 @@ export function MonthlyGoalsCRUD() {
     };
 
     if (executedAmount) dataToSave.executedAmount = parseFloat(executedAmount);
-    if (amountToReach) dataToSave.amountToReach = parseFloat(amountToReach);
 
     try {
       if (editingId) {
@@ -174,7 +170,7 @@ export function MonthlyGoalsCRUD() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 items-end gap-4 p-4 border rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 items-end gap-4 p-4 border rounded-lg">
           <div className="grid gap-2">
             <Label htmlFor="month">Mes</Label>
              <Popover>
@@ -220,10 +216,6 @@ export function MonthlyGoalsCRUD() {
             <Label htmlFor="executedAmount">Monto Ejecutado</Label>
             <Input id="executedAmount" placeholder="0.00" type="number" value={executedAmount} onChange={e => setExecutedAmount(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="amountToReach">Monto a Llegar</Label>
-            <Input id="amountToReach" placeholder="0.00" type="number" value={amountToReach} onChange={e => setAmountToReach(e.target.value)} />
-          </div>
           <div className="flex items-end gap-2 col-span-full">
             <Button className="w-full" onClick={handleAddOrUpdate}>
                 {editingId ? <><Edit className="mr-2 h-4 w-4" /> Actualizar</> : <><Plus className="mr-2 h-4 w-4" /> Agregar</>}
@@ -245,22 +237,21 @@ export function MonthlyGoalsCRUD() {
                   <TableHead>Tipo de Meta</TableHead>
                   <TableHead>M. Propuesto</TableHead>
                   <TableHead>M. Ejecutado</TableHead>
-                  <TableHead>M. a Llegar</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">Cargando datos...</TableCell>
+                    <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
+                    <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
                   </TableRow>
                 ) : sortedData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">No hay datos para mostrar.</TableCell>
+                    <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
                   </TableRow>
                 ) : (
                   sortedData.map((item) => (
@@ -269,7 +260,6 @@ export function MonthlyGoalsCRUD() {
                     <TableCell>{item.goalType === 'collection' ? 'Recaudación' : 'Deuda 3+'}</TableCell>
                     <TableCell>{formatCurrency(item.proposedAmount)}</TableCell>
                     <TableCell>{item.executedAmount ? formatCurrency(item.executedAmount) : '-'}</TableCell>
-                    <TableCell>{item.amountToReach ? formatCurrency(item.amountToReach) : '-'}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />
@@ -289,5 +279,3 @@ export function MonthlyGoalsCRUD() {
     </Card>
   );
 }
-
-    
