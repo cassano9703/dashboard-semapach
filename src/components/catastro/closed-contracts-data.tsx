@@ -94,10 +94,7 @@ export function ClosedContractsData() {
     <div className="grid gap-6 lg:grid-cols-12">
       <Card className="lg:col-span-4">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <CardTitle>Resumen Mensual</CardTitle>
-              </div>
+          <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant={"outline"} className="w-full sm:w-auto justify-start text-left font-normal">
