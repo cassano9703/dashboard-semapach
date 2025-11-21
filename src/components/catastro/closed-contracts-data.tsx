@@ -91,8 +91,8 @@ export function ClosedContractsData() {
 
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-1">
+    <div className="grid gap-6 lg:grid-cols-12">
+      <Card className="lg:col-span-4">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -150,7 +150,7 @@ export function ClosedContractsData() {
             </div>
         </CardContent>
       </Card>
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-8">
           <CardHeader>
               <CardTitle>Evolución Anual de Contratos Cerrados</CardTitle>
               <CardDescription>
