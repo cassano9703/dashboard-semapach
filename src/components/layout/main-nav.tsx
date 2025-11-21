@@ -122,39 +122,6 @@ const allNavItems: NavItem[] = [
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
-const CollapsibleNavButton = ({
-  item,
-  pathname,
-  isOpen,
-}: {
-  item: NavItem;
-  pathname: string;
-  isOpen: boolean;
-}) => {
-  const isActive = item.subItems
-    ? item.subItems.some((sub) => pathname.startsWith(sub.href))
-    : pathname.startsWith(item.href);
-
-  return (
-    <Button
-      variant="ghost"
-      data-active={isActive}
-      className={cn(
-        'w-full justify-between h-8 text-sm p-2 text-left flex items-center gap-2 overflow-hidden rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        isActive && 'font-medium bg-sidebar-accent text-sidebar-accent-foreground'
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <item.icon className="h-5 w-5" />
-        <span>{item.label}</span>
-      </div>
-      <ChevronDown
-        className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}
-      />
-    </Button>
-  );
-};
-
 
 export function MainNav() {
   const pathname = usePathname();
@@ -193,11 +160,22 @@ export function MainNav() {
               <Collapsible key={item.href} open={openCollapsibles[item.href] || false} onOpenChange={() => handleCollapsibleToggle(item.href)}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                     <CollapsibleNavButton
-                      item={item}
-                      pathname={pathname}
-                      isOpen={openCollapsibles[item.href] || false}
-                    />
+                    <Button
+                        variant="ghost"
+                        data-active={isSubItemActive(item.subItems)}
+                        className={cn(
+                            'w-full justify-between h-8 text-sm p-2 text-left flex items-center gap-2 overflow-hidden rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                            isSubItemActive(item.subItems) && 'font-medium bg-sidebar-accent text-sidebar-accent-foreground'
+                        )}
+                        >
+                        <div className="flex items-center gap-3">
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                        </div>
+                        <ChevronDown
+                            className={cn('h-4 w-4 transition-transform', openCollapsibles[item.href] && 'rotate-180')}
+                        />
+                    </Button>
                   </CollapsibleTrigger>
                 </SidebarMenuItem>
                 <CollapsibleContent>
