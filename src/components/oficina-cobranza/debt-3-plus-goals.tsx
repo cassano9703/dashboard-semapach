@@ -7,7 +7,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { format, getMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-interface CollectionDebtGoalsProps {
+interface Debt3PlusGoalsProps {
   selectedDate: Date;
 }
 
@@ -17,7 +17,7 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   })}`;
 
-export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) {
+export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
   const firestore = useFirestore();
 
   const goalsRef = useMemoFirebase(() => {
@@ -27,24 +27,22 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
       collection(firestore, 'monthly_goals'),
       where('month', '>=', `${currentYear}-01`),
       where('month', '<=', `${currentYear}-12`),
-      where('goalType', '==', 'collection')
+      where('goalType', '==', 'debt_3_plus')
     );
   }, [firestore, selectedDate]);
 
   const { data: goalsData, isLoading } = useCollection(goalsRef);
 
-  const collectionGoals = useMemo(() => {
-    const collGoals: any[] = Array(12).fill(null);
+  const debtGoals = useMemo(() => {
+    const dbtGoals: any[] = Array(12).fill(null);
     
     if (goalsData) {
       goalsData.forEach(goal => {
-        const monthIndex = getMonth(new Date(goal.month + '-02')); // Use day 2 to avoid timezone issues
-        if (goal.goalType === 'collection') {
-          collGoals[monthIndex] = goal;
-        }
+        const monthIndex = getMonth(new Date(goal.month + '-02'));
+        dbtGoals[monthIndex] = goal;
       });
     }
-    return collGoals;
+    return dbtGoals;
   }, [goalsData]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
@@ -53,7 +51,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     let statusColor = 'text-muted-foreground';
 
     if (hasData) {
-      if (executed >= proposed) {
+      if (executed <= proposed) {
         status = 'cumplió';
         statusColor = 'text-green-600';
       } else {
@@ -77,22 +75,22 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
   };
   
   if (isLoading) {
-    return <Card className="h-full flex items-center justify-center"><p>Cargando metas...</p></Card>
+    return <Card className="h-full flex items-center justify-center"><p>Cargando metas de deuda...</p></Card>
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Meta de Recaudación por mes</CardTitle>
+        <CardTitle>Deuda de 3 a mas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-          <div className="grid grid-cols-4 gap-4 text-xs font-bold text-muted-foreground">
+           <div className="grid grid-cols-4 gap-4 text-xs font-bold text-muted-foreground">
               <div className="col-span-1">Mes</div>
-              <div className="col-span-1 text-right">Meta Propuesta</div>
-              <div className="col-span-1 text-right">Meta Ejecutada</div>
+              <div className="col-span-1 text-right">Monto Inicial</div>
+              <div className="col-span-1 text-right">Monto Actual</div>
               <div className="col-span-1 text-center">Estado</div>
           </div>
-        {collectionGoals.map((goal, index) =>
+        {debtGoals.map((goal, index) =>
           renderGoalRow(
             format(new Date(2024, index, 1), 'LLLL', { locale: es }),
             goal?.proposedAmount,
