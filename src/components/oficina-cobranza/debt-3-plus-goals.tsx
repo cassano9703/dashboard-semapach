@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { format, getMonth } from 'date-fns';
+import { collection, query } from 'firebase/firestore';
+import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface Debt3PlusGoalsProps {
@@ -22,37 +22,39 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
 
   const goalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    const currentYear = format(selectedDate, 'yyyy');
-    return query(
-      collection(firestore, 'monthly_goals'),
-      where('month', '>=', `${currentYear}-01`),
-      where('month', '<=', `${currentYear}-12`),
-      where('goalType', '==', 'debt_3_plus')
-    );
-  }, [firestore, selectedDate]);
+    // Simplified query to fetch all goals
+    return query(collection(firestore, 'monthly_goals'));
+  }, [firestore]);
 
   const { data: goalsData, isLoading } = useCollection(goalsRef);
 
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
+    const currentYear = format(selectedDate, 'yyyy');
     
     if (goalsData) {
-      goalsData.forEach(goal => {
-        const monthIndex = getMonth(new Date(goal.month + '-02'));
-        dbtGoals[monthIndex] = goal;
-      });
+       goalsData
+        .filter(goal => goal.month.startsWith(currentYear) && goal.goalType === 'debt_3_plus')
+        .forEach(goal => {
+            const monthIndex = getMonth(parseISO(goal.month + '-01T12:00:00Z'));
+            dbtGoals[monthIndex] = goal;
+        });
     }
     // Filter for August (7), September (8), October (9)
     return dbtGoals.slice(7, 10);
-  }, [goalsData]);
+  }, [goalsData, selectedDate]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
-    const hasData = proposed !== undefined && executed !== undefined;
+    const hasData = proposed !== undefined;
+    const hasExecutedData = executed !== undefined;
     let status = 'sin datos';
     let statusColor = 'text-muted-foreground';
 
     if (hasData) {
-      if (executed <= proposed) {
+      if (!hasExecutedData) {
+        status = 'pendiente';
+        statusColor = 'text-yellow-600';
+      } else if (executed <= proposed) {
         status = 'cumplió';
         statusColor = 'text-green-600';
       } else {
@@ -68,7 +70,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
             {hasData ? formatCurrency(proposed) : '-'}
         </div>
         <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
-            {hasData ? formatCurrency(executed) : '-'}
+            {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
         <div className={`col-span-1 text-center font-semibold ${statusColor}`}>{status}</div>
       </div>
@@ -93,7 +95,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
           </div>
         {debtGoals.map((goal, index) =>
           renderGoalRow(
-            format(new Date(2024, index + 7, 1), 'LLLL', { locale: es }),
+            format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
             goal?.proposedAmount,
             goal?.executedAmount
           )
