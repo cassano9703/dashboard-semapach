@@ -96,10 +96,7 @@ export function ClosedContractsData() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <CardTitle>Resumen Mensual de Contratos Cerrados</CardTitle>
-                <CardDescription>
-                  Datos de contratos cerrados para el mes seleccionado.
-                </CardDescription>
+                <CardTitle>Resumen Mensual</CardTitle>
               </div>
               <Popover>
                 <PopoverTrigger asChild>
