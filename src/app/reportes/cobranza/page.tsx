@@ -1,24 +1,30 @@
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Briefcase} from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { OverallProgress } from '@/components/oficina-cobranza/overall-progress';
+import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-operations-summary';
+import { DistrictProgress } from '@/components/dashboard/district-progress';
+import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 
 export default function ReportesCobranzaPage() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Reportes de Cobranza</h1>
-      <Card className="flex flex-col items-center justify-center text-center p-12 border-dashed">
-        <CardHeader>
-          <div className="mx-auto bg-secondary p-4 rounded-full">
-            <Briefcase className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <CardTitle>Módulo en Construcción</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Esta sección está en construcción. Próximamente podrá generar y
-            descargar reportes de cobranza.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col gap-8">
+      <h1 className="text-3xl font-bold tracking-tight">Reporte de Oficina de Cobranza</h1>
+      
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 flex flex-col gap-6">
+          <OverallProgress selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        </div>
+        <div className="xl:col-span-1 flex flex-col gap-6">
+           <DistrictProgress />
+        </div>
+      </div>
+      
+      <ServiceOperationsSummary selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      
+      <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
     </div>
   );
 }

@@ -52,7 +52,6 @@ type NavItem = {
 
 const allNavItems: NavItem[] = [
   { href: '/', label: 'Inicio', icon: Home },
-  { href: '/oficina-cobranza', label: 'Oficina de Cobranza', icon: Building },
   {
     href: '/cobranza',
     label: 'Cobranza',
