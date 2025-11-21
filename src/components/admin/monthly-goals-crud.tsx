@@ -25,15 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Calendar } from "../ui/calendar";
 import { useState } from "react";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, getYear, setYear, eachMonthOfInterval, startOfYear, endOfYear } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, Timestamp, updateDoc, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const formatCurrency = (value: number | string) => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -43,6 +43,64 @@ const formatCurrency = (value: number | string) => {
     maximumFractionDigits: 2,
   })}`;
 };
+
+function MonthPicker({
+  selected,
+  onSelect,
+  className,
+}: {
+  selected: Date | undefined;
+  onSelect: (date: Date) => void;
+  className?: string;
+}) {
+  const [year, setYear] = useState(getYear(selected || new Date()));
+
+  const months = eachMonthOfInterval({
+    start: startOfYear(setYear(new Date(), year)),
+    end: endOfYear(setYear(new Date(), year)),
+  });
+
+  return (
+    <div className={cn("w-full space-y-4", className)}>
+      <div className="flex items-center justify-between px-4 pt-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setYear(year - 1)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="text-sm font-medium">{year}</div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setYear(year + 1)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-3 gap-2 px-4 pb-2">
+        {months.map((month) => (
+          <Button
+            key={month.toString()}
+            variant={
+              format(selected || new Date(), "yyyy-MM") === format(month, "yyyy-MM")
+                ? "default"
+                : "ghost"
+            }
+            onClick={() => onSelect(month)}
+            className="h-auto py-2 text-sm"
+          >
+            {format(month, "MMMM", { locale: es })}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 export function MonthlyGoalsCRUD() {
   const firestore = useFirestore();
@@ -188,14 +246,7 @@ export function MonthlyGoalsCRUD() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                  locale={es}
-                  defaultMonth={date}
-                />
+                <MonthPicker selected={date} onSelect={setDate} />
               </PopoverContent>
             </Popover>
           </div>
