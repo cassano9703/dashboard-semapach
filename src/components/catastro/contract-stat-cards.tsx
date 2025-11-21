@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, TrendingUp } from 'lucide-react';
-import { format, startOfYear, endOfYear, isWithinInterval, parseISO } from 'date-fns';
+import { Calendar, TrendingUp, History } from 'lucide-react';
+import { format, startOfYear, endOfYear, isWithinInterval, parseISO, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
@@ -23,20 +23,28 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
 
   const stats = useMemo(() => {
     if (!data) {
-      return { monthlyTotal: 0, yearlyTotal: 0 };
+      return { monthlyTotal: 0, yearlyTotal: 0, previousMonthTotal: 0 };
     }
 
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
+    const previousMonth = subMonths(selectedDate, 1);
+    const previousMonthStr = format(previousMonth, 'yyyy-MM');
     const yearStart = startOfYear(selectedDate);
     const yearEnd = endOfYear(selectedDate);
 
     let monthly = 0;
     let yearly = 0;
+    let previousMonthly = 0;
 
     data.forEach(item => {
       // Sum for selected month
       if (item.month === selectedMonthStr) {
         monthly += item.quantity;
+      }
+      
+      // Sum for previous month
+      if (item.month === previousMonthStr) {
+        previousMonthly += item.quantity;
       }
       
       // Sum for selected year
@@ -46,13 +54,13 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
       }
     });
 
-    return { monthlyTotal: monthly, yearlyTotal: yearly };
+    return { monthlyTotal: monthly, yearlyTotal: yearly, previousMonthTotal: previousMonthly };
   }, [data, selectedDate]);
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2">
-        {Array.from({ length: 2 }).map((_, index) => (
+      <div className="grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
@@ -67,7 +75,7 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-3">
       <Card className="border-l-4 border-primary">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total del Mes</CardTitle>
@@ -77,6 +85,18 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
           <div className="text-2xl font-bold">{stats.monthlyTotal}</div>
           <p className="text-xs text-muted-foreground">
             Contratos cerrados en {format(selectedDate, 'LLLL yyyy', { locale: es })}
+          </p>
+        </CardContent>
+      </Card>
+      <Card className="border-l-4 border-primary">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Mes Anterior</CardTitle>
+          <History className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.previousMonthTotal}</div>
+          <p className="text-xs text-muted-foreground">
+            Contratos cerrados en {format(subMonths(selectedDate, 1), 'LLLL yyyy', { locale: es })}
           </p>
         </CardContent>
       </Card>
