@@ -53,6 +53,7 @@ export function AnnualGoalsCRUD() {
   const { data, isLoading, error } = useCollection(dataRef);
 
   const [year, setYear] = useState<string>('');
+  const [goalType, setGoalType] = useState<string>('');
   const [amount, setAmount] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -60,6 +61,7 @@ export function AnnualGoalsCRUD() {
   
   const clearForm = () => {
     setYear('');
+    setGoalType('');
     setAmount('');
     setEditingId(null);
   };
@@ -67,11 +69,12 @@ export function AnnualGoalsCRUD() {
   const handleEdit = (item: any) => {
     setEditingId(item.id);
     setYear(item.year.toString());
+    setGoalType(item.goalType);
     setAmount(item.amount.toString());
   };
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !year || !amount) {
+    if (!firestore || !year || !goalType || !amount) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
@@ -82,7 +85,7 @@ export function AnnualGoalsCRUD() {
   
     const dataToSave = {
       year: parseInt(year, 10),
-      goalType: 'collection',
+      goalType: goalType,
       amount: parseFloat(amount),
       updatedAt: Timestamp.now(),
     };
@@ -96,7 +99,7 @@ export function AnnualGoalsCRUD() {
         const q = query(
           collection(firestore, 'annual_goals'),
           where('year', '==', dataToSave.year),
-          where('goalType', '==', 'collection')
+          where('goalType', '==', dataToSave.goalType)
         );
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
@@ -106,7 +109,7 @@ export function AnnualGoalsCRUD() {
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: `Ya existe una meta de recaudación para el año ${year}.`,
+                description: `Ya existe una meta de este tipo para el año ${year}.`,
             });
             return;
         }
@@ -143,13 +146,13 @@ export function AnnualGoalsCRUD() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestionar Metas Anuales de Recaudación</CardTitle>
+        <CardTitle>Gestionar Metas Anuales</CardTitle>
         <CardDescription>
-            Añada, edite o elimine las metas anuales de recaudación.
+            Añada, edite o elimine las metas anuales de recaudación y deuda.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4 p-4 border rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 items-end gap-4 p-4 border rounded-lg">
           <div className="grid gap-2">
             <Label htmlFor="year">Año</Label>
             <Select value={year} onValueChange={setYear} disabled={!!editingId}>
@@ -158,6 +161,18 @@ export function AnnualGoalsCRUD() {
                 </SelectTrigger>
                 <SelectContent>
                     {availableYears.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="goalType">Tipo de Meta</Label>
+            <Select value={goalType} onValueChange={setGoalType} disabled={!!editingId}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Seleccione un tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="collection">Recaudación</SelectItem>
+                    <SelectItem value="debt_3_plus">Deuda 3+</SelectItem>
                 </SelectContent>
             </Select>
           </div>
@@ -205,7 +220,7 @@ export function AnnualGoalsCRUD() {
                   sortedData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.year}</TableCell>
-                    <TableCell>Recaudación</TableCell>
+                    <TableCell>{item.goalType === 'collection' ? 'Recaudación' : 'Deuda 3+'}</TableCell>
                     <TableCell>{formatCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
@@ -226,5 +241,3 @@ export function AnnualGoalsCRUD() {
     </Card>
   );
 }
-
-    

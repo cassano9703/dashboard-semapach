@@ -272,11 +272,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AnnualGoal",
       "type": "object",
-      "description": "Represents an annual goal for collection.",
+      "description": "Represents an annual goal for collection or debt reduction.",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the goal record." },
         "year": { "type": "number", "description": "The year of the goal (e.g., 2025)." },
-        "goalType": { "type": "string", "enum": ["collection"], "description": "Type of the goal, currently only 'collection'." },
+        "goalType": { "type": "string", "enum": ["collection", "debt_3_plus"], "description": "Type of the goal." },
         "amount": { "type": "number", "description": "The target goal amount for the year." },
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },
@@ -432,7 +432,7 @@
         "definition": {
           "entityName": "AnnualGoal",
           "schema": { "$ref": "#/backend/entities/AnnualGoal" },
-          "description": "Stores annual goals for collection.",
+          "description": "Stores annual goals for collection or debt reduction.",
           "params": [{ "name": "goalId", "description": "The unique ID of the annual goal document." }]
         }
       },
@@ -449,5 +449,3 @@
     "reasoning": "The Firestore structure is designed to store daily collection data, monthly district progress, and daily recovered services for the SEMAPACH dashboard. Authorization Independence is not a major concern as there is no user-specific data, and security will likely be role-based. The collections are segregated to avoid mixing different data types and to facilitate secure and efficient querying (QAPs). This segregation ensures that listing daily collections doesn't inadvertently expose district progress or recovered services data, and vice versa. The paths are straightforward to facilitate easy data access and manipulation, prioritizing clarity for front-end integration and reporting."
   }
 }
-
-    
