@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, TrendingUp, History } from 'lucide-react';
-import { format, startOfYear, endOfYear, isWithinInterval, parseISO, subMonths } from 'date-fns';
+import { format, startOfYear, endOfMonth, isWithinInterval, parseISO, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
@@ -23,17 +23,18 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
 
   const stats = useMemo(() => {
     if (!data) {
-      return { monthlyTotal: 0, yearlyTotal: 0, previousMonthTotal: 0 };
+      return { monthlyTotal: 0, accumulatedToDate: 0, previousMonthTotal: 0 };
     }
 
     const selectedMonthStr = format(selectedDate, 'yyyy-MM');
-    const previousMonth = subMonths(selectedDate, 1);
-    const previousMonthStr = format(previousMonth, 'yyyy-MM');
+    const previousMonthDate = subMonths(selectedDate, 1);
+    const previousMonthStr = format(previousMonthDate, 'yyyy-MM');
+    
     const yearStart = startOfYear(selectedDate);
-    const yearEnd = endOfYear(selectedDate);
+    const selectedMonthEnd = endOfMonth(selectedDate);
 
     let monthly = 0;
-    let yearly = 0;
+    let accumulated = 0;
     let previousMonthly = 0;
 
     data.forEach(item => {
@@ -47,14 +48,14 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
         previousMonthly += item.quantity;
       }
       
-      // Sum for selected year
+      // Sum from the start of the year up to the end of the selected month
       const itemDate = parseISO(`${item.month}-01`);
-      if (isWithinInterval(itemDate, { start: yearStart, end: yearEnd })) {
-        yearly += item.quantity;
+      if (isWithinInterval(itemDate, { start: yearStart, end: selectedMonthEnd })) {
+        accumulated += item.quantity;
       }
     });
 
-    return { monthlyTotal: monthly, yearlyTotal: yearly, previousMonthTotal: previousMonthly };
+    return { monthlyTotal: monthly, accumulatedToDate: accumulated, previousMonthTotal: previousMonthly };
   }, [data, selectedDate]);
 
   if (isLoading) {
@@ -102,13 +103,13 @@ export function ContractStatCards({ selectedDate }: ContractStatCardsProps) {
       </Card>
       <Card className="border-l-4 border-primary">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Acumulado Anual</CardTitle>
+          <CardTitle className="text-sm font-medium">Acumulado a la Fecha</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.yearlyTotal}</div>
+          <div className="text-2xl font-bold">{stats.accumulatedToDate}</div>
           <p className="text-xs text-muted-foreground">
-            Total de contratos cerrados en el año {format(selectedDate, 'yyyy')}
+            Acumulado del año {format(selectedDate, 'yyyy')} hasta {format(selectedDate, 'LLLL', { locale: es })}
           </p>
         </CardContent>
       </Card>
