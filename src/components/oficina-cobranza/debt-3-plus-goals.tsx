@@ -80,8 +80,11 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                 ) : (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="w-full bg-secondary rounded-full h-2 overflow-hidden cursor-pointer">
-                          <Progress value={progress} className="h-2" />
+                       <div className="relative w-full h-4">
+                        <Progress value={progress} className="h-4" />
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white mix-blend-difference">
+                          {progress.toFixed(0)}%
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
