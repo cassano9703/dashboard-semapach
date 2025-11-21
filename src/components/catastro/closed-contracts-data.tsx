@@ -26,13 +26,12 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Rectangle,
 } from 'recharts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfYear, endOfYear, eachMonthOfInterval, parseISO, isWithinInterval } from 'date-fns';
+import { format, startOfYear, endOfYear, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -92,8 +91,8 @@ export function ClosedContractsData() {
 
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Card>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-1">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -104,7 +103,7 @@ export function ClosedContractsData() {
               </div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className="w-full sm:w-[240px] justify-start text-left font-normal">
+                  <Button variant={"outline"} className="w-full sm:w-auto justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
                   </Button>
@@ -154,7 +153,7 @@ export function ClosedContractsData() {
             </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="lg:col-span-2">
           <CardHeader>
               <CardTitle>Evolución Anual de Contratos Cerrados</CardTitle>
               <CardDescription>
