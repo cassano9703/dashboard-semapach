@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Table,
@@ -31,13 +29,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfYear, endOfYear, eachMonthOfInterval } from 'date-fns';
+import { format, startOfYear, eachMonthOfInterval, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 
-export function ClosedContractsData() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+interface ClosedContractsDataProps {
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+}
+
+export function ClosedContractsData({ selectedDate, onDateChange }: ClosedContractsDataProps) {
   const firestore = useFirestore();
 
   const dataRef = useMemoFirebase(
@@ -106,7 +108,7 @@ export function ClosedContractsData() {
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
+                    onSelect={(date) => date && onDateChange(date)}
                     disabled={{ after: new Date() }}
                     initialFocus
                     locale={es}
