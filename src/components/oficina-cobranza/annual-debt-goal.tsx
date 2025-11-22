@@ -102,7 +102,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Target className="h-6 w-6" />
-            Meta Anual de Reducción de Deuda ({currentYear})
+            Reducción de Deuda ({currentYear})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
