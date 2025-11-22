@@ -44,7 +44,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         collGoals[monthIndex] = goal;
       });
     }
-    return collGoals.slice(7, 11);
+    return collGoals.slice(7, 10);
   }, [goalsData, selectedDate]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
