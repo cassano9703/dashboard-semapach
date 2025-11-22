@@ -58,7 +58,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análisis de Deuda de 3 a más</CardTitle>
+        <CardTitle>Deuda de 3 a más</CardTitle>
         <CardDescription>Gráfico de la deuda actual por mes.</CardDescription>
       </CardHeader>
       <CardContent>
