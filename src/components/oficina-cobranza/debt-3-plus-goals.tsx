@@ -50,14 +50,6 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
         'Deuda Actual': goal?.executedAmount ?? goal?.proposedAmount ?? 0,
     })).filter(item => item['Deuda Actual'] > 0);
   }, [debtGoals]);
-
-  const renderGoalRow = (title: string) => {
-    return (
-      <div className="grid grid-cols-1 items-center gap-4 text-sm" key={title}>
-        <div className="col-span-1 font-medium capitalize">{title}</div>
-      </div>
-    );
-  };
   
   if (isLoading) {
     return <Card className="h-full flex items-center justify-center"><p>Cargando metas de deuda...</p></Card>
@@ -66,22 +58,11 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Deuda de 3 a mas</CardTitle>
-        <CardDescription>Análisis de la deuda actual por mes.</CardDescription>
+        <CardTitle>Análisis de Deuda de 3 a más</CardTitle>
+        <CardDescription>Gráfico de la deuda actual por mes.</CardDescription>
       </CardHeader>
       <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className='space-y-3'>
-                <div className="grid grid-cols-1 gap-4 text-xs font-bold text-muted-foreground">
-                    <div className="col-span-1">Mes</div>
-                </div>
-                {debtGoals.map((goal, index) =>
-                renderGoalRow(
-                    format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
-                )
-                )}
-            </div>
-            <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
                  {chartData.length === 0 ? (
                     <div className="h-[200px] flex items-center justify-center text-muted-foreground">No hay datos para el gráfico.</div>
                 ) : (
@@ -111,7 +92,6 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                 </ChartContainer>
                 )}
             </div>
-          </div>
       </CardContent>
     </Card>
   );
