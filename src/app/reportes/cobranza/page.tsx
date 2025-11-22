@@ -19,12 +19,13 @@ export default function ReportesCobranzaPage() {
         <div className="lg:col-span-1 flex flex-col gap-6">
             <AnnualCollectionGoal selectedDate={selectedDate} />
             <CollectionDebtGoals selectedDate={selectedDate} />
-            <ServiceOperationsSummary selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
         <div className="lg:col-span-1 flex flex-col gap-6">
            <DistrictProgressChart />
         </div>
       </div>
+      
+      <ServiceOperationsSummary selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
       <Debt3PlusGoals selectedDate={selectedDate} />
       
