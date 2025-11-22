@@ -64,7 +64,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
-        <div className="col-span-1 rounded-md border bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 p-2 text-right">
+        <div className="col-span-1 rounded-md border bg-teal-100 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800 p-2 text-right">
             {hasData ? formatCurrency(initialAmount) : '-'}
         </div>
         <div className="col-span-1 rounded-md border bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 p-2 text-right">
