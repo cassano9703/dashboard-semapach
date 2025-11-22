@@ -99,7 +99,7 @@ export function AnnualCollectionGoal({ selectedDate }: AnnualCollectionGoalProps
                   <Progress value={progress} className="h-3" />
               </TooltipTrigger>
               <TooltipContent>
-                  <p>Faltan {formatCurrency(missingAmount)} para la meta anual</p>
+                  <p className="text-muted-foreground">Faltan {formatCurrency(missingAmount)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
