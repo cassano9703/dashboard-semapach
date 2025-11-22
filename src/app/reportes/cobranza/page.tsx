@@ -7,6 +7,7 @@ import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { Debt3PlusGoals } from '@/components/oficina-cobranza/debt-3-plus-goals';
 import { AnnualCollectionGoal } from '@/components/oficina-cobranza/annual-collection-goal';
+import { AnnualDebtGoal } from '@/components/oficina-cobranza/annual-debt-goal';
 
 export default function ReportesCobranzaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 7, 1));
@@ -21,6 +22,7 @@ export default function ReportesCobranzaPage() {
             <CollectionDebtGoals selectedDate={selectedDate} />
         </div>
         <div className="lg:col-span-1 flex flex-col gap-6">
+            <AnnualDebtGoal selectedDate={selectedDate} />
            <DistrictProgressChart />
         </div>
       </div>
