@@ -247,7 +247,7 @@ export function DistrictProgress() {
         </Card>
         <Card className="lg:col-span-1">
             <CardHeader>
-                <CardTitle>Gráfico de Avance</CardTitle>
+                <CardTitle>Avance por Distrito</CardTitle>
                 <CardDescription>Visualización del progreso por distrito.</CardDescription>
             </CardHeader>
             <CardContent>
