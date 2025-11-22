@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -97,7 +96,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg p-4">
+        <div className="rounded-lg p-4 border-t-4 border-[hsl(var(--chart-3))]">
           <h3 className="text-lg font-semibold mb-4 text-[hsl(var(--chart-3))] flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Servis</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
@@ -112,7 +111,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
               />
           </div>
         </div>
-        <div className="rounded-lg p-4">
+        <div className="rounded-lg p-4 border-t-4 border-sky-500">
           <h3 className="text-lg font-semibold mb-4 text-sky-900 dark:text-sky-200 flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Semapach</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
