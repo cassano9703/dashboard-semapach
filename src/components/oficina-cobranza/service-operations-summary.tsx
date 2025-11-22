@@ -97,29 +97,33 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg p-4 border-t-4 border-blue-500 bg-card">
+        <div className="rounded-lg p-4 border-t-4 border-blue-500">
           <h3 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-200 flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Servis</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
                 title="Cortes" 
                 value={stats.servis.cut} 
+                className="border-l-4 border-blue-500"
               />
               <StatCard 
                 title="Reaperturas" 
                 value={stats.servis.reconnection}
+                className="border-l-4 border-blue-500"
               />
           </div>
         </div>
-        <div className="rounded-lg p-4 border-t-4 border-green-500 bg-card">
+        <div className="rounded-lg p-4 border-t-4 border-green-500">
           <h3 className="text-lg font-semibold mb-4 text-green-900 dark:text-green-200 flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Semapach</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
                 title="Cortes" 
-                value={stats.semapach.cut} 
+                value={stats.semapach.cut}
+                className="border-l-4 border-green-500"
               />
               <StatCard 
                 title="Reaperturas" 
                 value={stats.semapach.reconnection}
+                className="border-l-4 border-green-500"
               />
           </div>
         </div>
