@@ -63,10 +63,10 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
-        <div className="col-span-1 rounded-md border p-2 text-right bg-gray-50 dark:bg-gray-800">
+        <div className="col-span-1 rounded-md border p-2 text-right">
             {hasData ? formatCurrency(proposed) : '-'}
         </div>
-        <div className="col-span-1 rounded-md border p-2 text-right bg-accent">
+        <div className="col-span-1 rounded-md border p-2 text-right">
             {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
         <div className="col-span-1 flex items-center gap-2">
@@ -83,9 +83,6 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
                         <TooltipTrigger asChild>
                           <div className="relative w-full">
                             <Progress value={progress} className="h-4" />
-                            <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white mix-blend-screen">
-                              {progress.toFixed(0)}%
-                            </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -93,6 +90,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                    <span className="font-semibold text-xs text-muted-foreground">{progress.toFixed(0)}%</span>
                   </div>
                 )
             ) : (
