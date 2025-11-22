@@ -85,9 +85,9 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   if (isLoading) {
       return (
-          <Card>
-              <CardContent className="pt-6">
-                  <div className="h-24 animate-pulse bg-muted rounded-md" />
+          <Card className="h-full">
+              <CardContent className="pt-6 h-full flex items-center justify-center">
+                  <div className="h-24 animate-pulse bg-muted rounded-md w-full" />
               </CardContent>
           </Card>
       );
@@ -98,7 +98,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Target className="h-6 w-6" />
