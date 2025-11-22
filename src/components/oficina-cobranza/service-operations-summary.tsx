@@ -16,7 +16,7 @@ import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
-import { CalendarIcon, Scissors, Wrench, Building2 } from 'lucide-react';
+import { CalendarIcon, Scissors, Droplets, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ServiceOperationsSummaryProps {
@@ -112,7 +112,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
               <StatCard 
                 title="Reaperturas" 
                 value={stats.servis.reconnection} 
-                icon={<Wrench className="text-blue-700 dark:text-blue-300"/>} 
+                icon={<Droplets className="text-blue-700 dark:text-blue-300"/>} 
                 className="bg-white/60 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800"
               />
           </div>
@@ -129,7 +129,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
               <StatCard 
                 title="Reaperturas" 
                 value={stats.semapach.reconnection} 
-                icon={<Wrench className="text-green-700 dark:text-green-300"/>}
+                icon={<Droplets className="text-green-700 dark:text-green-300"/>}
                 className="bg-white/60 dark:bg-green-950/50 border-green-200 dark:border-green-800"
               />
           </div>
