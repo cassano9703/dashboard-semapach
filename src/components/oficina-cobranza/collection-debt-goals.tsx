@@ -63,7 +63,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
-        <div className="col-span-1 rounded-md border bg-cyan-100 border-cyan-200 p-2 text-right text-cyan-900">
+        <div className="col-span-1 rounded-md border bg-sky-100 border-sky-200 p-2 text-right text-sky-900">
             {hasData ? formatCurrency(proposed) : '-'}
         </div>
         <div className="col-span-1 rounded-md border border-sky-500 p-2 text-right">
