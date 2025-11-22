@@ -114,8 +114,8 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
       <CardContent className="space-y-3">
            <div className="grid grid-cols-4 gap-4 text-xs font-bold text-muted-foreground">
               <div className="col-span-1">Mes</div>
-              <div className="col-span-1 text-right">Monto Inicial</div>
-              <div className="col-span-1 text-right">Monto Actual</div>
+              <div className="col-span-1 text-right">Deuda Inicial</div>
+              <div className="col-span-1 text-right">Deuda Actual</div>
               <div className="col-span-1 text-center">Reducción</div>
           </div>
         {debtGoals.map((goal, index) =>
