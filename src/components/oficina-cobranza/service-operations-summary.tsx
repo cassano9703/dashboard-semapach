@@ -16,7 +16,7 @@ import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
-import { CalendarIcon, Scissors, Droplets, Building2 } from 'lucide-react';
+import { CalendarIcon, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ServiceOperationsSummaryProps {
@@ -57,7 +57,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
     return result;
   }, [operationsData]);
 
-  const StatCard = ({ title, value, icon, className }: { title: string; value: number, icon: React.ReactNode, className?: string }) => (
+  const StatCard = ({ title, value, className }: { title: string; value: number, className?: string }) => (
     <Card className={cn("text-center", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -97,37 +97,29 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg p-4 bg-blue-100 dark:bg-blue-900/30">
+        <div className="rounded-lg p-4 border-t-4 border-blue-500 bg-card">
           <h3 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-200 flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Servis</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
                 title="Cortes" 
                 value={stats.servis.cut} 
-                icon={<Scissors className="text-blue-700 dark:text-blue-300"/>} 
-                className="bg-white/60 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800"
               />
               <StatCard 
                 title="Reaperturas" 
-                value={stats.servis.reconnection} 
-                icon={<Droplets className="text-blue-700 dark:text-blue-300"/>} 
-                className="bg-white/60 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800"
+                value={stats.servis.reconnection}
               />
           </div>
         </div>
-        <div className="rounded-lg p-4 bg-green-100 dark:bg-green-900/30">
+        <div className="rounded-lg p-4 border-t-4 border-green-500 bg-card">
           <h3 className="text-lg font-semibold mb-4 text-green-900 dark:text-green-200 flex items-center gap-2"><Building2 className="h-5 w-5"/> Operaciones Semapach</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <StatCard 
                 title="Cortes" 
                 value={stats.semapach.cut} 
-                icon={<Scissors className="text-green-700 dark:text-green-300"/>} 
-                className="bg-white/60 dark:bg-green-950/50 border-green-200 dark:border-green-800"
               />
               <StatCard 
                 title="Reaperturas" 
-                value={stats.semapach.reconnection} 
-                icon={<Droplets className="text-green-700 dark:text-green-300"/>}
-                className="bg-white/60 dark:bg-green-950/50 border-green-200 dark:border-green-800"
+                value={stats.semapach.reconnection}
               />
           </div>
         </div>
