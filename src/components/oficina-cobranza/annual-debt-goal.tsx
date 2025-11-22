@@ -4,10 +4,8 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format, parseISO } from 'date-fns';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Target } from 'lucide-react';
+import { format } from 'date-fns';
+import { Target, TrendingDown, Flag } from 'lucide-react';
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -43,11 +41,18 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
-  const { annualGoal, totalReduction, progress } = useMemo(() => {
-    const goal = annualGoalData?.[0]?.amount || 0;
+  const {
+    initialDebt,
+    currentDebt,
+    targetDebt,
+    totalReductionNeeded,
+    reductionAchieved,
+    progress
+  } = useMemo(() => {
+    const target = annualGoalData?.[0]?.amount || 0;
 
     if (!monthlyGoalsData) {
-        return { annualGoal: goal, totalReduction: 0, progress: 0 };
+        return { initialDebt: 0, currentDebt: 0, targetDebt: target, totalReductionNeeded: 0, reductionAchieved: 0, progress: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -55,20 +60,24 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { annualGoal: goal, totalReduction: 0, progress: 0 };
+        return { initialDebt: 0, currentDebt: 0, targetDebt: target, totalReductionNeeded: 0, reductionAchieved: 0, progress: 0 };
     }
 
-    const initialDebtOfPeriod = yearData[0].proposedAmount;
-    const currentDebtOfPeriod = yearData[yearData.length - 1].executedAmount ?? yearData[yearData.length - 1].proposedAmount;
-
-    const reduction = initialDebtOfPeriod - currentDebtOfPeriod;
+    const initial = yearData[0].proposedAmount;
+    const current = yearData[yearData.length - 1].executedAmount ?? yearData[yearData.length - 1].proposedAmount;
     
-    const progressPercentage = goal > 0 ? Math.min((reduction / goal) * 100, 100) : 0;
+    const needed = initial - target;
+    const achieved = initial - current;
+    
+    const progressPercentage = needed > 0 ? Math.min((achieved / needed) * 100, 100) : 0;
 
     return {
-        annualGoal: goal,
-        totalReduction: reduction,
-        progress: progressPercentage,
+        initialDebt: initial,
+        currentDebt: current,
+        targetDebt: target,
+        totalReductionNeeded: needed,
+        reductionAchieved: achieved,
+        progress: progressPercentage
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
 
@@ -84,7 +93,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       );
   }
   
-  if (annualGoal === 0) {
+  if (targetDebt === 0) {
       return null;
   }
 
@@ -96,26 +105,38 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             Meta Anual de Reducción de Deuda ({currentYear})
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="flex justify-between items-baseline text-sm">
-            <span className="text-muted-foreground">Reducción Total</span>
-            <span className="font-semibold">{formatCurrency(totalReduction)}</span>
+      <CardContent className="space-y-4">
+        <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
+          <div className='flex items-center gap-2'>
+            <TrendingDown className="h-5 w-5 text-red-500" />
+            <span className="text-sm font-medium text-muted-foreground">Deuda Actual</span>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                  <Progress value={progress} className="h-3" />
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p className="text-muted-foreground">Faltan {formatCurrency(annualGoal - totalReduction)} por reducir</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="flex justify-between items-baseline text-sm">
-            <span className="text-muted-foreground">Meta de Reducción Anual</span>
-            <span className="font-semibold">{formatCurrency(annualGoal)}</span>
-          </div>
+          <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
+        </div>
+        
+        <div 
+          className="relative w-full h-2 bg-muted rounded-full"
+          title={`Deuda Inicial: ${formatCurrency(initialDebt)}`}
+        >
+          <div 
+            className="absolute h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Reducción Conseguida</span>
+                <span className="font-semibold text-green-600">{formatCurrency(reductionAchieved)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                 <span className="text-muted-foreground">Meta de Deuda</span>
+                 <span className="font-semibold">{formatCurrency(targetDebt)}</span>
+            </div>
+        </div>
+
+         <div className="text-center text-xs text-muted-foreground pt-2">
+            Se necesita reducir la deuda en <span className="font-bold">{formatCurrency(totalReductionNeeded)}</span> para alcanzar la meta de <span className="font-bold">{formatCurrency(targetDebt)}</span>.
         </div>
       </CardContent>
     </Card>
