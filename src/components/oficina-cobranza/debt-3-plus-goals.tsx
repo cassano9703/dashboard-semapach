@@ -51,15 +51,10 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     })).filter(item => item['Deuda Actual'] > 0);
   }, [debtGoals]);
 
-  const renderGoalRow = (title: string, currentAmount: number | undefined) => {
-    const hasCurrentData = currentAmount !== undefined;
-
+  const renderGoalRow = (title: string) => {
     return (
-      <div className="grid grid-cols-2 items-center gap-4 text-sm" key={title}>
+      <div className="grid grid-cols-1 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
-        <div className="col-span-1 rounded-md border border-sky-500 p-2 text-right">
-            {hasCurrentData ? formatCurrency(currentAmount) : '-'}
-        </div>
       </div>
     );
   };
@@ -77,14 +72,12 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
       <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className='space-y-3'>
-                <div className="grid grid-cols-2 gap-4 text-xs font-bold text-muted-foreground">
+                <div className="grid grid-cols-1 gap-4 text-xs font-bold text-muted-foreground">
                     <div className="col-span-1">Mes</div>
-                    <div className="col-span-1 text-right">Deuda Actual</div>
                 </div>
                 {debtGoals.map((goal, index) =>
                 renderGoalRow(
                     format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
-                    goal?.executedAmount ?? goal?.proposedAmount
                 )
                 )}
             </div>
