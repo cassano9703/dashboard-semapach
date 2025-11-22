@@ -60,9 +60,6 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
   const StatCard = ({ title, value, icon, className }: { title: string; value: number, icon: React.ReactNode, className?: string }) => (
     <Card className={cn("text-center", className)}>
       <CardHeader className="pb-2">
-        <div className="mx-auto bg-white/50 dark:bg-black/20 p-3 rounded-full mb-2">
-          {icon}
-        </div>
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
