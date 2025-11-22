@@ -66,7 +66,7 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         <div className="col-span-1 rounded-md border bg-cyan-100 border-cyan-200 p-2 text-right text-cyan-900">
             {hasData ? formatCurrency(proposed) : '-'}
         </div>
-        <div className="col-span-1 rounded-md border bg-amber-100 border-amber-200 p-2 text-right text-amber-900">
+        <div className="col-span-1 rounded-md border border-sky-500 p-2 text-right">
             {hasExecutedData ? formatCurrency(executed) : '-'}
         </div>
         <div className="col-span-1 flex items-center gap-2">

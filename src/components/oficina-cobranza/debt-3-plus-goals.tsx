@@ -67,7 +67,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
         <div className="col-span-1 rounded-md border bg-cyan-100 border-cyan-200 p-2 text-right text-cyan-900">
             {hasData ? formatCurrency(initialAmount) : '-'}
         </div>
-        <div className="col-span-1 rounded-md border bg-amber-100 border-amber-200 p-2 text-right text-amber-900">
+        <div className="col-span-1 rounded-md border border-sky-500 p-2 text-right">
             {hasCurrentData ? formatCurrency(currentAmount) : '-'}
         </div>
         <div className="col-span-1 flex items-center gap-2">
