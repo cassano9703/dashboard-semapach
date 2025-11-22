@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Target } from 'lucide-react';
@@ -43,24 +43,32 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
-  const { annualGoal, debtRemaining, progress, initialDebt } = useMemo(() => {
+  const { annualGoal, totalReduction, progress } = useMemo(() => {
     const goal = annualGoalData?.[0]?.amount || 0;
 
+    if (!monthlyGoalsData) {
+        return { annualGoal: goal, totalReduction: 0, progress: 0 };
+    }
+
     const yearData = monthlyGoalsData
-        ? monthlyGoalsData.filter(mg => mg.month.startsWith(currentYear) && mg.proposedAmount)
-        : [];
+        .filter(mg => mg.month.startsWith(currentYear) && mg.proposedAmount)
+        .sort((a, b) => a.month.localeCompare(b.month));
     
-    const totalInitialDebt = yearData.reduce((sum, mg) => sum + mg.proposedAmount, 0);
-    const totalCurrentDebt = yearData.reduce((sum, mg) => sum + (mg.executedAmount || mg.proposedAmount), 0);
+    if (yearData.length === 0) {
+        return { annualGoal: goal, totalReduction: 0, progress: 0 };
+    }
+
+    const initialDebtOfPeriod = yearData[0].proposedAmount;
+    const currentDebtOfPeriod = yearData[yearData.length - 1].executedAmount ?? yearData[yearData.length - 1].proposedAmount;
+
+    const reduction = initialDebtOfPeriod - currentDebtOfPeriod;
     
-    const reduction = totalInitialDebt > 0 ? totalInitialDebt - totalCurrentDebt : 0;
     const progressPercentage = goal > 0 ? Math.min((reduction / goal) * 100, 100) : 0;
 
     return {
         annualGoal: goal,
-        debtRemaining: totalCurrentDebt,
+        totalReduction: reduction,
         progress: progressPercentage,
-        initialDebt: totalInitialDebt
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
 
@@ -92,7 +100,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         <div className="space-y-2">
           <div className="flex justify-between items-baseline text-sm">
             <span className="text-muted-foreground">Reducción Total</span>
-            <span className="font-semibold">{formatCurrency(initialDebt - debtRemaining)}</span>
+            <span className="font-semibold">{formatCurrency(totalReduction)}</span>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -100,7 +108,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                   <Progress value={progress} className="h-3" />
               </TooltipTrigger>
               <TooltipContent>
-                  <p className="text-muted-foreground">Faltan {formatCurrency(annualGoal - (initialDebt - debtRemaining))} por reducir</p>
+                  <p className="text-muted-foreground">Faltan {formatCurrency(annualGoal - totalReduction)} por reducir</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
