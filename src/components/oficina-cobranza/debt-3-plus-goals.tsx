@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
@@ -9,6 +9,8 @@ import { es } from 'date-fns/locale';
 import { CheckCircle } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+import { ChartContainer } from '../ui/chart';
 
 interface Debt3PlusGoalsProps {
   selectedDate: Date;
@@ -44,6 +46,13 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     }
     return dbtGoals.slice(7, 11);
   }, [goalsData, selectedDate]);
+  
+  const chartData = useMemo(() => {
+    return debtGoals.map((goal, index) => ({
+        name: format(new Date(2025, index + 7, 1), 'MMM', { locale: es }),
+        'Deuda Actual': goal?.executedAmount ?? goal?.proposedAmount ?? 0,
+    })).filter(item => item['Deuda Actual'] > 0);
+  }, [debtGoals]);
 
   const renderGoalRow = (title: string, initialAmount: number | undefined, currentAmount: number | undefined) => {
     const hasData = initialAmount !== undefined && initialAmount > 0;
@@ -64,7 +73,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     return (
       <div className="grid grid-cols-4 items-center gap-4 text-sm" key={title}>
         <div className="col-span-1 font-medium capitalize">{title}</div>
-        <div className="col-span-1 rounded-md border bg-sky-100 border-sky-200 p-2 text-right text-sky-900">
+        <div className="col-span-1 rounded-md border bg-sky-100 border-sky-200 p-2 text-right text-sky-900 dark:bg-sky-900/50 dark:text-sky-200 dark:border-sky-800">
             {hasData ? formatCurrency(initialAmount) : '-'}
         </div>
         <div className="col-span-1 rounded-md border border-sky-500 p-2 text-right">
@@ -110,21 +119,56 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
     <Card>
       <CardHeader>
         <CardTitle>Deuda de 3 a mas</CardTitle>
+        <CardDescription>Análisis de la deuda inicial contra la deuda actual por mes.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-           <div className="grid grid-cols-4 gap-4 text-xs font-bold text-muted-foreground">
-              <div className="col-span-1">Mes</div>
-              <div className="col-span-1 text-right">Deuda Inicial</div>
-              <div className="col-span-1 text-right">Deuda Actual</div>
-              <div className="col-span-1 text-center">Reducción</div>
+      <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className='space-y-3'>
+                <div className="grid grid-cols-4 gap-4 text-xs font-bold text-muted-foreground">
+                    <div className="col-span-1">Mes</div>
+                    <div className="col-span-1 text-right">Deuda Inicial</div>
+                    <div className="col-span-1 text-right">Deuda Actual</div>
+                    <div className="col-span-1 text-center">Reducción</div>
+                </div>
+                {debtGoals.map((goal, index) =>
+                renderGoalRow(
+                    format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
+                    goal?.proposedAmount,
+                    goal?.executedAmount
+                )
+                )}
+            </div>
+            <div className="flex flex-col items-center justify-center">
+                 {chartData.length === 0 ? (
+                    <div className="h-[200px] flex items-center justify-center text-muted-foreground">No hay datos para el gráfico.</div>
+                ) : (
+                <ChartContainer config={{}} className='w-full h-[200px]'>
+                    <BarChart 
+                        data={chartData} 
+                        layout="vertical"
+                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                        barCategoryGap="20%"
+                    >
+                        <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} />
+                        <RechartsTooltip
+                            cursor={{ fill: 'hsla(var(--background))' }}
+                            content={({ active, payload, label }) =>
+                                active && payload && payload.length ? (
+                                <div className="bg-background border rounded-lg p-2 shadow-lg -mt-12">
+                                    <p className="font-bold">{label}</p>
+                                    <p className="text-sm">{formatCurrency(payload[0].value as number)}</p>
+                                </div>
+                                ) : null
+                            }
+                            />
+                        <Bar dataKey="Deuda Actual" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-2))" />
+                    </BarChart>
+                </ChartContainer>
+                )}
+            </div>
           </div>
-        {debtGoals.map((goal, index) =>
-          renderGoalRow(
-            format(new Date(2025, index + 7, 1), 'LLLL', { locale: es }),
-            goal?.proposedAmount,
-            goal?.executedAmount
-          )
-        )}
       </CardContent>
     </Card>
   );
