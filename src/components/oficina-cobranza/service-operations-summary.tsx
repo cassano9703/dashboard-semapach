@@ -95,7 +95,7 @@ export function ServiceOperationsSummary({ selectedDate, onDateChange }: Service
             </Popover>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-2 gap-4">
+      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Cortes Servis" value={stats.servis.cut} />
         <StatCard title="Reaperturas Servis" value={stats.servis.reconnection} />
         <StatCard title="Cortes Semapach" value={stats.semapach.cut} />
