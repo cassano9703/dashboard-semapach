@@ -8,7 +8,7 @@ import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 
 interface CollectionDebtGoalsProps {
@@ -78,14 +78,16 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
                     </div>
                 ) : (
                   <div className="flex items-center w-full gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Progress value={progress} className="h-2 flex-1" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Faltan {formatCurrency(missingAmount)}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Progress value={progress} className="h-2 flex-1" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Faltan {formatCurrency(missingAmount)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <span className="text-xs font-semibold text-muted-foreground w-10 text-right">
                         {progress.toFixed(0)}%
                     </span>
