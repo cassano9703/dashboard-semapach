@@ -96,12 +96,12 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                     <BarChart 
                         data={chartData} 
                         layout="vertical"
-                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                        margin={{ top: 5, right: 0, bottom: 5, left: 0 }}
                         barCategoryGap="20%"
                     >
                         <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                         <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={40} />
                         <RechartsTooltip
                             cursor={{ fill: 'hsla(var(--background))' }}
                             content={({ active, payload, label }) =>
@@ -113,7 +113,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
                                 ) : null
                             }
                             />
-                        <Bar dataKey="Deuda Actual" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-2))" />
+                        <Bar dataKey="Deuda Actual" radius={4} fill="hsl(var(--chart-2))" />
                     </BarChart>
                 </ChartContainer>
                 )}
