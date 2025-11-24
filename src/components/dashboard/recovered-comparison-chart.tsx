@@ -47,17 +47,11 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
     [firestore]
   );
   
-  const debtGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'debt_3_plus'), orderBy('month', 'asc')) : null),
-    [firestore]
-  );
-
   const { data: servicesData, isLoading: isLoadingServices } = useCollection(servicesRef);
-  const { data: debtGoalsData, isLoading: isLoadingDebt } = useCollection(debtGoalsRef);
   
   const chartData = useMemo(() => {
-    if ((!servicesData && !debtGoalsData) || selectedDate < firstAvailableDate) {
-      return { quantity: [], amount: [], debt: [] };
+    if (!servicesData || selectedDate < firstAvailableDate) {
+      return { quantity: [], amount: [] };
     }
 
     const interval = {
@@ -70,11 +64,9 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
     const monthlyTotals = monthsInInterval.map(month => {
         const monthStart = startOfMonth(month);
         const monthEnd = endOfMonth(month);
-        const monthStr = format(month, 'yyyy-MM');
         
         let totalQuantity = 0;
         let totalAmount = 0;
-        let debtAmount = 0;
 
         if (servicesData) {
             servicesData.forEach(item => {
@@ -86,30 +78,20 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
             });
         }
         
-        if (debtGoalsData) {
-            const debtGoalForMonth = debtGoalsData.find(goal => goal.month === monthStr);
-            if (debtGoalForMonth) {
-                debtAmount = debtGoalForMonth.executedAmount || debtGoalForMonth.proposedAmount;
-            }
-        }
-
-
         return {
             name: format(month, 'MMM', { locale: es }),
             quantity: totalQuantity,
             amount: totalAmount,
-            debt: debtAmount,
         };
     });
     
     const quantityData = monthlyTotals.map(({name, quantity}) => ({name, value: quantity}));
     const amountData = monthlyTotals.map(({name, amount}) => ({name, value: amount}));
-    const debtData = monthlyTotals.map(({name, debt}) => ({name, value: debt}));
 
-    return { quantity: quantityData, amount: amountData, debt: debtData };
-  }, [servicesData, debtGoalsData, selectedDate, firstAvailableDate]);
+    return { quantity: quantityData, amount: amountData };
+  }, [servicesData, selectedDate, firstAvailableDate]);
 
-  const isLoading = isLoadingServices || isLoadingDebt;
+  const isLoading = isLoadingServices;
 
 
   return (
@@ -119,7 +101,7 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
             <div>
               <CardTitle>Evolución Mensual</CardTitle>
               <CardDescription>
-                Cantidad de usuarios, montos recuperados y deuda por mes.
+                Cantidad de usuarios y montos recuperados por mes.
               </CardDescription>
             </div>
             <Popover>
@@ -147,13 +129,12 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
       </CardHeader>
       <CardContent>
         {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[300px] items-center justify-center">
-                <div className="text-center text-muted-foreground">Cargando datos del gráfico...</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[300px] items-center justify-center">
                 <div className="text-center text-muted-foreground">Cargando datos del gráfico...</div>
                 <div className="text-center text-muted-foreground">Cargando datos del gráfico...</div>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <h3 className="text-center font-semibold mb-4">Usuarios recuperados</h3>
                     <ResponsiveContainer width="100%" height={300}>
@@ -186,26 +167,6 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
                             formatter={(value) => [formatCurrency(Number(value)), "Monto"]}
                         />
                         <Bar dataKey="value" fill="hsl(var(--chart-4))" activeBar={<Rectangle fill="hsl(var(--chart-4) / 0.8)" />} />
-                    </BarChart>
-                    </ResponsiveContainer>
-                </div>
-                 <div>
-                    <h3 className="text-center font-semibold mb-4">Deuda 3 a más (S/)</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData.debt}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis 
-                            fontSize={12} 
-                            tickLine={false} 
-                            axisLine={false}
-                            tickFormatter={(value) => `S/${Number(value)/1000000}M`}
-                        />
-                        <Tooltip 
-                            contentStyle={{ fontSize: '12px' }}
-                            formatter={(value) => [formatCurrency(Number(value)), "Deuda"]}
-                        />
-                        <Bar dataKey="value" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
