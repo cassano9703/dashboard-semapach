@@ -1,3 +1,5 @@
+'use client';
+
 import { MeterDataTable } from '@/components/medicion/meter-data-table';
 import { MeterIndicatorsChart } from '@/components/medicion/meter-indicators-chart';
 import { WeeklyMeterTracking } from '@/components/medicion/weekly-meter-tracking';
@@ -6,7 +8,7 @@ import { useState } from 'react';
 
 export default function MedidoresPage() {
   const year = 2025;
-  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedWeekDate] = useState<Date>(new Date());
 
   return (
     <div className="flex flex-col gap-8">
@@ -22,8 +24,8 @@ export default function MedidoresPage() {
         </h2>
         <MeterIndicatorsChart year={year} />
       </div>
-      <WeeklyMeterTracking selectedDate={selectedWeekDate} onDateChange={setSelectedWeekDate} />
-      <WeeklyMeterProgressChart selectedDate={selectedWeekDate} />
+      <WeeklyMeterTracking selectedDate={selectedDate} onDateChange={setSelectedWeekDate} />
+      <WeeklyMeterProgressChart selectedDate={selectedDate} />
     </div>
   );
 }
