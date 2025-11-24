@@ -60,7 +60,7 @@ const ArrowBar = (props: any) => {
             <rect x={x} y={y} width={width} height={height} fill={fill} />
             <path
                 d={`M${x + width / 2},${y} L${x + width / 2 - arrowWidth / 2},${y + arrowHeight} L${x + width / 2 + arrowWidth / 2},${y + arrowHeight} Z`}
-                fill={fill}
+                fill="hsl(var(--chart-1))"
             />
         </g>
     );
@@ -84,8 +84,8 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   );
   const { data: meterData, isLoading } = useCollection(meterDataRef);
 
-  const { chartData } = useMemo(() => {
-    if (!meterData) return { chartData: [] };
+  const { chartData, minMeters, maxMeters } = useMemo(() => {
+    if (!meterData) return { chartData: [], minMeters: 0, maxMeters: 0 };
   
     const yearDate = new Date(year, 0, 1);
     const months = eachMonthOfInterval({
@@ -108,10 +108,14 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
     }).filter(d => d.meter_quantity !== null);
 
     if (processedData.length === 0) {
-        return { chartData: [] };
+        return { chartData: [], minMeters: 0, maxMeters: 0 };
     }
 
-    return { chartData: processedData };
+    const meterQuantities = processedData.map(d => d.meter_quantity).filter(q => q !== null) as number[];
+    const minVal = Math.min(...meterQuantities);
+    const maxVal = Math.max(...meterQuantities);
+
+    return { chartData: processedData, minMeters: minVal, maxMeters: maxVal };
   
   }, [meterData, year]);
 
@@ -130,8 +134,9 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
         </Card>
       );
   }
-
-  const domainMin = (dataMin: number) => (dataMin * 0.95);
+  
+  const domainMin = (dataMin: number) => Math.floor(dataMin * 0.999);
+  const domainMax = (dataMax: number) => Math.ceil(dataMax * 1.001);
 
   return (
     <Card>
@@ -155,7 +160,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(value) => `${value / 1000}k`}
-                    domain={[domainMin, (dataMax: number) => dataMax * 1.02]}
+                    domain={[domainMin, domainMax]}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
