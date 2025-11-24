@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfYear, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Gauge, TrendingUp, CheckCircle, Flag, TrendingDown } from 'lucide-react';
+import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 
 const formatNumber = (value?: number) => {
   if (value === undefined || value === null) return '0';
@@ -32,7 +32,7 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
 
-  // 2. Fetch weekly progress data for the selected week
+  // 2. Fetch weekly progress data up to the selected week
   const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
   
   const weeklyProgressRef = useMemoFirebase(
@@ -50,27 +50,19 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
   
   const evolucionFecha = useMemo(() => weeklyData?.[0]?.meterCount || 0, [weeklyData]);
+  
   const acumulado = useMemo(() => {
     if (!weeklyData) return 0;
-    return weeklyData.reduce((sum, record) => sum + record.meterCount, 0);
+    // We only need the latest entry for each week, so we filter out older entries for the same week start date.
+    const latestEntries = Array.from(new Map(weeklyData.map(item => [item.weekStartDate, item])).values());
+    return latestEntries.reduce((sum, record) => sum + record.meterCount, 0);
   }, [weeklyData]);
-
-  // 3. Fetch annual goal
-  const annualGoalRef = useMemoFirebase(
-    () => firestore ? query(
-        collection(firestore, 'annual_goals'),
-        where('year', '==', year),
-        where('goalType', '==', 'meter_replacement')
-    ) : null,
-    [firestore, year]
-  );
-  const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
-  const metaAnual = useMemo(() => annualGoalData?.[0]?.amount || 0, [annualGoalData]);
   
-  const isLoading = isLoadingBase || isLoadingWeekly || isLoadingAnnual;
-  
-  const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
+  const montoFinal = useMemo(() => acumulado - baseInicial, [acumulado, baseInicial]);
 
+  const isLoading = isLoadingBase || isLoadingWeekly;
+  
+  const acumuladoIcon = acumulado >= baseInicial ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
     <Card>
@@ -123,10 +115,10 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
                     description="Suma de instalaciones hasta la fecha"
                 />
                  <StatCard 
-                    title="Meta Anual" 
-                    value={formatNumber(metaAnual)} 
-                    icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />}
-                    description={`Meta de reemplazo para ${year}`}
+                    title="Monto Final" 
+                    value={formatNumber(montoFinal)} 
+                    icon={<Target className="h-4 w-4 text-muted-foreground" />}
+                    description="Diferencia entre acumulado y base"
                 />
             </div>
         </CardContent>
