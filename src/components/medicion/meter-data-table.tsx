@@ -17,6 +17,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { eachMonthOfInterval, format, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const formatPercent = (value?: number) => {
   if (value === undefined || value === null) return '-';
@@ -82,13 +83,22 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
         <div className="overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader>
-              <TableRow className="bg-black hover:bg-black">
-                <TableHead className="text-white font-bold sticky left-0 bg-black z-10 w-1/4">DESCRIPCION</TableHead>
-                {months.map(month => (
-                  <TableHead key={format(month, 'yyyy-MM')} className="text-white font-bold text-center">
-                    {format(month, 'MMM', { locale: es }).toUpperCase()}
-                  </TableHead>
-                ))}
+              <TableRow className="bg-gray-800 hover:bg-gray-800">
+                <TableHead className="text-white font-bold sticky left-0 bg-gray-800 z-10 w-1/4">DESCRIPCION</TableHead>
+                {months.map(month => {
+                  const isAugust = format(month, 'MMM', { locale: es }).toUpperCase() === 'AGO';
+                  return (
+                    <TableHead 
+                        key={format(month, 'yyyy-MM')} 
+                        className={cn(
+                            "text-white font-bold text-center",
+                            isAugust && "bg-black"
+                        )}
+                    >
+                      {format(month, 'MMM', { locale: es }).toUpperCase()}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -106,8 +116,15 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
                         const monthKey = format(month, 'yyyy-MM');
                         const data = dataByMonth.get(monthKey);
                         const value = data ? data[desc.key] : undefined;
+                        const isAugust = format(month, 'MMM', { locale: es }).toUpperCase() === 'AGO';
                         return (
-                        <TableCell key={monthKey} className="text-center">
+                        <TableCell 
+                            key={monthKey} 
+                            className={cn(
+                                "text-center",
+                                isAugust && "font-bold"
+                            )}
+                        >
                             {desc.format(value)}
                         </TableCell>
                         );
