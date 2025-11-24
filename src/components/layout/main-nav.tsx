@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -52,6 +51,32 @@ type NavItem = {
 
 const allNavItems: NavItem[] = [
   { href: '/', label: 'Inicio', icon: Home },
+  {
+    href: '/recaudacion',
+    label: 'Cobranza',
+    icon: Briefcase,
+    isCollapsible: true,
+    subItems: [
+      { href: '/recaudacion', label: 'Recaudación Diaria', icon: TrendingUp },
+      { href: '/avance-distritos', label: 'Avance por Distritos', icon: Target },
+      { href: '/suspendidos-recuperados', label: 'Suspendidos Recuperados', icon: ClipboardCheck },
+      { href: '/recuperados-12-mas', label: 'Recuperados 12+ Meses', icon: History },
+      { href: '/recuperados-2-3-meses', label: 'Recuperados 2-3 Meses', icon: Clock3 },
+    ],
+  },
+  {
+    href: '/reportes',
+    label: 'Reportes',
+    icon: FileText,
+    isCollapsible: true,
+    subItems: [
+        {
+            href: '/reportes/cobranza',
+            label: 'Oficina de Cobranza',
+            icon: Building,
+        }
+    ]
+  },
   {
     href: '/medicion',
     label: 'Medición',
