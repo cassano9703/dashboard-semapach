@@ -25,14 +25,9 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-        collection(firestore, 'monthly_goals'),
-        where('goalType', '==', 'debt_3_plus'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
-        orderBy('month')
-    );
-  }, [firestore, currentYear]);
+    // Simplified query to avoid composite index error
+    return query(collection(firestore, 'monthly_goals'));
+  }, [firestore]);
 
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
@@ -43,16 +38,21 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     progress,
     remainingToReduce,
   } = useMemo(() => {
-    const filteredMonthlyGoals = monthlyGoalsData || [];
+    // Filter data on the client side
+    const filteredMonthlyGoals = (monthlyGoalsData || [])
+      .filter(goal => goal.goalType === 'debt_3_plus' && goal.month.startsWith(currentYear))
+      .sort((a, b) => a.month.localeCompare(b.month));
 
     if (filteredMonthlyGoals.length === 0) {
       return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
+    // Find the first month of the reduction period (August)
     const firstData = filteredMonthlyGoals.find(d => d.month.endsWith('-08'));
     const debtAtStartOfReduction = firstData?.proposedAmount ?? 0;
 
-    const lastData = filteredMonthlyGoals.length > 0 ? filteredMonthlyGoals[filteredMonthlyGoals.length - 1] : null;
+    // Find the last available month data
+    const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
@@ -71,7 +71,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       progress: Math.max(0, progressPercentage),
       remainingToReduce: current - goal
     };
-  }, [monthlyGoalsData]);
+  }, [monthlyGoalsData, currentYear]);
 
   const isLoading = isLoadingMonthly;
 
