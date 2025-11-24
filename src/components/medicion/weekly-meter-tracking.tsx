@@ -134,7 +134,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                     title="Monto Final" 
                     value={formatNumber(montoFinal)} 
                     icon={<Target className="h-4 w-4 text-muted-foreground" />}
-                    description={isAugust ? "Base inicial - Acumulado" : "Base inicial + Acumulado"}
+                    description={isAugust ? "Base inicial - Acumulado (retiro de medidores)" : "Base inicial + Acumulado"}
                 />
             </div>
         </CardContent>
