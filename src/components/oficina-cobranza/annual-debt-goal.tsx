@@ -134,10 +134,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                  <span className="font-semibold">{formatCurrency(targetDebt)}</span>
             </div>
         </div>
-
-         <div className="text-center text-xs text-muted-foreground pt-2">
-            Se necesita reducir la deuda en <span className="font-bold">{formatCurrency(totalReductionNeeded)}</span> para alcanzar la meta de <span className="font-bold">{formatCurrency(targetDebt)}</span>.
-        </div>
       </CardContent>
     </Card>
   );
