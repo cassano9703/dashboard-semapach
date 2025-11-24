@@ -4,8 +4,12 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format } from 'date-fns';
-import { Target, TrendingDown, Flag } from 'lucide-react';
+import { format, getMonth, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Target, Flag } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+import { ChartContainer } from '../ui/chart';
+import { Separator } from '../ui/separator';
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -43,16 +47,15 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const {
     initialDebt,
-    currentDebt,
     targetDebt,
     reductionNeeded,
     reductionAchieved,
     progress
   } = useMemo(() => {
-    const target = annualGoalData?.[0]?.amount || 0; // Meta final: 9,300,000
+    const target = annualGoalData?.[0]?.amount || 0;
 
     if (!monthlyGoalsData) {
-        return { initialDebt: 0, currentDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
+        return { initialDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -60,11 +63,11 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { initialDebt: 0, currentDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
+        return { initialDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
     }
 
     const octoberData = yearData.find(d => d.month === `${currentYear}-10`);
-    const initial = octoberData?.proposedAmount || 0; // Deuda de Octubre: 10,541,196
+    const initial = octoberData?.proposedAmount || 0;
 
     const latestData = yearData[yearData.length - 1];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
@@ -74,17 +77,37 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     
     const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
     
-    const remainingToReduce = initial - target;
+    const remainingToReduce = current - target;
 
     return {
         initialDebt: initial,
-        currentDebt: current,
         targetDebt: target,
         reductionNeeded: totalToReduce,
         reductionAchieved: remainingToReduce > 0 ? remainingToReduce : 0,
         progress: progressPercentage
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
+
+  const debtGoals = useMemo(() => {
+    const dbtGoals: any[] = Array(12).fill(null);
+    
+    if (monthlyGoalsData) {
+       monthlyGoalsData
+        .filter(goal => goal.month.startsWith(currentYear) && goal.goalType === 'debt_3_plus')
+        .forEach(goal => {
+            const monthIndex = getMonth(parseISO(goal.month + '-01T12:00:00Z'));
+            dbtGoals[monthIndex] = goal;
+        });
+    }
+    return dbtGoals.slice(7, 10);
+  }, [monthlyGoalsData, currentYear]);
+
+  const chartData = useMemo(() => {
+    return debtGoals.map((goal, index) => ({
+        name: format(new Date(2025, index + 7, 1), 'MMM', { locale: es }),
+        'Deuda Actual': goal?.executedAmount ?? goal?.proposedAmount ?? 0,
+    })).filter(item => item['Deuda Actual'] > 0);
+  }, [debtGoals]);
 
   const isLoading = isLoadingAnnual || isLoadingMonthly;
 
@@ -138,6 +161,41 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                  <span className="text-muted-foreground">Meta de Deuda</span>
                  <span className="font-semibold">{formatCurrency(targetDebt)}</span>
             </div>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div>
+            <h3 className="text-md font-semibold">Deuda de 3 a más</h3>
+            <p className="text-sm text-muted-foreground mb-4">Gráfico de la deuda actual por mes.</p>
+            {chartData.length === 0 ? (
+                <div className="h-[150px] flex items-center justify-center text-muted-foreground">No hay datos para el gráfico.</div>
+            ) : (
+                <ChartContainer config={{}} className='w-full h-[150px]'>
+                    <BarChart 
+                        data={chartData} 
+                        layout="vertical"
+                        margin={{ top: 5, right: 0, bottom: 5, left: 0 }}
+                        barCategoryGap="20%"
+                    >
+                        <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={40} />
+                        <RechartsTooltip
+                            cursor={{ fill: 'hsla(var(--background))' }}
+                            content={({ active, payload, label }) =>
+                                active && payload && payload.length ? (
+                                <div className="bg-background border rounded-lg p-2 shadow-lg -mt-12">
+                                    <p className="font-bold">{label}</p>
+                                    <p className="text-sm">{formatCurrency(payload[0].value as number)}</p>
+                                </div>
+                                ) : null
+                            }
+                            />
+                        <Bar dataKey="Deuda Actual" radius={4} fill="hsl(var(--chart-2))" />
+                    </BarChart>
+                </ChartContainer>
+            )}
         </div>
       </CardContent>
     </Card>

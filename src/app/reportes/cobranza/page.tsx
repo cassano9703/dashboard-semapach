@@ -5,7 +5,6 @@ import { CollectionDebtGoals } from '@/components/oficina-cobranza/collection-de
 import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-operations-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
-import { Debt3PlusGoals } from '@/components/oficina-cobranza/debt-3-plus-goals';
 import { AnnualCollectionGoal } from '@/components/oficina-cobranza/annual-collection-goal';
 import { AnnualDebtGoal } from '@/components/oficina-cobranza/annual-debt-goal';
 
@@ -31,7 +30,6 @@ export default function ReportesCobranzaPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="flex flex-col gap-6">
           <AnnualDebtGoal selectedDate={selectedDate} />
-          <Debt3PlusGoals selectedDate={selectedDate} />
         </div>
         <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
