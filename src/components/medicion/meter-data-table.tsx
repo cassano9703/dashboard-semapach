@@ -35,9 +35,12 @@ const descriptions = [
   { key: 'meter_quantity', label: 'CANTIDAD DE MEDIDORES', format: formatNumber },
 ];
 
-export function MeterDataTable() {
+interface MeterDataTableProps {
+    year: number;
+}
+
+export function MeterDataTable({ year }: MeterDataTableProps) {
   const firestore = useFirestore();
-  const year = 2025;
 
   const meterDataRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'meter_data'), orderBy('month', 'asc')) : null),
@@ -62,7 +65,12 @@ export function MeterDataTable() {
     return map;
   }, [meterData]);
   
-  const hasData = useMemo(() => meterData && meterData.length > 0, [meterData]);
+  const hasData = useMemo(() => {
+      if (!meterData) return false;
+      const yearStr = year.toString();
+      return meterData.some(item => item.month.startsWith(yearStr));
+  }, [meterData, year]);
+
 
   if (isLoading) {
     return <div className="text-center p-8">Cargando datos...</div>;
@@ -78,7 +86,7 @@ export function MeterDataTable() {
                 <TableHead className="text-white font-bold sticky left-0 bg-black z-10 w-1/4">DESCRIPCION</TableHead>
                 {months.map(month => (
                   <TableHead key={format(month, 'yyyy-MM')} className="text-white font-bold text-center">
-                    {format(month, 'MMM-yy', { locale: es }).toUpperCase()}
+                    {format(month, 'MMM', { locale: es }).toUpperCase()}
                   </TableHead>
                 ))}
               </TableRow>
