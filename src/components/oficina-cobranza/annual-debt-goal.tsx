@@ -48,14 +48,14 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const {
     initialDebt,
     targetDebt,
-    reductionNeeded,
-    reductionAchieved,
-    progress
+    currentDebt,
+    progress,
+    remainingToReduce,
   } = useMemo(() => {
     const target = annualGoalData?.[0]?.amount || 0;
 
     if (!monthlyGoalsData) {
-        return { initialDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
+        return { initialDebt: 0, targetDebt: target, currentDebt: 0, progress: 0, remainingToReduce: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -63,7 +63,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { initialDebt: 0, targetDebt: target, reductionNeeded: 0, reductionAchieved: 0, progress: 0 };
+        return { initialDebt: 0, targetDebt: target, currentDebt: 0, progress: 0, remainingToReduce: 0 };
     }
 
     const octoberData = yearData.find(d => d.month === `${currentYear}-10`);
@@ -77,14 +77,14 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     
     const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
     
-    const remainingToReduce = current - target;
+    const remaining = current - target;
 
     return {
         initialDebt: initial,
         targetDebt: target,
-        reductionNeeded: totalToReduce,
-        reductionAchieved: remainingToReduce > 0 ? remainingToReduce : 0,
-        progress: progressPercentage
+        currentDebt: current,
+        progress: progressPercentage,
+        remainingToReduce: remaining > 0 ? remaining : 0,
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
 
@@ -155,7 +155,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Falta Reducir</span>
-                <span className="font-semibold text-red-600">{formatCurrency(reductionAchieved)}</span>
+                <span className="font-semibold text-red-600">{formatCurrency(remainingToReduce)}</span>
             </div>
             <div className="flex items-center gap-2">
                  <span className="text-muted-foreground">Meta de Deuda</span>
