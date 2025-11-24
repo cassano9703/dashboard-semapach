@@ -48,14 +48,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const {
     initialDebt,
     targetDebt,
-    currentDebt,
     progress,
     remainingToReduce,
   } = useMemo(() => {
-    const target = annualGoalData?.[0]?.amount || 0;
+    const target = annualGoalData?.[0]?.amount || 0; // Meta: 9,300,000
 
     if (!monthlyGoalsData) {
-        return { initialDebt: 0, targetDebt: target, currentDebt: 0, progress: 0, remainingToReduce: 0 };
+        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -63,26 +62,26 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { initialDebt: 0, targetDebt: target, currentDebt: 0, progress: 0, remainingToReduce: 0 };
+        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0 };
     }
-
-    const octoberData = yearData.find(d => d.month === `${currentYear}-10`);
-    const initial = octoberData?.proposedAmount || 0;
-
+    
+    // Deuda inicial es el `proposedAmount` del primer mes con datos en el año
+    const initial = yearData[0]?.proposedAmount || 0; 
+    
+    // Deuda actual es `executedAmount` (o `proposedAmount`) del último mes con datos
     const latestData = yearData[yearData.length - 1];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
 
-    const totalToReduce = initial - target;
-    const hasBeenReduced = initial - current;
+    const totalToReduce = initial - target; // Total que se debe reducir desde el inicio del periodo
+    const hasBeenReduced = initial - current; // Cuánto se ha reducido hasta ahora
     
     const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
     
-    const remaining = current - target;
+    const remaining = current - target; // Cuánto falta desde el punto actual hasta la meta
 
     return {
-        initialDebt: initial,
+        initialDebt: current, // "Deuda Actual" es el último dato registrado
         targetDebt: target,
-        currentDebt: current,
         progress: progressPercentage,
         remainingToReduce: remaining > 0 ? remaining : 0,
     };
