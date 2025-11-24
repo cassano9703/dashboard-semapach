@@ -9,7 +9,7 @@ export default function AdminMedicionPage() {
           Administración de Medición
         </h1>
         <p className="text-muted-foreground">
-          Gestione los datos de los indicadores de medición.
+          Gestione los datos de los indicadores de micromed.
         </p>
       </div>
       <MeterDataCRUD />

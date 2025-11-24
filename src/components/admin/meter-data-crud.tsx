@@ -169,11 +169,11 @@ export function MeterDataCRUD() {
                 <Input id="coverage" placeholder="35.94" type="number" value={coverage} onChange={e => setCoverage(e.target.value)} />
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="micrometering_tariff_study">Micromedición (Estudio Tarifario) (%)</Label>
+                <Label htmlFor="micrometering_tariff_study">Micromed. (Estudio Tarifario) (%)</Label>
                 <Input id="micrometering_tariff_study" placeholder="38.22" type="number" value={micrometeringTariffStudy} onChange={e => setMicrometeringTariffStudy(e.target.value)} />
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="micrometering_percentage">Micromedición (%)</Label>
+                <Label htmlFor="micrometering_percentage">Micromed. (%)</Label>
                 <Input id="micrometering_percentage" placeholder="29.18" type="number" value={micrometeringPercentage} onChange={e => setMicrometeringPercentage(e.target.value)} />
             </div>
             <div className="grid gap-2">

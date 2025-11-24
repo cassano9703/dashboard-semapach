@@ -105,7 +105,7 @@ export function MeterStatCards({ year }: MeterStatCardsProps) {
       </Card>
        <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Micromedición (Estudio Tarifario)</CardTitle>
+          <CardTitle className="text-sm font-medium">Micromed. (Estudio Tarifario)</CardTitle>
           <FileBarChart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -123,7 +123,7 @@ export function MeterStatCards({ year }: MeterStatCardsProps) {
         <CardContent>
           <div className="text-2xl font-bold">{formatPercent(latestData.micrometering_percentage)}</div>
           <p className="text-xs text-muted-foreground">
-            Porcentaje de micromedición a {latestData.month}
+            Porcentaje de micromed. a {latestData.month}
           </p>
         </CardContent>
       </Card>
