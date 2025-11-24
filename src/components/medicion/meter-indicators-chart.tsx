@@ -48,6 +48,24 @@ interface MeterIndicatorsChartProps {
   year: number;
 }
 
+const ArrowBar = (props: any) => {
+    const { fill, x, y, width, height } = props;
+    const arrowWidth = 10;
+    const arrowHeight = 5;
+
+    if (height === 0) return null;
+
+    return (
+        <g>
+            <rect x={x} y={y} width={width} height={height} fill={fill} />
+            <path
+                d={`M${x + width / 2},${y} L${x + width / 2 - arrowWidth / 2},${y + arrowHeight} L${x + width / 2 + arrowWidth / 2},${y + arrowHeight} Z`}
+                fill={fill}
+            />
+        </g>
+    );
+};
+
 export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   const firestore = useFirestore();
 
@@ -113,6 +131,8 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
       );
   }
 
+  const domainMin = (dataMin: number) => (dataMin * 0.95);
+
   return (
     <Card>
       <CardHeader>
@@ -135,7 +155,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(value) => `${value / 1000}k`}
-                    domain={[dataMin => (dataMin * 0.95), dataMax => (dataMax * 1.02)]}
+                    domain={[domainMin, (dataMax: number) => dataMax * 1.02]}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
@@ -146,7 +166,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                           <p className="font-bold">{label}</p>
                           {payload.map((entry, index) => (
                             <p key={`item-${index}`} style={{ color: entry.color }}>
-                              {`${entry.name}: ${entry.name === 'Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
+                              {`${entry.name}: ${entry.name === 'Cantidad Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
                             </p>
                           ))}
                         </div>
@@ -156,9 +176,9 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" />
+                <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" shape={<ArrowBar />} />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E. T.)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E_ T_)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
               </ComposedChart>
             </ResponsiveContainer>
