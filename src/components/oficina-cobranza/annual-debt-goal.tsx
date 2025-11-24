@@ -67,7 +67,9 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     const current = yearData[yearData.length - 1].executedAmount ?? yearData[yearData.length - 1].proposedAmount;
     
     const needed = initial - target;
-    const achieved = initial - current;
+
+    const octoberData = yearData.find(d => d.month === `${currentYear}-10`);
+    const achieved = octoberData?.executedAmount ?? octoberData?.proposedAmount ?? 0;
     
     const progressPercentage = needed > 0 ? Math.min((achieved / needed) * 100, 100) : 0;
 
