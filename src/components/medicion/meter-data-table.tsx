@@ -122,7 +122,7 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
                             key={monthKey} 
                             className={cn(
                                 "text-center",
-                                isAugust && "font-bold"
+                                isAugust && "font-bold bg-muted"
                             )}
                         >
                             {desc.format(value)}
