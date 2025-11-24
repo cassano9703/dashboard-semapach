@@ -15,29 +15,27 @@ const formatNumber = (value?: number) => {
 };
 
 interface WeeklyMeterTrackingProps {
-  year: number;
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
-export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterTrackingProps) {
   const firestore = useFirestore();
 
-  const selectedMonthDate = useMemo(() => date ? startOfMonth(date) : new Date(), [date]);
+  const selectedMonthDate = useMemo(() => startOfMonth(selectedDate), [selectedDate]);
 
-  // 1. Fetch base data for the selected month
   const monthlyBaseDataRef = useMemoFirebase(
-    () => firestore && date ? query(collection(firestore, 'meter_data'), where('month', '==', format(selectedMonthDate, 'yyyy-MM'))) : null,
-    [firestore, date, selectedMonthDate]
+    () => firestore ? query(collection(firestore, 'meter_data'), where('month', '==', format(selectedMonthDate, 'yyyy-MM'))) : null,
+    [firestore, selectedMonthDate]
   );
   const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
 
-  // 2. Fetch weekly progress data for the selected month
   const weeklyProgressRef = useMemoFirebase(
     () => {
-      if (!firestore || !date) return null;
-      const monthStart = startOfMonth(date);
-      const monthEnd = endOfMonth(date);
+      if (!firestore) return null;
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
       return query(
         collection(firestore, 'weekly_meter_progress'),
         where('weekStartDate', '>=', format(monthStart, 'yyyy-MM-dd')),
@@ -45,11 +43,11 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
         orderBy('weekStartDate', 'asc')
       );
     },
-    [firestore, date]
+    [firestore, selectedDate]
   );
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
   
-  const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
+  const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
 
   const evolucionFecha = useMemo(() => {
     if (!weeklyData || !weekStart) return 0;
@@ -62,15 +60,13 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
     if (!weeklyData || !weekStart) return 0;
     const weekStartStr = format(weekStart, 'yyyy-MM-dd');
 
-    // Filter records up to and including the selected week's start date
     const relevantData = weeklyData.filter(d => d.weekStartDate <= weekStartStr);
     
-    // Sum the meterCount from the relevant weekly records
     return relevantData.reduce((sum, record) => sum + record.meterCount, 0);
   }, [weeklyData, weekStart]);
 
 
-  const isAugust = getMonth(selectedMonthDate) === 7; // August is month 7 (0-indexed)
+  const isAugust = getMonth(selectedMonthDate) === 7;
   
   const montoFinal = useMemo(() => {
     if (isAugust) {
@@ -109,8 +105,8 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
             <div className="lg:col-span-1 flex justify-center">
                  <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={setDate}
+                    selected={selectedDate}
+                    onSelect={(d) => d && onDateChange(d)}
                     className="rounded-md border"
                     locale={es}
                 />
