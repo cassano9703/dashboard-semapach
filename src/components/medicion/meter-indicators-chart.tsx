@@ -118,10 +118,10 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   }
   
   const domainMin = (dataMin: number) => {
-    return Math.floor(dataMin * 0.999);
+    return Math.floor(dataMin * 0.95);
   };
   const domainMax = (dataMax: number) => {
-    return Math.ceil(dataMax * 1.001);
+    return Math.ceil(dataMax * 1.05);
   };
 
   return (
@@ -168,6 +168,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 />
                 <Legend />
                 <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" />
+                <Line type="monotone" dataKey="meter_quantity" name="Cantidad Medidores" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E_ T_)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
