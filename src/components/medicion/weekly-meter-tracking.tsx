@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, CheckCircle, Flag } from 'lucide-react';
 
@@ -22,13 +22,15 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const firestore = useFirestore();
 
-  // 1. Fetch August base data
-  const augustMeterDataRef = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'meter_data'), where('month', '==', `${year}-08`)) : null,
-    [firestore, year]
+  const selectedMonth = useMemo(() => date ? startOfMonth(date) : new Date(), [date]);
+
+  // 1. Fetch base data for the selected month
+  const monthlyBaseDataRef = useMemoFirebase(
+    () => firestore && date ? query(collection(firestore, 'meter_data'), where('month', '==', format(selectedMonth, 'yyyy-MM'))) : null,
+    [firestore, date, selectedMonth]
   );
-  const { data: augustData, isLoading: isLoadingAugust } = useCollection(augustMeterDataRef);
-  const baseInicial = useMemo(() => augustData?.[0]?.meter_quantity || 0, [augustData]);
+  const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
+  const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
 
   // 2. Fetch weekly progress data for the selected week
   const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
@@ -58,9 +60,9 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const metaAnual = useMemo(() => annualGoalData?.[0]?.amount || 0, [annualGoalData]);
 
-  const acumulado = evolucionFecha > 0 ? evolucionFecha - baseInicial : 0;
+  const acumulado = evolucionFecha > 0 && baseInicial > 0 ? evolucionFecha - baseInicial : 0;
   
-  const isLoading = isLoadingAugust || isLoadingWeekly || isLoadingAnnual;
+  const isLoading = isLoadingBase || isLoadingWeekly || isLoadingAnnual;
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
     <Card>
@@ -95,10 +97,10 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
             </div>
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <StatCard 
-                    title="Base Inicial (Agosto)" 
+                    title={`Base Inicial (${format(selectedMonth, 'MMMM', { locale: es })})`} 
                     value={formatNumber(baseInicial)} 
                     icon={<Flag className="h-4 w-4 text-muted-foreground" />}
-                    description={`Medidores al inicio de Agosto ${year}`}
+                    description={`Medidores al inicio de ${format(selectedMonth, 'MMMM yyyy', { locale: es })}`}
                 />
                 <StatCard 
                     title="Evolución a la Fecha" 
