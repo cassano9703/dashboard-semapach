@@ -58,14 +58,15 @@ export function MeterQuantityChart({ year }: MeterQuantityChartProps) {
 
   const chartData = useMemo(() => {
     if (!meterData) return [];
-
+  
+    const yearDate = new Date(year, 0, 1);
     const months = eachMonthOfInterval({
-      start: startOfYear(new Date(year, 0, 1)),
-      end: endOfYear(new Date(year, 0, 1)),
+      start: new Date(year, 7, 1), // Start from August
+      end: endOfYear(yearDate),
     });
-
+  
     const dataMap = new Map(meterData.map(item => [item.month, item]));
-    
+      
     return months.map(month => {
         const monthKey = format(month, 'yyyy-MM');
         const data = dataMap.get(monthKey);
@@ -74,7 +75,7 @@ export function MeterQuantityChart({ year }: MeterQuantityChartProps) {
             meter_quantity: data ? data.meter_quantity : null,
         }
     }).filter(d => d.meter_quantity !== null);
-
+  
   }, [meterData, year]);
 
   if (isLoading) {
