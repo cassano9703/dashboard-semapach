@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { format, parseISO } from 'date-fns';
 import { Target } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -25,20 +25,17 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Simplified query to avoid composite index error
     return query(collection(firestore, 'monthly_goals'));
   }, [firestore]);
 
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
-    initialDebtForPeriod,
     currentDebt,
     targetDebt,
     progress,
     remainingToReduce,
   } = useMemo(() => {
-    // Filter data on the client side
     const filteredMonthlyGoals = (monthlyGoalsData || [])
       .filter(goal => goal.goalType === 'debt_3_plus' && goal.month.startsWith(currentYear))
       .sort((a, b) => a.month.localeCompare(b.month));
@@ -47,11 +44,9 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    // Find the first month of the reduction period (August)
     const firstData = filteredMonthlyGoals.find(d => d.month.endsWith('-08'));
     const debtAtStartOfReduction = firstData?.proposedAmount ?? 0;
 
-    // Find the last available month data
     const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
@@ -65,7 +60,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       : 0;
 
     return {
-      initialDebtForPeriod: current, 
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
@@ -95,8 +89,8 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-baseline text-sm">
-            <span className="font-semibold">Deuda Actual (Oct)</span>
-            <span className="font-bold text-lg">{formatCurrency(initialDebtForPeriod)}</span>
+            <span className="font-semibold">Deuda a Octubre</span>
+            <span className="font-bold text-lg">{formatCurrency(currentDebt)}</span>
         </div>
 
         <TooltipProvider>
