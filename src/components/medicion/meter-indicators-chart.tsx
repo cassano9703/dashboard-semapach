@@ -48,24 +48,6 @@ interface MeterIndicatorsChartProps {
   year: number;
 }
 
-const ArrowBar = (props: any) => {
-    const { fill, x, y, width, height } = props;
-    const arrowWidth = 10;
-    const arrowHeight = 5;
-
-    if (height === 0) return null;
-
-    return (
-        <g>
-            <rect x={x} y={y} width={width} height={height} fill={fill} />
-            <path
-                d={`M${x + width / 2},${y} L${x + width / 2 - arrowWidth / 2},${y + arrowHeight} L${x + width / 2 + arrowWidth / 2},${y + arrowHeight} Z`}
-                fill="hsl(var(--chart-1))"
-            />
-        </g>
-    );
-};
-
 export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   const firestore = useFirestore();
 
@@ -135,8 +117,12 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
       );
   }
   
-  const domainMin = (dataMin: number) => Math.floor(dataMin * 0.999);
-  const domainMax = (dataMax: number) => Math.ceil(dataMax * 1.001);
+  const domainMin = (dataMin: number) => {
+    return Math.floor(dataMin * 0.999);
+  };
+  const domainMax = (dataMax: number) => {
+    return Math.ceil(dataMax * 1.001);
+  };
 
   return (
     <Card>
@@ -181,7 +167,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" shape={<ArrowBar />} />
+                <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E_ T_)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
