@@ -49,25 +49,23 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    // The starting point for the reduction is the debt at the beginning of the analysis period (August)
     const firstData = filteredMonthlyGoals.find(d => d.month.endsWith('-08'));
-    const initialForProgress = firstData?.proposedAmount ?? 0;
+    const debtAtStartOfReduction = firstData?.proposedAmount ?? 0;
 
-    // The current debt is the latest available data point (October)
     const lastData = filteredMonthlyGoals.length > 0 ? filteredMonthlyGoals[filteredMonthlyGoals.length - 1] : null;
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
     
-    const totalReductionRequired = initialForProgress - goal;
-    const reductionAchieved = initialForProgress - current;
+    const totalReductionRequired = debtAtStartOfReduction - goal;
+    const reductionAchieved = debtAtStartOfReduction - current;
 
     const progressPercentage = totalReductionRequired > 0 
       ? (reductionAchieved / totalReductionRequired) * 100 
       : 0;
 
     return {
-      initialDebtForPeriod: current, // Display the latest debt value
+      initialDebtForPeriod: current, 
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
@@ -95,7 +93,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             Reducción de Deuda ({currentYear})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-4">
+        <div className="flex justify-between items-baseline text-sm">
+            <span className="font-semibold">Deuda Actual (Oct)</span>
+            <span className="font-bold text-lg">{formatCurrency(initialDebtForPeriod)}</span>
+        </div>
+
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -107,9 +110,10 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
-        <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Inicial: {formatCurrency(initialDebtForPeriod)}</span>
-            <span>Meta: {formatCurrency(targetDebt)}</span>
+
+        <div className="flex justify-between items-baseline text-sm">
+            <span className="text-muted-foreground">Meta</span>
+            <span className="font-semibold">{formatCurrency(targetDebt)}</span>
         </div>
       </CardContent>
     </Card>
