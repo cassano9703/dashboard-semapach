@@ -61,12 +61,12 @@ export function MeterDataTable() {
     });
     return map;
   }, [meterData]);
+  
+  const hasData = useMemo(() => meterData && meterData.length > 0, [meterData]);
 
   if (isLoading) {
     return <div className="text-center p-8">Cargando datos...</div>;
   }
-  
-  const hasData = useMemo(() => meterData && meterData.length > 0, [meterData]);
 
   return (
     <Card>
