@@ -32,7 +32,7 @@ const formatNumber = (value?: number) => {
 const descriptions = [
   { key: 'coverage', label: 'COBERTURA', format: formatPercent },
   { key: 'micrometering_tariff_study', label: 'MICROMED. % (E. T.)', format: formatPercent },
-  { key: 'micrometering_percentage', label: 'MICROMED. %', format: formatPercent },
+  { key: 'micrometering_percentage', label: 'MICROMED. PMC %', format: formatPercent },
   { key: 'meter_quantity', label: 'MEDIDORES', format: formatNumber },
 ];
 
