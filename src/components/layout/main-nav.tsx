@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Book,
   Home,
   Settings,
   Target,
@@ -15,7 +14,6 @@ import {
   Map,
   History,
   Clock3,
-  ClipboardList,
   FileLock,
 } from 'lucide-react';
 import Link from 'next/link';
