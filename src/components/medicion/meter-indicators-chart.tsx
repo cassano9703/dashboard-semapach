@@ -139,7 +139,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(value) => `${value / 1000}k`}
-                    domain={[minMeters * 0.95, maxMeters * 1.001]}
+                    domain={[minMeters * 0.95, 'dataMax + 100']}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
