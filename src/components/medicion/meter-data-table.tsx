@@ -25,7 +25,7 @@ const formatPercent = (value?: number) => {
 };
 
 const formatNumber = (value?: number) => {
-    if (value === undefined || value === null) return '-';
+    if (value === undefined || value === null) return '0';
     return value.toLocaleString('es-PE');
 };
 
@@ -83,8 +83,8 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
         <div className="overflow-x-auto relative max-h-[350px]">
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 z-10">
-              <TableRow className="bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-800 hover:to-gray-900">
-                <TableHead className="text-white font-bold sticky left-0 z-20 bg-gray-800 w-1/4">DESCRIPCION</TableHead>
+              <TableRow className="bg-[#1f2937] hover:bg-[#1f2937]">
+                <TableHead className="text-white font-bold sticky left-0 z-20 bg-[#1f2937] w-1/4">DESCRIPCION</TableHead>
                 {months.map(month => {
                   const isAugust = format(month, 'MMM', { locale: es }).toUpperCase() === 'AGO';
                   return (
@@ -92,7 +92,7 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
                         key={format(month, 'yyyy-MM')} 
                         className={cn(
                             "text-white font-bold text-center",
-                            isAugust && "bg-black/80"
+                            isAugust && "bg-black"
                         )}
                     >
                       {format(month, 'MMM', { locale: es }).toUpperCase()}
