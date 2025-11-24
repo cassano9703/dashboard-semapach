@@ -53,11 +53,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       return { initialDebtInPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    filteredMonthlyGoals.sort((a,b) => a.month.localeCompare(b.month));
-    
-    const initialData = filteredMonthlyGoals[0];
-    const initialDebt = initialData?.proposedAmount ?? 0;
+    // Sort to find initial debt of the period (August)
+    const periodGoals = filteredMonthlyGoals.filter(d => getMonth(parseISO(d.month + '-01')) >= 7); // August (index 7) onwards
+    periodGoals.sort((a,b) => a.month.localeCompare(b.month));
+    const initialDebt = periodGoals[0]?.proposedAmount ?? 0;
 
+    // Sort to find the latest debt value
     filteredMonthlyGoals.sort((a,b) => b.month.localeCompare(a.month));
     const latestData = filteredMonthlyGoals[0];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
@@ -123,13 +124,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-          <div className='flex items-center gap-2'>
-            <Flag className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Deuda Actual</span>
-          </div>
-          <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
-        </div>
+        
         <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
           <div className='flex items-center gap-2'>
             <Target className="h-5 w-5 text-muted-foreground" />
