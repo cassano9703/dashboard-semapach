@@ -65,19 +65,6 @@ const allNavItems: NavItem[] = [
     ],
   },
   {
-    href: '/reportes',
-    label: 'Reportes',
-    icon: FileText,
-    isCollapsible: true,
-    subItems: [
-        {
-            href: '/reportes/cobranza',
-            label: 'Oficina de Cobranza',
-            icon: Building,
-        }
-    ]
-  },
-  {
     href: '/medicion',
     label: 'Medición',
     icon: Gauge,
