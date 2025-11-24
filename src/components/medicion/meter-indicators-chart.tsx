@@ -66,8 +66,8 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   );
   const { data: meterData, isLoading } = useCollection(meterDataRef);
 
-  const { chartData, minMeters, maxMeters } = useMemo(() => {
-    if (!meterData) return { chartData: [], minMeters: 0, maxMeters: 0 };
+  const { chartData } = useMemo(() => {
+    if (!meterData) return { chartData: [] };
   
     const yearDate = new Date(year, 0, 1);
     const months = eachMonthOfInterval({
@@ -90,14 +90,10 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
     }).filter(d => d.meter_quantity !== null);
 
     if (processedData.length === 0) {
-        return { chartData: [], minMeters: 0, maxMeters: 0 };
+        return { chartData: [] };
     }
 
-    const meterQuantities = processedData.map(d => d.meter_quantity).filter(q => q !== null) as number[];
-    const minVal = Math.min(...meterQuantities);
-    const maxVal = Math.max(...meterQuantities);
-
-    return { chartData: processedData, minMeters: minVal, maxMeters: maxVal };
+    return { chartData: processedData };
   
   }, [meterData, year]);
 
@@ -118,7 +114,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   }
   
   const domainMin = (dataMin: number) => {
-    return Math.floor(dataMin * 0.995);
+    return Math.floor(dataMin * 0.80);
   };
   const domainMax = (dataMax: number) => {
     return Math.ceil(dataMax * 1.005);
@@ -155,11 +151,14 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                       return (
                         <div className="bg-background p-2 border rounded-md shadow-lg">
                           <p className="font-bold">{label}</p>
-                          {payload.map((entry, index) => (
-                            <p key={`item-${index}`} style={{ color: entry.color }}>
-                              {`${entry.name}: ${entry.name === 'Cantidad Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
-                            </p>
-                          ))}
+                          {payload.map((entry, index) => {
+                            if (entry.name === 'Cantidad Medidores' && entry.color === 'hsl(var(--chart-1))') return null;
+                            return (
+                              <p key={`item-${index}`} style={{ color: entry.color }}>
+                                {`${entry.name}: ${entry.name.includes('Medidores') ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
+                              </p>
+                            )
+                          })}
                         </div>
                       );
                     }
@@ -168,7 +167,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 />
                 <Legend />
                 <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-5))" yAxisId="left" />
-                <Line type="monotone" dataKey="meter_quantity" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} legendType="none" />
+                <Line type="monotone" dataKey="meter_quantity" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} name="Cantidad Medidores" legendType="none" />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E. T.)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="MICROMED. PMC %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
