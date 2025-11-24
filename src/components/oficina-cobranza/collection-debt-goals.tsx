@@ -44,8 +44,8 @@ export function CollectionDebtGoals({ selectedDate }: CollectionDebtGoalsProps) 
         collGoals[monthIndex] = goal;
       });
     }
-    // Show August (7), September (8), October (9)
-    return collGoals.slice(7, 10);
+    // Show August (7), September (8), October (9), November (10)
+    return collGoals.slice(7, 11);
   }, [goalsData, selectedDate]);
 
   const renderGoalRow = (title: string, proposed: number | undefined, executed: number | undefined) => {
