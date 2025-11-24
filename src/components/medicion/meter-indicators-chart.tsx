@@ -27,7 +27,7 @@ import { ChartContainer } from '../ui/chart';
 
 const chartConfig = {
   meter_quantity: {
-    label: 'Cantidad de Medidores',
+    label: 'Medidores',
     color: 'hsl(var(--chart-1))',
   },
   coverage: {
@@ -35,11 +35,11 @@ const chartConfig = {
     color: 'hsl(var(--chart-2))',
   },
   micrometering_tariff_study: {
-    label: 'Micromed. (Tarifario)',
+    label: 'Micromed. (E. T.)',
     color: 'hsl(var(--chart-3))',
   },
   micrometering_percentage: {
-    label: 'Micromed.',
+    label: 'Micromed. %',
     color: 'hsl(var(--chart-4))',
   }
 };
@@ -145,13 +145,13 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
-                      const relevantPayload = payload.filter(p => p.dataKey !== 'meter_quantity' || p.name === 'Cantidad de Medidores');
+                      const relevantPayload = payload.filter(p => p.dataKey !== 'meter_quantity' || p.name === 'Medidores');
                       return (
                         <div className="bg-background p-2 border rounded-md shadow-lg">
                           <p className="font-bold">{label}</p>
                           {relevantPayload.map((entry, index) => (
                             <p key={`item-${index}`} style={{ color: entry.color }}>
-                              {`${entry.name}: ${entry.name === 'Cantidad de Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
+                              {`${entry.name}: ${entry.name === 'Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
                             </p>
                           ))}
                         </div>
@@ -161,11 +161,11 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="meter_quantity" name="Cantidad de Medidores" yAxisId="left" fill="hsl(var(--chart-5))" barSize={20} />
+                <Bar dataKey="meter_quantity" name="Medidores" yAxisId="left" fill="hsl(var(--chart-5))" barSize={20} />
                 <Line type="monotone" dataKey="meter_quantity" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--chart-1))"}} activeDot={{ r: 8 }} legendType="none" />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (Tarifario)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="micrometering_percentage" name="Micromed." yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E. T.)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
               </ComposedChart>
             </ResponsiveContainer>
         </ChartContainer>
