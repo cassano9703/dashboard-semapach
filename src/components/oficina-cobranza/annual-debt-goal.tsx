@@ -51,11 +51,12 @@ export function AnnualDebtGoal() {
     progress,
     amountToReduce,
   } = useMemo(() => {
-    const target = annualGoalData?.[0]?.amount || 0;
-
-    if (!monthlyGoalsData) {
-        return { initialDebt: 0, currentDebt: 0, targetDebt: target, progress: 0, amountToReduce: 0 };
+    // Wait for both data sources to be loaded before calculating
+    if (!annualGoalData || !monthlyGoalsData) {
+        return { initialDebt: 0, currentDebt: 0, targetDebt: 0, progress: 0, amountToReduce: 0 };
     }
+
+    const target = annualGoalData[0]?.amount || 0;
     
     const yearGoals = monthlyGoalsData
         .filter(goal => goal.month.startsWith(currentYear.toString()))
