@@ -296,6 +296,22 @@
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },
       "required": ["month", "operationType", "entity", "quantity"]
+    },
+    "MeterData": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MeterData",
+      "type": "object",
+      "description": "Represents the monthly meter data.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the record in YYYY-MM format." },
+        "month": { "type": "string", "description": "The month of the record, in YYYY-MM format." },
+        "coverage": { "type": "number", "description": "Coverage percentage." },
+        "micrometering_tariff_study": { "type": "number", "description": "Micrometering percentage based on tariff study." },
+        "micrometering_percentage": { "type": "number", "description": "General micrometering percentage." },
+        "meter_quantity": { "type": "number", "description": "Total quantity of meters." },
+        "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
+      },
+      "required": ["month", "coverage", "micrometering_tariff_study", "micrometering_percentage", "meter_quantity"]
     }
   },
   "auth": {
@@ -443,6 +459,15 @@
           "schema": { "$ref": "#/backend/entities/ServiceOperation" },
           "description": "Stores records of service operations like cuts and reconnections.",
           "params": [{ "name": "operationId", "description": "The unique ID of the service operation document." }]
+        }
+      },
+      {
+        "path": "/meter_data/{meterDataId}",
+        "definition": {
+          "entityName": "MeterData",
+          "schema": { "$ref": "#/backend/entities/MeterData" },
+          "description": "Stores monthly records for meter data indicators. The document ID should be in YYYY-MM format.",
+          "params": [{ "name": "meterDataId", "description": "The unique ID of the meter data document, typically YYYY-MM." }]
         }
       }
     ],

@@ -125,6 +125,15 @@ service cloud.firestore {
       allow get, list: if true;
       allow write: if isSignedIn();
     }
+    
+    /**
+     * @description Allows read access to any user and write access to authenticated users for meter data.
+     * @path /meter_data/{meterDataId}
+     */
+    match /meter_data/{meterDataId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+    }
 
     // Helper function to determine if a user is signed in
     function isSignedIn() {
