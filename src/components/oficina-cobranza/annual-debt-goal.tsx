@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { Target } from 'lucide-react';
 import { Progress } from '../ui/progress';
@@ -44,17 +44,22 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
+    // Find the starting debt for the reduction period (August)
     const firstData = filteredMonthlyGoals.find(d => d.month.endsWith('-08'));
     const debtAtStartOfReduction = firstData?.proposedAmount ?? 0;
 
+    // Find the latest available debt data
     const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
     
+    // Total amount we need to reduce from the start
     const totalReductionRequired = debtAtStartOfReduction - goal;
+    // How much we have reduced so far from the start
     const reductionAchieved = debtAtStartOfReduction - current;
 
+    // Progress is the percentage of the required reduction that has been achieved
     const progressPercentage = totalReductionRequired > 0 
       ? (reductionAchieved / totalReductionRequired) * 100 
       : 0;
@@ -62,7 +67,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     return {
       currentDebt: current,
       targetDebt: goal,
-      progress: Math.max(0, progressPercentage),
+      progress: Math.max(0, progressPercentage), // Ensure progress is not negative
       remainingToReduce: current - goal
     };
   }, [monthlyGoalsData, currentYear]);
