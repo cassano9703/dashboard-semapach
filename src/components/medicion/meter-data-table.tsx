@@ -83,16 +83,16 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
         <div className="overflow-x-auto relative max-h-[350px]">
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 z-10">
-              <TableRow className="bg-[#1f2937] hover:bg-[#1f2937]">
-                <TableHead className="text-white font-bold sticky left-0 z-20 bg-[#1f2937] w-1/4">DESCRIPCION</TableHead>
+              <TableRow className="bg-table-header hover:bg-table-header">
+                <TableHead className="font-bold sticky left-0 z-20 bg-table-header w-1/4 text-table-header-foreground">DESCRIPCION</TableHead>
                 {months.map(month => {
                   const isAugust = format(month, 'MMM', { locale: es }).toUpperCase() === 'AGO';
                   return (
                     <TableHead 
                         key={format(month, 'yyyy-MM')} 
                         className={cn(
-                            "text-white font-bold text-center",
-                            isAugust && "bg-black"
+                            "font-bold text-center text-table-header-foreground",
+                            isAugust && "bg-black text-white"
                         )}
                     >
                       {format(month, 'MMM', { locale: es }).toUpperCase()}
