@@ -1,6 +1,5 @@
 import { MeterDataTable } from '@/components/medicion/meter-data-table';
 import { MeterIndicatorsChart } from '@/components/medicion/meter-indicators-chart';
-import { MeterStatCards } from '@/components/medicion/meter-stat-cards';
 
 export default function MedidoresPage() {
   const year = 2025;
@@ -11,7 +10,6 @@ export default function MedidoresPage() {
           Reporte de Indicadores de Medición ({year})
         </h1>
       </div>
-      <MeterStatCards year={year} />
       <MeterDataTable year={year} />
       <div>
         <h2 className="text-2xl font-bold tracking-tight mb-4">
