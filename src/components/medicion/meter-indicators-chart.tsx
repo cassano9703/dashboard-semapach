@@ -66,8 +66,8 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   );
   const { data: meterData, isLoading } = useCollection(meterDataRef);
 
-  const { chartData, minMeters, maxMeters } = useMemo(() => {
-    if (!meterData) return { chartData: [], minMeters: 0, maxMeters: 0 };
+  const { chartData } = useMemo(() => {
+    if (!meterData) return { chartData: [] };
   
     const yearDate = new Date(year, 0, 1);
     const months = eachMonthOfInterval({
@@ -90,14 +90,10 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
     }).filter(d => d.meter_quantity !== null);
 
     if (processedData.length === 0) {
-        return { chartData: [], minMeters: 0, maxMeters: 0 };
+        return { chartData: [] };
     }
 
-    const meterValues = processedData.map(d => d.meter_quantity).filter(v => v !== null) as number[];
-    const min = Math.min(...meterValues);
-    const max = Math.max(...meterValues);
-  
-    return { chartData: processedData, minMeters: min, maxMeters: max };
+    return { chartData: processedData };
   
   }, [meterData, year]);
 
@@ -139,17 +135,16 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(value) => `${value / 1000}k`}
-                    domain={[dataMin => Math.floor(dataMin * 0.95), dataMax => Math.ceil(dataMax * 1.05)]}
+                    domain={[dataMin => Math.floor(dataMin * 0.98), dataMax => Math.ceil(dataMax * 1.02)]}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
-                      const relevantPayload = payload.filter(p => p.dataKey !== 'meter_quantity' || p.name === 'Medidores');
                       return (
                         <div className="bg-background p-2 border rounded-md shadow-lg">
                           <p className="font-bold">{label}</p>
-                          {relevantPayload.map((entry, index) => (
+                          {payload.map((entry, index) => (
                             <p key={`item-${index}`} style={{ color: entry.color }}>
                               {`${entry.name}: ${entry.name === 'Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
                             </p>
@@ -161,8 +156,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="meter_quantity" name="Medidores" yAxisId="left" fill="hsl(var(--chart-5))" barSize={20} />
-                <Line type="monotone" dataKey="meter_quantity" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--chart-1))"}} activeDot={{ r: 8 }} legendType="none" />
+                <Line type="monotone" dataKey="meter_quantity" name="Medidores" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--chart-1))"}} activeDot={{ r: 8 }} />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E. T.)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
