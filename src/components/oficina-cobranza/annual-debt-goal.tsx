@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Target } from 'lucide-react';
 import { Progress } from '../ui/progress';
@@ -27,9 +27,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     if (!firestore) return null;
     return query(
         collection(firestore, 'monthly_goals'),
+        where('goalType', '==', 'debt_3_plus'),
+        where('month', '>=', `${currentYear}-01`),
+        where('month', '<=', `${currentYear}-12`),
         orderBy('month')
     );
-  }, [firestore]);
+  }, [firestore, currentYear]);
 
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
@@ -40,18 +43,18 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     progress,
     remainingToReduce,
   } = useMemo(() => {
-    const filteredMonthlyGoals = monthlyGoalsData?.filter(
-        (d) => d.month.startsWith(currentYear) && d.goalType === 'debt_3_plus'
-    ) || [];
+    const filteredMonthlyGoals = monthlyGoalsData || [];
 
     if (filteredMonthlyGoals.length === 0) {
       return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    const firstData = filteredMonthlyGoals[0];
-    const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
-    
+    // The starting point for the reduction is the debt at the beginning of the analysis period (August)
+    const firstData = filteredMonthlyGoals.find(d => d.month.endsWith('-08'));
     const initialForProgress = firstData?.proposedAmount ?? 0;
+
+    // The current debt is the latest available data point (October)
+    const lastData = filteredMonthlyGoals.length > 0 ? filteredMonthlyGoals[filteredMonthlyGoals.length - 1] : null;
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
@@ -64,13 +67,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       : 0;
 
     return {
-      initialDebtForPeriod: initialForProgress,
+      initialDebtForPeriod: current, // Display the latest debt value
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
       remainingToReduce: current - goal
     };
-  }, [monthlyGoalsData, currentYear]);
+  }, [monthlyGoalsData]);
 
   const isLoading = isLoadingMonthly;
 
