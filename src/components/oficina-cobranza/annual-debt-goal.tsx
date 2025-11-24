@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Target } from 'lucide-react';
@@ -30,15 +30,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-        collection(firestore, 'monthly_goals'),
-        where('goalType', '==', 'debt_3_plus')
-    );
+    return query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'debt_3_plus'));
   }, [firestore]);
 
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
+    initialDebt,
     currentDebt,
     targetDebt,
     progress,
@@ -49,26 +47,30 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     ) || [];
 
     if (filteredMonthlyGoals.length === 0) {
-      return { currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
+      return { initialDebt: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    // Sort to find the latest debt value
-    filteredMonthlyGoals.sort((a,b) => b.month.localeCompare(a.month));
-    const latestData = filteredMonthlyGoals[0];
-    const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
+    // Sort to find the latest and earliest debt values for the period
+    filteredMonthlyGoals.sort((a,b) => a.month.localeCompare(b.month));
+    const firstData = filteredMonthlyGoals[0];
+    const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
+    
+    // The "initial" debt for the progress bar is the starting point of the period (August)
+    const initialForProgress = firstData?.proposedAmount ?? 0;
+    // The "current" debt is the latest available value (October)
+    const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
     
-    const reductionAchieved = current > goal ? current - goal : 0;
-    
-    const initialDebtForProgress = 11030000;
-    const totalReductionRequired = initialDebtForProgress - goal;
+    const totalReductionRequired = initialForProgress - goal;
+    const reductionAchieved = initialForProgress - current;
 
     const progressPercentage = totalReductionRequired > 0 
-      ? ((initialDebtForProgress - current) / totalReductionRequired) * 100 
+      ? (reductionAchieved / totalReductionRequired) * 100 
       : 0;
 
     return {
+      initialDebt: current, // This is for display as per request "colocar el ultimo monto"
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
@@ -133,8 +135,8 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                 </Tooltip>
             </TooltipProvider>
             <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatCurrency(currentDebt)} (Actual)</span>
-                <span>{formatCurrency(targetDebt)} (Meta)</span>
+                <span>Inicial: {formatCurrency(initialDebt)}</span>
+                <span>Meta: {formatCurrency(targetDebt)}</span>
             </div>
         </div>
         
