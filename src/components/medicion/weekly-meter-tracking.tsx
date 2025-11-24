@@ -31,7 +31,7 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const baseInicial = useMemo(() => augustData?.[0]?.meter_quantity || 0, [augustData]);
 
   // 2. Fetch weekly progress data for the selected week
-  const weekStart = date ? startOfWeek(date, { weekStartsOn: 1 }) : null;
+  const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
   
   const weeklyProgressRef = useMemoFirebase(
     () => {
