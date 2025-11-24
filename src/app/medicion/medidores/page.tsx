@@ -3,7 +3,6 @@
 import { MeterDataTable } from '@/components/medicion/meter-data-table';
 import { MeterIndicatorsChart } from '@/components/medicion/meter-indicators-chart';
 import { WeeklyMeterTracking } from '@/components/medicion/weekly-meter-tracking';
-import { WeeklyMeterProgressChart } from '@/components/medicion/weekly-meter-progress-chart';
 import { useState } from 'react';
 
 export default function MedidoresPage() {
@@ -25,7 +24,6 @@ export default function MedidoresPage() {
         <MeterIndicatorsChart year={year} />
       </div>
       <WeeklyMeterTracking selectedDate={selectedDate} onDateChange={setSelectedWeekDate} />
-      <WeeklyMeterProgressChart selectedDate={selectedDate} />
     </div>
   );
 }

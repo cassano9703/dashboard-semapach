@@ -8,11 +8,43 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '../ui/chart';
+import { Separator } from '../ui/separator';
 
 const formatNumber = (value?: number) => {
   if (value === undefined || value === null) return '0';
   return value.toLocaleString('es-PE');
 };
+
+// @ts-ignore
+const CustomizedDot = (props) => {
+  const { cx, cy, stroke, payload, value, data, dataKey } = props;
+  const isLastPoint = payload.name === data[data.length - 1].name;
+
+  if (isLastPoint) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={3} stroke={stroke} fill={stroke} />
+        <path d={`M${cx},${cy} L${cx + 8},${cy - 5} L${cx + 8},${cy + 5} Z`} fill={stroke} transform={`rotate(0 ${cx} ${cy})`} />
+      </g>
+    );
+  }
+
+  return <circle cx={cx} cy={cy} r={3} stroke={stroke} fill={stroke} />;
+};
+
+const chartConfig = {
+  weeklyCount: {
+    label: 'Medidores Semanales',
+    color: 'hsl(var(--chart-1))',
+  },
+  accumulatedCount: {
+    label: 'Acumulado Mensual',
+    color: 'hsl(var(--chart-2))',
+  },
+} satisfies ChartConfig;
+
 
 interface WeeklyMeterTrackingProps {
   selectedDate: Date;
@@ -80,6 +112,21 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
   
   const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
 
+  const chartData = useMemo(() => {
+    if (!weeklyData) return [];
+    
+    let accumulatedTotal = 0;
+    
+    return weeklyData.map(item => {
+      accumulatedTotal += item.meterCount;
+      return {
+        name: `Sem. ${format(new Date(item.weekStartDate + 'T00:00'), 'dd MMM', { locale: es })}`,
+        weeklyCount: item.meterCount,
+        accumulatedCount: accumulatedTotal,
+      }
+    });
+  }, [weeklyData]);
+
   const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -101,41 +148,103 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                 Seleccione una semana en el calendario para ver el progreso de instalación de medidores.
             </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 flex justify-center">
-                 <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(d) => d && onDateChange(d)}
-                    className="rounded-md border"
-                    locale={es}
-                />
+        <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 flex justify-center">
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(d) => d && onDateChange(d)}
+                        className="rounded-md border"
+                        locale={es}
+                    />
+                </div>
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <StatCard 
+                        title={`Base Inicial (${format(selectedMonthDate, 'MMMM', { locale: es })})`} 
+                        value={formatNumber(baseInicial)} 
+                        icon={<Flag className="h-4 w-4 text-muted-foreground" />}
+                        description={`Medidores al inicio de ${format(selectedMonthDate, 'MMMM yyyy', { locale: es })}`}
+                    />
+                    <StatCard 
+                        title="Evolución a la Fecha" 
+                        value={formatNumber(evolucionFecha)} 
+                        icon={<Gauge className="h-4 w-4 text-muted-foreground" />}
+                        description={weekStart ? `Medidores en la semana del ${format(weekStart, 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
+                    />
+                    <StatCard 
+                        title="Acumulado" 
+                        value={formatNumber(acumulado)} 
+                        icon={acumuladoIcon}
+                        description="Suma de instalaciones hasta la fecha"
+                    />
+                    <StatCard 
+                        title="Monto Final" 
+                        value={formatNumber(montoFinal)} 
+                        icon={<Target className="h-4 w-4 text-muted-foreground" />}
+                        description={isAugust ? "Base inicial - Acumulado (retiro de medidores)" : "Base inicial + Acumulado"}
+                    />
+                </div>
             </div>
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <StatCard 
-                    title={`Base Inicial (${format(selectedMonthDate, 'MMMM', { locale: es })})`} 
-                    value={formatNumber(baseInicial)} 
-                    icon={<Flag className="h-4 w-4 text-muted-foreground" />}
-                    description={`Medidores al inicio de ${format(selectedMonthDate, 'MMMM yyyy', { locale: es })}`}
-                />
-                <StatCard 
-                    title="Evolución a la Fecha" 
-                    value={formatNumber(evolucionFecha)} 
-                    icon={<Gauge className="h-4 w-4 text-muted-foreground" />}
-                    description={weekStart ? `Medidores en la semana del ${format(weekStart, 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
-                />
-                <StatCard 
-                    title="Acumulado" 
-                    value={formatNumber(acumulado)} 
-                    icon={acumuladoIcon}
-                    description="Suma de instalaciones hasta la fecha"
-                />
-                 <StatCard 
-                    title="Monto Final" 
-                    value={formatNumber(montoFinal)} 
-                    icon={<Target className="h-4 w-4 text-muted-foreground" />}
-                    description={isAugust ? "Base inicial - Acumulado (retiro de medidores)" : "Base inicial + Acumulado"}
-                />
+            
+            <Separator />
+
+            <div>
+                <h3 className="text-lg font-semibold mb-2">Evolución Semanal de Medidores</h3>
+                <p className="text-sm text-muted-foreground mb-4">Progreso de instalación por semana en {format(selectedDate, 'MMMM yyyy', {locale: es})}.</p>
+                {isLoading ? (
+                    <div className="h-[250px] flex items-center justify-center text-muted-foreground">Cargando gráfico...</div>
+                ) : chartData.length === 0 ? (
+                    <div className="h-[250px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en este mes.</div>
+                ) : (
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                        <ResponsiveContainer>
+                        <LineChart
+                            accessibilityLayer
+                            data={chartData}
+                            margin={{ left: 12, right: 12 }}
+                        >
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="name"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                fontSize={12}
+                            />
+                            <YAxis
+                                tickFormatter={(value) => formatNumber(value as number)}
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                width={80}
+                            />
+                            <Tooltip
+                                content={<ChartTooltipContent formatter={(value) => formatNumber(value as number)}/>}
+                            />
+                            <Legend />
+                            <Line
+                                dataKey="weeklyCount"
+                                type="monotone"
+                                stroke="hsl(var(--chart-1))"
+                                strokeWidth={2}
+                                dot={<CustomizedDot data={chartData} />}
+                                activeDot={{ r: 8 }}
+                                name="Medidores Semanales"
+                            />
+                            <Line
+                                dataKey="accumulatedCount"
+                                type="monotone"
+                                stroke="hsl(var(--chart-2))"
+                                strokeWidth={2}
+                                dot={<CustomizedDot data={chartData} />}
+                                activeDot={{ r: 8 }}
+                                name="Acumulado Mensual"
+                            />
+                        </LineChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                )}
             </div>
         </CardContent>
     </Card>
