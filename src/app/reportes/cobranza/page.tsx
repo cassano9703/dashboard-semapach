@@ -28,12 +28,13 @@ export default function ReportesCobranzaPage() {
       
       <ServiceOperationsSummary selectedDate={selectedDate} onDateChange={setSelectedDate} />
       
-      <div className="flex flex-col gap-6">
-        <AnnualDebtGoal selectedDate={selectedDate} />
-        <Debt3PlusGoals selectedDate={selectedDate} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
+          <AnnualDebtGoal selectedDate={selectedDate} />
+          <Debt3PlusGoals selectedDate={selectedDate} />
+        </div>
+        <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
-
-      <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
     </div>
   );
 }
