@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { format, startOfWeek, endOfWeek, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Gauge, TrendingUp, CheckCircle, Flag } from 'lucide-react';
+import { Gauge, TrendingUp, CheckCircle, Flag, TrendingDown } from 'lucide-react';
 
 const formatNumber = (value?: number) => {
   if (value === undefined || value === null) return '0';
@@ -63,6 +63,9 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const acumulado = evolucionFecha > 0 && baseInicial > 0 ? evolucionFecha - baseInicial : 0;
   
   const isLoading = isLoadingBase || isLoadingWeekly || isLoadingAnnual;
+  
+  const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
+
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
     <Card>
@@ -111,8 +114,8 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
                 <StatCard 
                     title="Acumulado" 
                     value={formatNumber(acumulado)} 
-                    icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-                    description="Nuevos medidores instalados"
+                    icon={acumuladoIcon}
+                    description="Cambio neto de medidores en el mes"
                 />
                  <StatCard 
                     title="Meta Anual" 
