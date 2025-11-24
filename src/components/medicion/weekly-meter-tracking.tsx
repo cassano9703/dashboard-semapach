@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, endOfYear, startOfYear } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 
@@ -22,12 +22,12 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const firestore = useFirestore();
 
-  const selectedMonth = useMemo(() => date ? startOfMonth(date) : new Date(), [date]);
+  const selectedMonthDate = useMemo(() => date ? startOfMonth(date) : new Date(), [date]);
 
   // 1. Fetch base data for the selected month
   const monthlyBaseDataRef = useMemoFirebase(
-    () => firestore && date ? query(collection(firestore, 'meter_data'), where('month', '==', format(selectedMonth, 'yyyy-MM'))) : null,
-    [firestore, date, selectedMonth]
+    () => firestore && date ? query(collection(firestore, 'meter_data'), where('month', '==', format(selectedMonthDate, 'yyyy-MM'))) : null,
+    [firestore, date, selectedMonthDate]
   );
   const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
@@ -39,10 +39,11 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
     () => {
       if (!firestore || !weekStart) return null;
       const monthStart = startOfMonth(weekStart);
+      const monthEnd = endOfMonth(weekStart);
       return query(
         collection(firestore, 'weekly_meter_progress'),
-        where('weekStartDate', '<=', format(weekStart, 'yyyy-MM-dd')),
         where('weekStartDate', '>=', format(monthStart, 'yyyy-MM-dd')),
+        where('weekStartDate', '<=', format(monthEnd, 'yyyy-MM-dd')),
         orderBy('weekStartDate', 'desc')
       );
     },
@@ -50,7 +51,12 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   );
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
   
-  const evolucionFecha = useMemo(() => weeklyData?.[0]?.meterCount || 0, [weeklyData]);
+  const evolucionFecha = useMemo(() => {
+    if (!weeklyData || !weekStart) return 0;
+    const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+    const weekRecord = weeklyData.find(d => d.weekStartDate === weekStartStr);
+    return weekRecord?.meterCount || 0;
+  }, [weeklyData, weekStart]);
   
   const acumulado = useMemo(() => {
     if (!weeklyData) return 0;
@@ -58,12 +64,20 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
     const latestEntries = Array.from(new Map(weeklyData.map(item => [item.weekStartDate, item])).values());
     return latestEntries.reduce((sum, record) => sum + record.meterCount, 0);
   }, [weeklyData]);
+
+  const isAugust = getMonth(selectedMonthDate) === 7; // August is month 7 (0-indexed)
   
-  const montoFinal = useMemo(() => acumulado - baseInicial, [acumulado, baseInicial]);
+  const montoFinal = useMemo(() => {
+    if (isAugust) {
+        return baseInicial - acumulado;
+    }
+    return baseInicial + acumulado;
+  }, [baseInicial, acumulado, isAugust]);
+
 
   const isLoading = isLoadingBase || isLoadingWeekly;
   
-  const acumuladoIcon = acumulado >= baseInicial ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
+  const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
     <Card>
@@ -98,10 +112,10 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
             </div>
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <StatCard 
-                    title={`Base Inicial (${format(selectedMonth, 'MMMM', { locale: es })})`} 
+                    title={`Base Inicial (${format(selectedMonthDate, 'MMMM', { locale: es })})`} 
                     value={formatNumber(baseInicial)} 
                     icon={<Flag className="h-4 w-4 text-muted-foreground" />}
-                    description={`Medidores al inicio de ${format(selectedMonth, 'MMMM yyyy', { locale: es })}`}
+                    description={`Medidores al inicio de ${format(selectedMonthDate, 'MMMM yyyy', { locale: es })}`}
                 />
                 <StatCard 
                     title="Evolución a la Fecha" 
@@ -119,7 +133,7 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
                     title="Monto Final" 
                     value={formatNumber(montoFinal)} 
                     icon={<Target className="h-4 w-4 text-muted-foreground" />}
-                    description="Diferencia entre acumulado y base"
+                    description={isAugust ? "Base inicial - Acumulado" : "Base inicial + Acumulado"}
                 />
             </div>
         </CardContent>
