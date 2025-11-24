@@ -111,7 +111,7 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
               ) : (
                 descriptions.map(desc => (
                     <TableRow key={desc.key}>
-                    <TableCell className="font-bold sticky left-0 bg-card z-10">{desc.label}</TableCell>
+                    <TableCell className="font-bold sticky left-0 bg-table-header text-table-header-foreground z-10">{desc.label}</TableCell>
                     {months.map(month => {
                         const monthKey = format(month, 'yyyy-MM');
                         const data = dataByMonth.get(monthKey);
