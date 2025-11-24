@@ -3,16 +3,11 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, getMonth, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { format } from 'date-fns';
 import { Target } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
-import { ChartContainer } from '../ui/chart';
-import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -30,34 +25,33 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'debt_3_plus'));
+    return query(
+        collection(firestore, 'monthly_goals'),
+        orderBy('month')
+    );
   }, [firestore]);
 
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
-    initialDebt,
+    initialDebtForPeriod,
     currentDebt,
     targetDebt,
     progress,
     remainingToReduce,
   } = useMemo(() => {
     const filteredMonthlyGoals = monthlyGoalsData?.filter(
-        (d) => d.month.startsWith(currentYear)
+        (d) => d.month.startsWith(currentYear) && d.goalType === 'debt_3_plus'
     ) || [];
 
     if (filteredMonthlyGoals.length === 0) {
-      return { initialDebt: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
+      return { initialDebtForPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    // Sort to find the latest and earliest debt values for the period
-    filteredMonthlyGoals.sort((a,b) => a.month.localeCompare(b.month));
     const firstData = filteredMonthlyGoals[0];
     const lastData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
     
-    // The "initial" debt for the progress bar is the starting point of the period (August)
     const initialForProgress = firstData?.proposedAmount ?? 0;
-    // The "current" debt is the latest available value (October)
     const current = lastData?.executedAmount ?? lastData?.proposedAmount ?? 0;
     
     const goal = 9300000;
@@ -70,35 +64,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       : 0;
 
     return {
-      initialDebt: current, // This is for display as per request "colocar el ultimo monto"
+      initialDebtForPeriod: initialForProgress,
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
       remainingToReduce: current - goal
     };
   }, [monthlyGoalsData, currentYear]);
-  
-  const debtGoals = useMemo(() => {
-    const dbtGoals: any[] = Array(12).fill(null);
-    
-    if (monthlyGoalsData) {
-       monthlyGoalsData
-        .filter(goal => goal.month.startsWith(currentYear) && goal.goalType === 'debt_3_plus')
-        .forEach(goal => {
-            const monthIndex = getMonth(parseISO(goal.month + '-01T12:00:00Z'));
-            dbtGoals[monthIndex] = goal;
-        });
-    }
-    // Aug, Sep, Oct
-    return dbtGoals.slice(7, 10);
-  }, [monthlyGoalsData, currentYear]);
-
-  const chartData = useMemo(() => {
-    return debtGoals.map((goal, index) => ({
-        name: format(new Date(2025, index + 7, 1), 'MMM', { locale: es }),
-        'Deuda Actual': goal?.executedAmount ?? goal?.proposedAmount ?? 0,
-    })).filter(item => item['Deuda Actual'] > 0);
-  }, [debtGoals]);
 
   const isLoading = isLoadingMonthly;
 
@@ -120,59 +92,21 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             Reducción de Deuda ({currentYear})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        
-        <div className="space-y-2">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Progress value={progress} className="h-3" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Progreso: {progress.toFixed(2)}%</p>
-                        {remainingToReduce > 0 && <p>Falta reducir: {formatCurrency(remainingToReduce)}</p>}
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Inicial: {formatCurrency(initialDebt)}</span>
-                <span>Meta: {formatCurrency(targetDebt)}</span>
-            </div>
-        </div>
-        
-        <Separator className="my-4" />
-
-        <div>
-            <h3 className="text-md font-semibold">Deuda de 3 a más</h3>
-            <p className="text-sm text-muted-foreground mb-4">Gráfico de la deuda actual por mes.</p>
-            {chartData.length === 0 ? (
-                <div className="h-[150px] flex items-center justify-center text-muted-foreground">No hay datos para el gráfico.</div>
-            ) : (
-                <ChartContainer config={{}} className='w-full h-[150px]'>
-                    <BarChart 
-                        data={chartData} 
-                        layout="vertical"
-                        margin={{ top: 5, right: 0, bottom: 5, left: 0 }}
-                        barCategoryGap="20%"
-                    >
-                        <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={40} />
-                        <RechartsTooltip
-                            cursor={{ fill: 'hsla(var(--background))' }}
-                            content={({ active, payload, label }) =>
-                                active && payload && payload.length ? (
-                                <div className="bg-background border rounded-lg p-2 shadow-lg -mt-12">
-                                    <p className="font-bold">{label}</p>
-                                    <p className="text-sm">{formatCurrency(payload[0].value as number)}</p>
-                                </div>
-                                ) : null
-                            }
-                            />
-                        <Bar dataKey="Deuda Actual" radius={4} fill="hsl(var(--chart-2))" />
-                    </BarChart>
-                </ChartContainer>
-            )}
+      <CardContent className="space-y-2">
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Progress value={progress} className="h-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Progreso: {progress.toFixed(2)}%</p>
+                    {remainingToReduce > 0 && <p>Falta reducir: {formatCurrency(remainingToReduce)}</p>}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+        <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Inicial: {formatCurrency(initialDebtForPeriod)}</span>
+            <span>Meta: {formatCurrency(targetDebt)}</span>
         </div>
       </CardContent>
     </Card>
