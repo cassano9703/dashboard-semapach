@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format, parseISO, getMonth } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -51,22 +51,26 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   
   const { data: monthlyGoalsData, isLoading } = useCollection(monthlyGoalsRef);
 
-  const { initialDebt, currentDebt, progress, targetDebt, chartData } = useMemo(() => {
+  const { initialDebt, currentDebt, progress, targetDebt, chartData, currentMonthLabel } = useMemo(() => {
     const debtTarget = 9300000;
     if (!monthlyGoalsData || monthlyGoalsData.length === 0) {
-      return { initialDebt: 0, currentDebt: 0, progress: 0, targetDebt: debtTarget, chartData: [] };
+      return { initialDebt: 0, currentDebt: 0, progress: 0, targetDebt: debtTarget, chartData: [], currentMonthLabel: '' };
     }
 
     const sortedGoals = [...monthlyGoalsData].sort((a, b) =>
       a.month.localeCompare(b.month)
     );
     
-    const initial = debtTarget; // Using fixed target for now as per image
-    const current = debtTarget; // Using fixed target for now as per image
+    const firstGoal = sortedGoals.find(g => g.month.endsWith('-08'));
+    const lastGoal = sortedGoals[sortedGoals.length - 1];
 
-    const totalToReduce = 0; // Placeholder
-    const reducedSoFar = 0; // Placeholder
-    const progressPercentage = 0; // Placeholder
+    const initial = firstGoal?.proposedAmount || 0;
+    const current = lastGoal?.executedAmount || lastGoal?.proposedAmount || 0;
+    const monthLabel = format(parseISO(lastGoal.month + '-01'), 'LLLL', { locale: es });
+
+    const totalToReduce = initial - debtTarget;
+    const reducedSoFar = initial - current;
+    const progressPercentage = totalToReduce > 0 ? (reducedSoFar / totalToReduce) * 100 : 0;
     
     const chart = sortedGoals.map(goal => ({
         name: format(parseISO(goal.month + '-01'), 'MMM', { locale: es }),
@@ -79,6 +83,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       progress: Math.max(0, Math.min(progressPercentage, 100)),
       targetDebt: debtTarget,
       chartData: chart,
+      currentMonthLabel: monthLabel,
     };
   }, [monthlyGoalsData]);
 
@@ -97,10 +102,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         <CardTitle>Reducción de Deuda ({format(selectedDate, 'yyyy')})</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex justify-between items-baseline">
+            <span className="text-muted-foreground capitalize">Deuda a {currentMonthLabel}</span>
+            <span className="text-2xl font-bold">{formatCurrency(currentDebt)}</span>
+        </div>
         <div className="space-y-2">
             <Progress value={progress} className="h-3" />
             <div className="flex justify-between text-sm font-medium text-muted-foreground">
-                <span>Inicial: {formatCurrency(initialDebt)}</span>
                 <span>Meta: {formatCurrency(targetDebt)}</span>
             </div>
         </div>
