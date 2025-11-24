@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CollectionDebtGoals } from '@/components/oficina-cobranza/collection-debt-goals';
 import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-operations-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
-import { MonthlyDebtChart } from '@/components/oficina-cobranza/monthly-debt-chart';
+import { AnnualDebtGoal } from '@/components/oficina-cobranza/annual-debt-goal';
 
 
 export default function ReportesCobranzaPage() {
@@ -16,7 +16,7 @@ export default function ReportesCobranzaPage() {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CollectionDebtGoals selectedDate={selectedDate} />
-        <MonthlyDebtChart />
+        <AnnualDebtGoal />
       </div>
       
       <ServiceOperationsSummary selectedDate={selectedDate} onDateChange={setSelectedDate} />

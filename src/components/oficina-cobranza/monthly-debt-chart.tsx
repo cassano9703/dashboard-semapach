@@ -5,20 +5,11 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, eachMonthOfInterval, startOfYear, endOfYear, getYear, parseISO } from 'date-fns';
@@ -64,46 +55,49 @@ export function MonthlyDebtChart() {
       const data = dataMap.get(monthKey);
       return {
         name: format(month, 'MMM', { locale: es }),
-        'Deuda 3+ Meses': data?.executedAmount ?? data?.proposedAmount ?? null,
+        'Deuda': data?.executedAmount ?? data?.proposedAmount ?? null,
       };
-    }).filter(d => d['Deuda 3+ Meses'] !== null);
+    }).filter(d => d['Deuda'] !== null);
   }, [debtGoalsData, currentYear]);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Deuda 3+ Meses (S/)</CardTitle>
-        <CardDescription>Evolución de la deuda durante el año {currentYear}.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-            Cargando gráfico...
+  if (isLoading) {
+      return (
+          <div className="h-[150px] flex items-center justify-center text-muted-foreground">
+              Cargando gráfico...
           </div>
-        ) : chartData.length === 0 ? (
-          <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+      );
+  }
+
+  if (chartData.length === 0) {
+    return (
+        <div className="h-[150px] flex items-center justify-center text-muted-foreground">
             No hay datos de deuda para este año.
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis
-                fontSize={12}
-                tickLine={false}
+        </div>
+    );
+  }
+
+  return (
+      <ResponsiveContainer width="100%" height={150}>
+        <BarChart data={chartData} layout="vertical" margin={{ left: -10 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+            <XAxis 
+                type="number" 
+                hide 
+            />
+            <YAxis 
+                type="category" 
+                dataKey="name" 
+                fontSize={12} 
+                tickLine={false} 
                 axisLine={false}
-                tickFormatter={value => `S/${Number(value) / 1000000}M`}
-              />
-              <Tooltip
-                contentStyle={{ fontSize: '12px' }}
-                formatter={(value: number) => [formatCurrency(value), 'Deuda']}
-              />
-              <Bar dataKey="Deuda 3+ Meses" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+            />
+            <Tooltip
+            cursor={{ fill: 'hsl(var(--muted))' }}
+            contentStyle={{ fontSize: '12px' }}
+            formatter={(value: number) => [formatCurrency(value), 'Deuda']}
+            />
+            <Bar dataKey="Deuda" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
   );
 }
