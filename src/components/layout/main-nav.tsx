@@ -17,8 +17,6 @@ import {
   Clock3,
   ClipboardList,
   FileLock,
-  FileText,
-  Building,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
