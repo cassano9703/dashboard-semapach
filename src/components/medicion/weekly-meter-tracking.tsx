@@ -166,7 +166,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                         value={formatNumber(baseInicial)} 
                         icon={<Flag className="h-4 w-4 text-muted-foreground" />}
                         description={`Medidores al inicio de ${format(selectedMonthDate, 'MMMM yyyy', { locale: es })}`}
-                        className="border-l-4 border-chart-1"
+                        className="border-l-4 border-chart-3"
                     />
                     <StatCard 
                         title="Evolución a la Fecha" 
@@ -180,7 +180,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                         value={formatNumber(acumulado)} 
                         icon={acumuladoIcon}
                         description="Suma de instalaciones hasta la fecha"
-                        className="border-l-4 border-chart-3"
+                        className="border-l-4 border-chart-1"
                     />
                     <StatCard 
                         title="Monto Final" 
