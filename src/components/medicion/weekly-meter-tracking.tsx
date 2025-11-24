@@ -32,25 +32,25 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
 
-  // 2. Fetch weekly progress data for the selected month up to the selected week
-  const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
-  
+  // 2. Fetch weekly progress data for the selected month
   const weeklyProgressRef = useMemoFirebase(
     () => {
-      if (!firestore || !weekStart) return null;
-      const monthStart = startOfMonth(weekStart);
-      const monthEnd = endOfMonth(weekStart);
+      if (!firestore || !date) return null;
+      const monthStart = startOfMonth(date);
+      const monthEnd = endOfMonth(date);
       return query(
         collection(firestore, 'weekly_meter_progress'),
         where('weekStartDate', '>=', format(monthStart, 'yyyy-MM-dd')),
         where('weekStartDate', '<=', format(monthEnd, 'yyyy-MM-dd')),
-        orderBy('weekStartDate', 'desc')
+        orderBy('weekStartDate', 'asc')
       );
     },
-    [firestore, weekStart]
+    [firestore, date]
   );
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
   
+  const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
+
   const evolucionFecha = useMemo(() => {
     if (!weeklyData || !weekStart) return 0;
     const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -59,11 +59,16 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   }, [weeklyData, weekStart]);
   
   const acumulado = useMemo(() => {
-    if (!weeklyData) return 0;
-    // We only need the latest entry for each week, so we filter out older entries for the same week start date.
-    const latestEntries = Array.from(new Map(weeklyData.map(item => [item.weekStartDate, item])).values());
-    return latestEntries.reduce((sum, record) => sum + record.meterCount, 0);
-  }, [weeklyData]);
+    if (!weeklyData || !weekStart) return 0;
+    const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+
+    // Filter records up to and including the selected week's start date
+    const relevantData = weeklyData.filter(d => d.weekStartDate <= weekStartStr);
+    
+    // Sum the meterCount from the relevant weekly records
+    return relevantData.reduce((sum, record) => sum + record.meterCount, 0);
+  }, [weeklyData, weekStart]);
+
 
   const isAugust = getMonth(selectedMonthDate) === 7; // August is month 7 (0-indexed)
   
@@ -121,7 +126,7 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
                     title="Evolución a la Fecha" 
                     value={formatNumber(evolucionFecha)} 
                     icon={<Gauge className="h-4 w-4 text-muted-foreground" />}
-                    description={weekStart ? `Medidores al ${format(endOfWeek(weekStart, { weekStartsOn: 1 }), 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
+                    description={weekStart ? `Medidores en la semana del ${format(weekStart, 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
                 />
                 <StatCard 
                     title="Acumulado" 
