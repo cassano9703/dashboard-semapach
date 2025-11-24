@@ -74,7 +74,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     
     const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
     
-    const remainingToReduce = current - target;
+    const remainingToReduce = initial - target;
 
     return {
         initialDebt: initial,
@@ -113,10 +113,10 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
           <div className='flex items-center gap-2'>
-            <TrendingDown className="h-5 w-5 text-red-500" />
-            <span className="text-sm font-medium text-muted-foreground">Meta de Deuda</span>
+            <Flag className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Deuda Actual</span>
           </div>
-          <span className="text-lg font-bold">{formatCurrency(targetDebt)}</span>
+          <span className="text-lg font-bold">{formatCurrency(initialDebt)}</span>
         </div>
         
         <div 
@@ -135,8 +135,8 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                 <span className="font-semibold text-red-600">{formatCurrency(reductionAchieved)}</span>
             </div>
             <div className="flex items-center gap-2">
-                 <span className="text-muted-foreground">Deuda Octubre</span>
-                 <span className="font-semibold">{formatCurrency(initialDebt)}</span>
+                 <span className="text-muted-foreground">Meta de Deuda</span>
+                 <span className="font-semibold">{formatCurrency(targetDebt)}</span>
             </div>
         </div>
       </CardContent>
