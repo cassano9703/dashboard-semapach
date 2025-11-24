@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Target, Flag } from 'lucide-react';
@@ -51,7 +51,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
-  const {
+    const {
     currentDebt,
     targetDebt,
     progress,
@@ -65,18 +65,18 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     }
     
     // Deuda al inicio del periodo que se está analizando (ej. Agosto)
-    const initial = monthlyGoalsData[0]?.proposedAmount || 0; 
+    const initial = monthlyGoalsData.find(d => d.month === `${currentYear}-08`)?.proposedAmount || 0; 
     
     // Deuda actual es `executedAmount` (o `proposedAmount`) del último mes con datos
     const latestData = monthlyGoalsData[monthlyGoalsData.length - 1];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
 
-    const totalToReduce = initial - target; // Total que se debe reducir desde el inicio del periodo
-    const hasBeenReduced = initial - current; // Cuánto se ha reducido hasta ahora
+    const totalToReduce = initial - target;
+    const hasBeenReduced = initial - current; 
     
     const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
     
-    const remaining = current - target; // Cuánto falta desde el punto actual hasta la meta
+    const remaining = current - target;
 
     return {
         currentDebt: current,
@@ -85,7 +85,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         remainingToReduce: remaining > 0 ? remaining : 0,
         initialPeriodDebt: initial,
     };
-  }, [annualGoalData, monthlyGoalsData]);
+  }, [annualGoalData, monthlyGoalsData, currentYear]);
 
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
