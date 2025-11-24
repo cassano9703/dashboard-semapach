@@ -3,10 +3,10 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Target, Flag } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from '../ui/chart';
 import { Separator } from '../ui/separator';
@@ -39,7 +39,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
-    initialDebtInPeriod,
     currentDebt,
     targetDebt,
     progress,
@@ -50,14 +49,9 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     ) || [];
 
     if (filteredMonthlyGoals.length === 0) {
-      return { initialDebtInPeriod: 0, currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
+      return { currentDebt: 0, targetDebt: 9300000, progress: 0, remainingToReduce: 0 };
     }
     
-    // Sort to find initial debt of the period (August)
-    const periodGoals = filteredMonthlyGoals.filter(d => getMonth(parseISO(d.month + '-01')) >= 7); // August (index 7) onwards
-    periodGoals.sort((a,b) => a.month.localeCompare(b.month));
-    const initialDebt = periodGoals[0]?.proposedAmount ?? 0;
-
     // Sort to find the latest debt value
     filteredMonthlyGoals.sort((a,b) => b.month.localeCompare(a.month));
     const latestData = filteredMonthlyGoals[0];
@@ -65,15 +59,16 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     
     const goal = 9300000;
     
-    const totalReductionRequired = initialDebt - goal;
-    const reductionAchieved = initialDebt - current;
+    const reductionAchieved = current > goal ? current - goal : 0;
     
+    const initialDebtForProgress = 11030000;
+    const totalReductionRequired = initialDebtForProgress - goal;
+
     const progressPercentage = totalReductionRequired > 0 
-      ? (reductionAchieved / totalReductionRequired) * 100 
+      ? ((initialDebtForProgress - current) / totalReductionRequired) * 100 
       : 0;
 
     return {
-      initialDebtInPeriod: initialDebt,
       currentDebt: current,
       targetDebt: goal,
       progress: Math.max(0, progressPercentage),
@@ -125,13 +120,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         
-        <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-          <div className='flex items-center gap-2'>
-            <Target className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Meta de Deuda</span>
-          </div>
-          <span className="text-lg font-bold">{formatCurrency(targetDebt)}</span>
-        </div>
         <div className="space-y-2">
             <TooltipProvider>
                 <Tooltip>
@@ -140,12 +128,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Progreso: {progress.toFixed(2)}%</p>
-                        <p>Falta reducir: {formatCurrency(remainingToReduce)}</p>
+                        {remainingToReduce > 0 && <p>Falta reducir: {formatCurrency(remainingToReduce)}</p>}
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
             <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatCurrency(initialDebtInPeriod)} (Inicial)</span>
+                <span>{formatCurrency(currentDebt)} (Actual)</span>
                 <span>{formatCurrency(targetDebt)} (Meta)</span>
             </div>
         </div>
