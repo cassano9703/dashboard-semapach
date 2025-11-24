@@ -66,8 +66,8 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   );
   const { data: meterData, isLoading } = useCollection(meterDataRef);
 
-  const chartData = useMemo(() => {
-    if (!meterData) return [];
+  const { chartData, minMeters, maxMeters } = useMemo(() => {
+    if (!meterData) return { chartData: [], minMeters: 0, maxMeters: 0 };
   
     const yearDate = new Date(year, 0, 1);
     const months = eachMonthOfInterval({
@@ -77,7 +77,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
   
     const dataMap = new Map(meterData.map(item => [item.month, item]));
       
-    return months.map(month => {
+    const processedData = months.map(month => {
         const monthKey = format(month, 'yyyy-MM');
         const data = dataMap.get(monthKey);
         return {
@@ -88,6 +88,16 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
             micrometering_percentage: data ? data.micrometering_percentage * 100 : null,
         }
     }).filter(d => d.meter_quantity !== null);
+
+    if (processedData.length === 0) {
+        return { chartData: [], minMeters: 0, maxMeters: 0 };
+    }
+
+    const meterValues = processedData.map(d => d.meter_quantity).filter(v => v !== null) as number[];
+    const min = Math.min(...meterValues);
+    const max = Math.max(...meterValues);
+  
+    return { chartData: processedData, minMeters: min, maxMeters: max };
   
   }, [meterData, year]);
 
@@ -121,7 +131,16 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
               <ComposedChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                <YAxis 
+                    yAxisId="left" 
+                    orientation="left" 
+                    stroke="hsl(var(--chart-1))" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(value) => `${value / 1000}k`}
+                    domain={[minMeters * 0.999, maxMeters * 1.001]}
+                />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
                   content={({ active, payload, label }) => {
@@ -142,9 +161,9 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 />
                 <Legend />
                 <Bar dataKey="meter_quantity" name="Cantidad de Medidores" yAxisId="left" fill="hsl(var(--chart-1))" barSize={20} />
-                <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (Tarifario)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="micrometering_percentage" name="Micromedición" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (Tarifario)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="micrometering_percentage" name="Micromedición" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
               </ComposedChart>
             </ResponsiveContainer>
         </ChartContainer>
