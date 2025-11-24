@@ -3,13 +3,16 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, orderBy, where } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Target, Flag } from 'lucide-react';
+import { Target, Flag, TrendingDown } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from '../ui/chart';
 import { Separator } from '../ui/separator';
+import { Progress } from '../ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -25,39 +28,36 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const firestore = useFirestore();
   const currentYear = format(selectedDate, 'yyyy');
 
-  const annualGoalRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-        collection(firestore, 'annual_goals'),
-        where('year', '==', parseInt(currentYear, 10)),
-        where('goalType', '==', 'debt_3_plus')
-    );
-  }, [firestore, currentYear]);
-
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'monthly_goals'));
   }, [firestore]);
 
-  const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
     currentDebt,
+    targetDebt
   } = useMemo(() => {
     const filteredMonthlyGoals = monthlyGoalsData?.filter(
         (d) => d.goalType === 'debt_3_plus' && d.month.startsWith(currentYear)
     ) || [];
 
     if (filteredMonthlyGoals.length === 0) {
-      return { currentDebt: 0 };
+      return { currentDebt: 0, targetDebt: 9300000 };
     }
     
-    const latestData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
+    // Sort by month to find the latest
+    filteredMonthlyGoals.sort((a,b) => b.month.localeCompare(a.month));
+
+    const latestData = filteredMonthlyGoals[0];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
+    
+    const goal = 9300000;
 
     return {
       currentDebt: current,
+      targetDebt: goal
     };
   }, [monthlyGoalsData, currentYear]);
   
@@ -83,7 +83,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     })).filter(item => item['Deuda Actual'] > 0);
   }, [debtGoals]);
 
-  const isLoading = isLoadingAnnual || isLoadingMonthly;
+  const isLoading = isLoadingMonthly;
 
   if (isLoading) {
       return (
@@ -110,6 +110,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             <span className="text-sm font-medium text-muted-foreground">Deuda Actual</span>
           </div>
           <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
+        </div>
+        <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
+          <div className='flex items-center gap-2'>
+            <Target className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Meta de Deuda</span>
+          </div>
+          <span className="text-lg font-bold">{formatCurrency(targetDebt)}</span>
         </div>
         
         <Separator className="my-4" />
