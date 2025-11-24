@@ -135,7 +135,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(value) => `${value / 1000}k`}
-                    domain={[dataMin => Math.floor(dataMin * 0.98), dataMax => Math.ceil(dataMax * 1.02)]}
+                    domain={[dataMin => Math.floor(dataMin * 0.95), dataMax => Math.ceil(dataMax * 1.02)]}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
@@ -156,7 +156,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                   }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="meter_quantity" name="Medidores" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--chart-1))"}} activeDot={{ r: 8 }} />
+                <Bar dataKey="meter_quantity" name="Cantidad Medidores" barSize={20} fill="hsl(var(--chart-1))" yAxisId="left" />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (E. T.)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromed. %" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
