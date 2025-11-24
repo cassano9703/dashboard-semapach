@@ -1,5 +1,6 @@
 import { MeterDataTable } from '@/components/medicion/meter-data-table';
 import { MeterIndicatorsChart } from '@/components/medicion/meter-indicators-chart';
+import { WeeklyMeterTracking } from '@/components/medicion/weekly-meter-tracking';
 
 export default function MedidoresPage() {
   const year = 2025;
@@ -17,6 +18,7 @@ export default function MedidoresPage() {
         </h2>
         <MeterIndicatorsChart year={year} />
       </div>
+      <WeeklyMeterTracking year={year} />
     </div>
   );
 }

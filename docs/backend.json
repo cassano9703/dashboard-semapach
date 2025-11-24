@@ -276,7 +276,7 @@
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the goal record." },
         "year": { "type": "number", "description": "The year of the goal (e.g., 2025)." },
-        "goalType": { "type": "string", "enum": ["collection", "debt_3_plus"], "description": "Type of the goal." },
+        "goalType": { "type": "string", "enum": ["collection", "debt_3_plus", "meter_replacement"], "description": "Type of the goal." },
         "amount": { "type": "number", "description": "The target goal amount for the year." },
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },
@@ -312,6 +312,19 @@
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },
       "required": ["month", "coverage", "micrometering_tariff_study", "micrometering_percentage", "meter_quantity"]
+    },
+     "WeeklyMeterProgress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WeeklyMeterProgress",
+      "type": "object",
+      "description": "Represents the weekly progress of meter quantity.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the record." },
+        "weekStartDate": { "type": "string", "description": "The start date of the week (Monday), in YYYY-MM-DD format.", "format": "date" },
+        "meterCount": { "type": "number", "description": "The quantity of meters at the end of the week." },
+        "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
+      },
+      "required": ["weekStartDate", "meterCount"]
     }
   },
   "auth": {
@@ -468,6 +481,15 @@
           "schema": { "$ref": "#/backend/entities/MeterData" },
           "description": "Stores monthly records for meter data indicators. The document ID should be in YYYY-MM format.",
           "params": [{ "name": "meterDataId", "description": "The unique ID of the meter data document, typically YYYY-MM." }]
+        }
+      },
+      {
+        "path": "/weekly_meter_progress/{progressId}",
+        "definition": {
+          "entityName": "WeeklyMeterProgress",
+          "schema": { "$ref": "#/backend/entities/WeeklyMeterProgress" },
+          "description": "Stores weekly records of meter quantity progress.",
+          "params": [{ "name": "progressId", "description": "The unique ID for the weekly progress record." }]
         }
       }
     ],
