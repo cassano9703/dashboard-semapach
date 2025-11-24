@@ -7,7 +7,6 @@ import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { AnnualCollectionGoal } from '@/components/oficina-cobranza/annual-collection-goal';
 import { AnnualDebtGoal } from '@/components/oficina-cobranza/annual-debt-goal';
-import { DebtEvolutionChart } from '@/components/oficina-cobranza/debt-evolution-chart';
 
 export default function ReportesCobranzaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 7, 1));
@@ -33,9 +32,6 @@ export default function ReportesCobranzaPage() {
         <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
 
-      <div className="flex flex-col gap-6">
-        <DebtEvolutionChart />
-      </div>
     </div>
   );
 }
