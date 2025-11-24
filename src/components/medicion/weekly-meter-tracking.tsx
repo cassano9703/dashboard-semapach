@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, startOfMonth } from 'date-fns';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfYear, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, CheckCircle, Flag, TrendingDown } from 'lucide-react';
 
@@ -40,13 +40,20 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
       if (!firestore || !weekStart) return null;
       return query(
         collection(firestore, 'weekly_meter_progress'),
-        where('weekStartDate', '==', format(weekStart, 'yyyy-MM-dd'))
+        where('weekStartDate', '<=', format(weekStart, 'yyyy-MM-dd')),
+        where('weekStartDate', '>=', format(startOfYear(weekStart), 'yyyy-MM-dd')),
+        orderBy('weekStartDate', 'desc')
       );
     },
     [firestore, weekStart]
   );
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
+  
   const evolucionFecha = useMemo(() => weeklyData?.[0]?.meterCount || 0, [weeklyData]);
+  const acumulado = useMemo(() => {
+    if (!weeklyData) return 0;
+    return weeklyData.reduce((sum, record) => sum + record.meterCount, 0);
+  }, [weeklyData]);
 
   // 3. Fetch annual goal
   const annualGoalRef = useMemoFirebase(
@@ -59,8 +66,6 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   );
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const metaAnual = useMemo(() => annualGoalData?.[0]?.amount || 0, [annualGoalData]);
-
-  const acumulado = evolucionFecha > 0 && baseInicial > 0 ? evolucionFecha - baseInicial : 0;
   
   const isLoading = isLoadingBase || isLoadingWeekly || isLoadingAnnual;
   
@@ -115,7 +120,7 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
                     title="Acumulado" 
                     value={formatNumber(acumulado)} 
                     icon={acumuladoIcon}
-                    description="Cambio neto de medidores en el mes"
+                    description="Suma de instalaciones hasta la fecha"
                 />
                  <StatCard 
                     title="Meta Anual" 
