@@ -1,4 +1,5 @@
 import { MeterDataCRUD } from "@/components/admin/meter-data-crud";
+import { WeeklyMeterProgressCRUD } from "@/components/admin/weekly-meter-progress-crud";
 
 export default function AdminMedicionPage() {
   return (
@@ -12,6 +13,7 @@ export default function AdminMedicionPage() {
         </p>
       </div>
       <MeterDataCRUD />
+      <WeeklyMeterProgressCRUD />
     </div>
   );
 }
