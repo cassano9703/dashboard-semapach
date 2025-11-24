@@ -3,16 +3,13 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Target, Flag } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from '../ui/chart';
 import { Separator } from '../ui/separator';
-import { Progress } from '../ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -39,10 +36,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const monthlyGoalsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-        collection(firestore, 'monthly_goals'),
-        orderBy('month')
-    );
+    return query(collection(firestore, 'monthly_goals'));
   }, [firestore]);
 
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
@@ -50,43 +44,22 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
   const {
     currentDebt,
-    targetDebt,
-    progress,
-    remainingToReduce,
-    initialPeriodDebt
   } = useMemo(() => {
-    const target = annualGoalData?.[0]?.amount || 0;
-
     const filteredMonthlyGoals = monthlyGoalsData?.filter(
         (d) => d.goalType === 'debt_3_plus' && d.month.startsWith(currentYear)
     ) || [];
 
     if (filteredMonthlyGoals.length === 0) {
-      return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
+      return { currentDebt: 0 };
     }
-    
-    // August is the start of the period for this logic
-    const initialDebtRecord = filteredMonthlyGoals.find(d => d.month === `${currentYear}-08`);
-    const initial = initialDebtRecord?.executedAmount ?? initialDebtRecord?.proposedAmount ?? 0;
     
     const latestData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
 
-    const totalToReduce = initial - target;
-    const hasBeenReduced = initial - current;
-    
-    const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
-    
-    const remaining = current - target;
-
     return {
       currentDebt: current,
-      targetDebt: target,
-      progress: progressPercentage,
-      remainingToReduce: remaining > 0 ? remaining : 0,
-      initialPeriodDebt: initial
     };
-  }, [annualGoalData, monthlyGoalsData, currentYear]);
+  }, [monthlyGoalsData, currentYear]);
   
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
@@ -121,10 +94,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
           </Card>
       );
   }
-  
-  if (targetDebt === 0 && currentDebt === 0) {
-      return null;
-  }
 
   return (
     <Card className="h-full">
@@ -143,17 +112,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
           <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
         </div>
         
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Progress value={progress} className="h-2" />
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Progreso de reducción: {progress.toFixed(2)}%</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-
         <Separator className="my-4" />
 
         <div>
