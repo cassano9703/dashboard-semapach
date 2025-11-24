@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfYear, startOfYear } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, endOfYear, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 
@@ -32,16 +32,17 @@ export function WeeklyMeterTracking({ year }: WeeklyMeterTrackingProps) {
   const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const baseInicial = useMemo(() => monthlyBaseData?.[0]?.meter_quantity || 0, [monthlyBaseData]);
 
-  // 2. Fetch weekly progress data up to the selected week
+  // 2. Fetch weekly progress data for the selected month up to the selected week
   const weekStart = useMemo(() => date ? startOfWeek(date, { weekStartsOn: 1 }) : null, [date]);
   
   const weeklyProgressRef = useMemoFirebase(
     () => {
       if (!firestore || !weekStart) return null;
+      const monthStart = startOfMonth(weekStart);
       return query(
         collection(firestore, 'weekly_meter_progress'),
         where('weekStartDate', '<=', format(weekStart, 'yyyy-MM-dd')),
-        where('weekStartDate', '>=', format(startOfYear(weekStart), 'yyyy-MM-dd')),
+        where('weekStartDate', '>=', format(monthStart, 'yyyy-MM-dd')),
         orderBy('weekStartDate', 'desc')
       );
     },
