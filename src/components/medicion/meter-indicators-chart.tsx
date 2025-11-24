@@ -145,10 +145,11 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
+                      const relevantPayload = payload.filter(p => p.dataKey !== 'meter_quantity' || p.name === 'Cantidad de Medidores');
                       return (
                         <div className="bg-background p-2 border rounded-md shadow-lg">
                           <p className="font-bold">{label}</p>
-                          {payload.map((entry, index) => (
+                          {relevantPayload.map((entry, index) => (
                             <p key={`item-${index}`} style={{ color: entry.color }}>
                               {`${entry.name}: ${entry.name === 'Cantidad de Medidores' ? entry.value : `${Number(entry.value).toFixed(2)}%`}`}
                             </p>
@@ -161,6 +162,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 />
                 <Legend />
                 <Bar dataKey="meter_quantity" name="Cantidad de Medidores" yAxisId="left" fill="hsl(var(--chart-1))" barSize={20} />
+                <Line type="monotone" dataKey="meter_quantity" yAxisId="left" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} activeDot={false} legendType="none" />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (Tarifario)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromedición" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: 'hsl(var(--background))' }} activeDot={{ r: 8, strokeWidth: 2 }} />
