@@ -41,7 +41,7 @@ export function Debt3PlusGoals({ selectedDate }: Debt3PlusGoalsProps) {
             dbtGoals[monthIndex] = goal;
         });
     }
-    return dbtGoals.slice(7, 11);
+    return dbtGoals.slice(7, 10);
   }, [goalsData, selectedDate]);
   
   const chartData = useMemo(() => {
