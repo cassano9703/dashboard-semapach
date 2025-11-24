@@ -41,50 +41,50 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     if (!firestore) return null;
     return query(
         collection(firestore, 'monthly_goals'),
-        where('goalType', '==', 'debt_3_plus'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
         orderBy('month')
     );
-  }, [firestore, currentYear]);
+  }, [firestore]);
 
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
-    const {
-        currentDebt,
-        targetDebt,
-        progress,
-        remainingToReduce,
-        initialPeriodDebt,
-    } = useMemo(() => {
-        const target = annualGoalData?.[0]?.amount || 0;
+  const {
+    currentDebt,
+    targetDebt,
+    progress,
+    remainingToReduce,
+  } = useMemo(() => {
+    const target = annualGoalData?.[0]?.amount || 0;
 
-        if (!monthlyGoalsData || monthlyGoalsData.length === 0) {
-            return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
-        }
-        
-        const initialDebtRecord = monthlyGoalsData.find(d => d.month === `${currentYear}-08`);
-        const initial = initialDebtRecord?.executedAmount ?? initialDebtRecord?.proposedAmount ?? 0;
-        
-        const latestData = monthlyGoalsData[monthlyGoalsData.length - 1];
-        const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
+    const filteredMonthlyGoals = monthlyGoalsData?.filter(
+        (d) => d.goalType === 'debt_3_plus' && d.month.startsWith(currentYear)
+    ) || [];
 
-        const totalToReduce = initial - target;
-        const hasBeenReduced = initial - current;
-        
-        const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
-        
-        const remaining = current - target;
+    if (filteredMonthlyGoals.length === 0) {
+      return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
+    }
+    
+    const initialDebtRecord = filteredMonthlyGoals.find(d => d.month === `${currentYear}-08`);
+    const initial = initialDebtRecord?.executedAmount ?? initialDebtRecord?.proposedAmount ?? 0;
+    
+    const latestData = filteredMonthlyGoals[filteredMonthlyGoals.length - 1];
+    const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
 
-        return {
-            currentDebt: current,
-            targetDebt: target,
-            progress: progressPercentage,
-            remainingToReduce: remaining > 0 ? remaining : 0,
-            initialPeriodDebt: initial,
-        };
-    }, [annualGoalData, monthlyGoalsData, currentYear]);
+    const totalToReduce = initial - target;
+    const hasBeenReduced = initial - current;
+    
+    const progressPercentage = totalToReduce > 0 ? Math.min((hasBeenReduced / totalToReduce) * 100, 100) : 0;
+    
+    const remaining = current - target;
+
+    return {
+      currentDebt: current,
+      targetDebt: target,
+      progress: progressPercentage,
+      remainingToReduce: remaining > 0 ? remaining : 0,
+      initialPeriodDebt: initial,
+    };
+  }, [annualGoalData, monthlyGoalsData, currentYear]);
 
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
