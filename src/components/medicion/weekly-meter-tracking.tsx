@@ -11,6 +11,7 @@ import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '../ui/chart';
 import { Separator } from '../ui/separator';
+import { cn } from '@/lib/utils';
 
 const formatNumber = (value?: number) => {
   if (value === undefined || value === null) return '0';
@@ -127,8 +128,8 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
     });
   }, [weeklyData]);
 
-  const StatCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description?: string }) => (
-    <Card>
+  const StatCard = ({ title, value, icon, description, className }: { title: string; value: string; icon: React.ReactNode; description?: string, className?: string }) => (
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}
@@ -165,24 +166,28 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                         value={formatNumber(baseInicial)} 
                         icon={<Flag className="h-4 w-4 text-muted-foreground" />}
                         description={`Medidores al inicio de ${format(selectedMonthDate, 'MMMM yyyy', { locale: es })}`}
+                        className="border-l-4 border-chart-1"
                     />
                     <StatCard 
                         title="Evolución a la Fecha" 
                         value={formatNumber(evolucionFecha)} 
                         icon={<Gauge className="h-4 w-4 text-muted-foreground" />}
                         description={weekStart ? `Medidores en la semana del ${format(weekStart, 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
+                        className="border-l-4 border-chart-2"
                     />
                     <StatCard 
                         title="Acumulado" 
                         value={formatNumber(acumulado)} 
                         icon={acumuladoIcon}
                         description="Suma de instalaciones hasta la fecha"
+                        className="border-l-4 border-chart-3"
                     />
                     <StatCard 
                         title="Monto Final" 
                         value={formatNumber(montoFinal)} 
                         icon={<Target className="h-4 w-4 text-muted-foreground" />}
                         description={isAugust ? "Base inicial - Acumulado (retiro de medidores)" : "Base inicial + Acumulado"}
+                        className="border-l-4 border-chart-4"
                     />
                 </div>
             </div>
