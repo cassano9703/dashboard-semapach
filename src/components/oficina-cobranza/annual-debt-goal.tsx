@@ -10,6 +10,9 @@ import { Target, Flag } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from '../ui/chart';
 import { Separator } from '../ui/separator';
+import { Progress } from '../ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+
 
 interface AnnualDebtGoalProps {
   selectedDate: Date;
@@ -38,9 +41,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     if (!firestore) return null;
     return query(
         collection(firestore, 'monthly_goals'),
-        where('goalType', '==', 'debt_3_plus')
+        where('goalType', '==', 'debt_3_plus'),
+        where('month', '>=', `${currentYear}-01`),
+        where('month', '<=', `${currentYear}-12`),
+        orderBy('month')
     );
-  }, [firestore]);
+  }, [firestore, currentYear]);
 
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
@@ -52,25 +58,17 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     remainingToReduce,
     initialPeriodDebt,
   } = useMemo(() => {
-    const target = annualGoalData?.[0]?.amount || 0; // Meta: 9,300,000
+    const target = annualGoalData?.[0]?.amount || 0;
 
-    if (!monthlyGoalsData) {
-        return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
-    }
-
-    const yearData = monthlyGoalsData
-        .filter(mg => mg.month.startsWith(currentYear))
-        .sort((a, b) => a.month.localeCompare(b.month));
-    
-    if (yearData.length === 0) {
+    if (!monthlyGoalsData || monthlyGoalsData.length === 0) {
         return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
     
     // Deuda al inicio del periodo que se está analizando (ej. Agosto)
-    const initial = yearData[0]?.proposedAmount || 0; 
+    const initial = monthlyGoalsData[0]?.proposedAmount || 0; 
     
     // Deuda actual es `executedAmount` (o `proposedAmount`) del último mes con datos
-    const latestData = yearData[yearData.length - 1];
+    const latestData = monthlyGoalsData[monthlyGoalsData.length - 1];
     const current = latestData?.executedAmount ?? latestData?.proposedAmount ?? 0;
 
     const totalToReduce = initial - target; // Total que se debe reducir desde el inicio del periodo
@@ -81,13 +79,13 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     const remaining = current - target; // Cuánto falta desde el punto actual hasta la meta
 
     return {
-        currentDebt: current, // La deuda del mes más reciente
-        targetDebt: target, // Meta final
+        currentDebt: current,
+        targetDebt: target,
         progress: progressPercentage,
-        remainingToReduce: remaining > 0 ? remaining : 0, // Lo que falta para llegar a la meta desde la deuda actual
-        initialPeriodDebt: initial, // Deuda al inicio del periodo de reporte
+        remainingToReduce: remaining > 0 ? remaining : 0,
+        initialPeriodDebt: initial,
     };
-  }, [annualGoalData, monthlyGoalsData, currentYear]);
+  }, [annualGoalData, monthlyGoalsData]);
 
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
@@ -122,7 +120,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       );
   }
   
-  if (targetDebt === 0) {
+  if (targetDebt === 0 && currentDebt === 0) {
       return null;
   }
 
@@ -143,15 +141,16 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
           <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
         </div>
         
-        <div 
-          className="relative w-full h-2 bg-muted rounded-full"
-          title={`Progreso: ${progress.toFixed(2)}%`}
-        >
-          <div 
-            className="absolute h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Progress value={progress} className="h-2" />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Progreso de reducción: {progress.toFixed(2)}%</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
 
         <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2">
