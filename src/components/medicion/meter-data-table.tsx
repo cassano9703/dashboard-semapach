@@ -92,7 +92,7 @@ export function MeterDataTable({ year }: MeterDataTableProps) {
                         key={format(month, 'yyyy-MM')} 
                         className={cn(
                             "font-bold text-center text-table-header-foreground",
-                            isAugust && "bg-black text-white"
+                            isAugust && "bg-primary text-primary-foreground"
                         )}
                     >
                       {format(month, 'MMM', { locale: es }).toUpperCase()}
