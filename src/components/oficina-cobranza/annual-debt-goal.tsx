@@ -50,11 +50,12 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     targetDebt,
     progress,
     remainingToReduce,
+    initialPeriodDebt,
   } = useMemo(() => {
     const target = annualGoalData?.[0]?.amount || 0; // Meta: 9,300,000
 
     if (!monthlyGoalsData) {
-        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0 };
+        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -62,10 +63,10 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0 };
+        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
     
-    // Deuda inicial es el `proposedAmount` del primer mes con datos en el año
+    // Deuda al inicio del periodo que se está analizando (ej. Agosto)
     const initial = yearData[0]?.proposedAmount || 0; 
     
     // Deuda actual es `executedAmount` (o `proposedAmount`) del último mes con datos
@@ -81,9 +82,10 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
 
     return {
         initialDebt: current, // "Deuda Actual" es el último dato registrado
-        targetDebt: target,
+        targetDebt: target, // Meta final
         progress: progressPercentage,
-        remainingToReduce: remaining > 0 ? remaining : 0,
+        remainingToReduce: remaining > 0 ? remaining : 0, // Lo que falta para llegar a la meta desde la deuda actual
+        initialPeriodDebt: initial, // Deuda al inicio del periodo de reporte
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
 
