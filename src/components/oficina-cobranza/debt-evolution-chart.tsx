@@ -55,12 +55,15 @@ export function DebtEvolutionChart() {
     
     const yearStart = startOfYear(selectedDate);
     const yearEnd = endOfYear(selectedDate);
+    const yearStr = format(selectedDate, 'yyyy');
 
     const monthsInInterval = eachMonthOfInterval({ start: yearStart, end: yearEnd });
 
+    const goalsForYear = debtGoalsData.filter(g => g.month.startsWith(yearStr));
+
     return monthsInInterval.map(month => {
         const monthStr = format(month, 'yyyy-MM');
-        const goal = debtGoalsData.find(g => g.month === monthStr);
+        const goal = goalsForYear.find(g => g.month === monthStr);
         return {
             name: format(month, 'MMM', { locale: es }),
             'Deuda 3 a más (S/)': goal?.executedAmount ?? goal?.proposedAmount ?? 0,
