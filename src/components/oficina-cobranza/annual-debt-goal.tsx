@@ -46,7 +46,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const {
-    initialDebt,
+    currentDebt,
     targetDebt,
     progress,
     remainingToReduce,
@@ -55,7 +55,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     const target = annualGoalData?.[0]?.amount || 0; // Meta: 9,300,000
 
     if (!monthlyGoalsData) {
-        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
+        return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
 
     const yearData = monthlyGoalsData
@@ -63,7 +63,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
         .sort((a, b) => a.month.localeCompare(b.month));
     
     if (yearData.length === 0) {
-        return { initialDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
+        return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
     
     // Deuda al inicio del periodo que se está analizando (ej. Agosto)
@@ -81,7 +81,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     const remaining = current - target; // Cuánto falta desde el punto actual hasta la meta
 
     return {
-        initialDebt: current, // "Deuda Actual" es el último dato registrado
+        currentDebt: current, // La deuda del mes más reciente
         targetDebt: target, // Meta final
         progress: progressPercentage,
         remainingToReduce: remaining > 0 ? remaining : 0, // Lo que falta para llegar a la meta desde la deuda actual
@@ -140,7 +140,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             <Flag className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">Deuda Actual</span>
           </div>
-          <span className="text-lg font-bold">{formatCurrency(initialDebt)}</span>
+          <span className="text-lg font-bold">{formatCurrency(currentDebt)}</span>
         </div>
         
         <div 
