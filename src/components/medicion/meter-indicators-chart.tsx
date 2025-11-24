@@ -23,7 +23,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChartContainer, ChartTooltipContent } from '../ui/chart';
+import { ChartContainer } from '../ui/chart';
 
 const chartConfig = {
   meter_quantity: {
@@ -33,6 +33,10 @@ const chartConfig = {
   coverage: {
     label: 'Cobertura',
     color: 'hsl(var(--chart-2))',
+  },
+  micrometering_tariff_study: {
+    label: 'Micromed. (Tarifario)',
+    color: 'hsl(var(--chart-3))',
   },
   micrometering_percentage: {
     label: 'Micromedición',
@@ -80,6 +84,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
             name: format(month, 'MMM', { locale: es }),
             meter_quantity: data?.meter_quantity ?? null,
             coverage: data ? data.coverage * 100 : null,
+            micrometering_tariff_study: data ? data.micrometering_tariff_study * 100 : null,
             micrometering_percentage: data ? data.micrometering_percentage * 100 : null,
         }
     }).filter(d => d.meter_quantity !== null);
@@ -138,6 +143,7 @@ export function MeterIndicatorsChart({ year }: MeterIndicatorsChartProps) {
                 <Legend />
                 <Bar dataKey="meter_quantity" name="Cantidad de Medidores" yAxisId="left" fill="hsl(var(--chart-1))" barSize={20} />
                 <Line type="monotone" dataKey="coverage" name="Cobertura" yAxisId="right" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="micrometering_tariff_study" name="Micromed. (Tarifario)" yAxisId="right" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
                 <Line type="monotone" dataKey="micrometering_percentage" name="Micromedición" yAxisId="right" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
               </ComposedChart>
             </ResponsiveContainer>
