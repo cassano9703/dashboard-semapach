@@ -168,11 +168,17 @@ export function MeterQuantityChart({ year }: MeterQuantityChartProps) {
                   type="monotone"
                   stroke="hsl(var(--chart-1))"
                   strokeWidth={2}
-                  dot={false}
+                  dot={{
+                    r: 4,
+                    fill: "hsl(var(--chart-1))",
+                    stroke: "hsl(var(--card))",
+                    strokeWidth: 2,
+                  }}
                   activeDot={{
-                    r: 6,
-                    fill: 'hsl(var(--background))',
-                    stroke: 'hsl(var(--chart-1))',
+                    r: 8,
+                    fill: "hsl(var(--chart-1))",
+                    stroke: "hsl(var(--card))",
+                    strokeWidth: 2,
                   }}
                   name="Cantidad de Medidores"
               />
