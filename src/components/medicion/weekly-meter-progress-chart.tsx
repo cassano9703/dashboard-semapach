@@ -9,21 +9,31 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  Rectangle
+  ResponsiveContainer
 } from 'recharts';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChartContainer, ChartTooltipContent } from '../ui/chart';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '../ui/chart';
+
+const chartConfig = {
+  weeklyCount: {
+    label: 'Medidores Semanales',
+    color: 'hsl(var(--chart-1))',
+  },
+  accumulatedCount: {
+    label: 'Acumulado Mensual',
+    color: 'hsl(var(--chart-2))',
+  },
+} satisfies ChartConfig;
 
 const formatNumber = (value: number) => {
     return new Intl.NumberFormat('es-PE').format(value);
@@ -54,10 +64,17 @@ export function WeeklyMeterProgressChart({ selectedDate }: WeeklyMeterProgressCh
 
   const chartData = useMemo(() => {
     if (!weeklyData) return [];
-    return weeklyData.map(item => ({
-      name: `Sem. ${format(new Date(item.weekStartDate + 'T00:00'), 'dd MMM', { locale: es })}`,
-      'Medidores Instalados': item.meterCount,
-    }));
+    
+    let accumulatedTotal = 0;
+    
+    return weeklyData.map(item => {
+      accumulatedTotal += item.meterCount;
+      return {
+        name: `Sem. ${format(new Date(item.weekStartDate + 'T00:00'), 'dd MMM', { locale: es })}`,
+        weeklyCount: item.meterCount,
+        accumulatedCount: accumulatedTotal,
+      }
+    });
   }, [weeklyData]);
 
   if (isLoading) {
@@ -91,27 +108,52 @@ export function WeeklyMeterProgressChart({ selectedDate }: WeeklyMeterProgressCh
         <CardDescription>Progreso de instalación por semana en {format(selectedDate, 'MMMM yyyy', {locale: es})}.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
+        <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <ResponsiveContainer>
-            <BarChart data={chartData}>
+              <LineChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  left: 12,
+                  right: 12,
+                }}
+              >
                 <CartesianGrid vertical={false} />
-                <XAxis 
-                    dataKey="name"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    fontSize={12}
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  fontSize={12}
                 />
-                <YAxis 
-                    tickFormatter={(value) => formatNumber(value as number)}
-                    fontSize={12}
+                <YAxis
+                  tickFormatter={(value) => formatNumber(value as number)}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={80}
                 />
                 <Tooltip
-                    cursor={{ fill: 'hsl(var(--muted))' }}
-                    content={<ChartTooltipContent formatter={(value) => formatNumber(value as number)} />}
+                  content={<ChartTooltipContent formatter={(value) => formatNumber(value as number)}/>}
                 />
-                <Bar dataKey="Medidores Instalados" fill="hsl(var(--chart-1))" radius={4} activeBar={<Rectangle fill="hsl(var(--chart-1) / 0.8)" />} />
-            </BarChart>
+                <Legend />
+                <Line
+                  dataKey="weeklyCount"
+                  type="monotone"
+                  stroke="hsl(var(--chart-1))"
+                  strokeWidth={2}
+                  dot={true}
+                  name="Medidores Semanales"
+                />
+                <Line
+                  dataKey="accumulatedCount"
+                  type="monotone"
+                  stroke="hsl(var(--chart-2))"
+                  strokeWidth={2}
+                  dot={true}
+                  name="Acumulado Mensual"
+                />
+              </LineChart>
             </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
