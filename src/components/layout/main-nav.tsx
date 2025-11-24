@@ -77,7 +77,13 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
-  { href: '/medicion', label: 'Medición', icon: Gauge },
+  {
+    href: '/medicion',
+    label: 'Medición',
+    icon: Gauge,
+    isCollapsible: true,
+    subItems: [{ href: '/medicion/medidores', label: 'Medidores', icon: Gauge }],
+  },
   {
     href: '/catastro',
     label: 'Catastro',
