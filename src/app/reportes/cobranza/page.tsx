@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { CollectionDebtGoals } from '@/components/oficina-cobranza/collection-debt-goals';
-import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 import { ServiceOperationsSummary } from '@/components/oficina-cobranza/service-operations-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { MonthlyDebtChart } from '@/components/oficina-cobranza/monthly-debt-chart';
