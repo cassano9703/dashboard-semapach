@@ -131,7 +131,7 @@ export function RecoveredComparisonChart({ selectedDate, onDateChange }: Recover
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h3 className="text-center font-semibold mb-4">Cantidad de Usuarios Recuperados</h3>
+                    <h3 className="text-center font-semibold mb-4">Usuarios recuperados</h3>
                     <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={chartData.quantity}>
                         <CartesianGrid strokeDasharray="3 3" />
