@@ -39,6 +39,24 @@ const formatNumber = (value: number) => {
     return new Intl.NumberFormat('es-PE').format(value);
 };
 
+// @ts-ignore
+const CustomizedDot = (props) => {
+  const { cx, cy, stroke, payload, value, data, dataKey } = props;
+  const isLastPoint = payload.name === data[data.length - 1].name;
+
+  if (isLastPoint) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={3} stroke={stroke} fill={stroke} />
+        <path d={`M${cx},${cy} L${cx + 8},${cy - 5} L${cx + 8},${cy + 5} Z`} fill={stroke} transform={`rotate(0 ${cx} ${cy})`} />
+      </g>
+    );
+  }
+
+  return <circle cx={cx} cy={cy} r={3} stroke={stroke} fill={stroke} />;
+};
+
+
 interface WeeklyMeterProgressChartProps {
   selectedDate: Date;
 }
@@ -142,7 +160,8 @@ export function WeeklyMeterProgressChart({ selectedDate }: WeeklyMeterProgressCh
                   type="monotone"
                   stroke="hsl(var(--chart-1))"
                   strokeWidth={2}
-                  dot={true}
+                  dot={<CustomizedDot data={chartData} />}
+                  activeDot={{ r: 8 }}
                   name="Medidores Semanales"
                 />
                 <Line
@@ -150,7 +169,8 @@ export function WeeklyMeterProgressChart({ selectedDate }: WeeklyMeterProgressCh
                   type="monotone"
                   stroke="hsl(var(--chart-2))"
                   strokeWidth={2}
-                  dot={true}
+                  dot={<CustomizedDot data={chartData} />}
+                  activeDot={{ r: 8 }}
                   name="Acumulado Mensual"
                 />
               </LineChart>
