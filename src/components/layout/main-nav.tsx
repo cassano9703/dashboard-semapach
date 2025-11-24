@@ -53,31 +53,6 @@ type NavItem = {
 const allNavItems: NavItem[] = [
   { href: '/', label: 'Inicio', icon: Home },
   {
-    href: '/cobranza',
-    label: 'Cobranza',
-    icon: Briefcase,
-    isCollapsible: true,
-    subItems: [
-      { href: '/recaudacion', label: 'Recaudación diaria', icon: TrendingUp },
-      { href: '/avance-distritos', label: 'Avance de distritos', icon: Target },
-      {
-        href: '/suspendidos-recuperados',
-        label: 'Suspendidos Recuperados',
-        icon: History,
-      },
-      {
-        href: '/recuperados-12-mas',
-        label: 'Recuperados 12 a mas',
-        icon: Clock3,
-      },
-      {
-        href: '/recuperados-2-3-meses',
-        label: 'Recuperados 2 a 3 meses',
-        icon: ClipboardList,
-      },
-    ],
-  },
-  {
     href: '/medicion',
     label: 'Medición',
     icon: Gauge,
@@ -123,19 +98,6 @@ const allNavItems: NavItem[] = [
         label: 'Admin Catastro',
         icon: Map,
       },
-    ]
-  },
-  { 
-    href: '/reportes', 
-    label: 'Reportes', 
-    icon: FileText,
-    isCollapsible: true,
-    subItems: [
-      {
-        href: '/reportes/cobranza',
-        label: 'Cobranza',
-        icon: Briefcase
-      }
     ]
   },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
