@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { format, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Target, Flag } from 'lucide-react';
@@ -53,6 +53,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
     targetDebt,
     progress,
     remainingToReduce,
+    initialPeriodDebt
   } = useMemo(() => {
     const target = annualGoalData?.[0]?.amount || 0;
 
@@ -64,6 +65,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       return { currentDebt: 0, targetDebt: target, progress: 0, remainingToReduce: 0, initialPeriodDebt: 0 };
     }
     
+    // August is the start of the period for this logic
     const initialDebtRecord = filteredMonthlyGoals.find(d => d.month === `${currentYear}-08`);
     const initial = initialDebtRecord?.executedAmount ?? initialDebtRecord?.proposedAmount ?? 0;
     
@@ -82,10 +84,10 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
       targetDebt: target,
       progress: progressPercentage,
       remainingToReduce: remaining > 0 ? remaining : 0,
-      initialPeriodDebt: initial,
+      initialPeriodDebt: initial
     };
   }, [annualGoalData, monthlyGoalsData, currentYear]);
-
+  
   const debtGoals = useMemo(() => {
     const dbtGoals: any[] = Array(12).fill(null);
     
@@ -97,6 +99,7 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
             dbtGoals[monthIndex] = goal;
         });
     }
+    // Aug, Sep, Oct
     return dbtGoals.slice(7, 10);
   }, [monthlyGoalsData, currentYear]);
 
@@ -150,17 +153,6 @@ export function AnnualDebtGoal({ selectedDate }: AnnualDebtGoalProps) {
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
-
-        <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Falta Reducir</span>
-                <span className="font-semibold text-red-600">{formatCurrency(remainingToReduce)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-                 <span className="text-muted-foreground">Meta de Deuda</span>
-                 <span className="font-semibold">{formatCurrency(targetDebt)}</span>
-            </div>
-        </div>
 
         <Separator className="my-4" />
 
