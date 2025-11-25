@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 import { RecoveredStatsCards } from '@/components/dashboard/recovered-stats-cards';
+import { WeeklyRecoveredChart } from '@/components/dashboard/weekly-recovered-chart';
 
 
 export default function SuspendidosRecuperadosPage() {
@@ -22,6 +23,8 @@ export default function SuspendidosRecuperadosPage() {
       <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate}/>
       
       <RecoveredSummary selectedDate={selectedDate} />
+
+      <WeeklyRecoveredChart />
     </div>
   );
 }
