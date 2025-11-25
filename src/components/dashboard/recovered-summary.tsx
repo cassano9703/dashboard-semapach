@@ -50,9 +50,9 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
   );
   const { data: servicesData, isLoading } = useCollection(servicesRef);
 
-  const districtTotals = useMemo(() => {
+  const districtsWithData = useMemo(() => {
     if (!servicesData) {
-      return new Map();
+      return [];
     }
 
     const monthStart = startOfMonth(selectedDate);
@@ -69,8 +69,16 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
         totals.set(item.district, current);
       }
     });
+    
+    return districts
+        .map(district => ({
+            district,
+            ... (totals.get(district) || { recoveredCount: 0, recoveredAmount: 0 })
+        }))
+        .filter(d => d.recoveredCount > 0 || d.recoveredAmount > 0)
+        .sort((a,b) => b.recoveredAmount - a.recoveredAmount);
 
-    return totals;
+
   }, [servicesData, selectedDate]);
   
   return (
@@ -90,6 +98,10 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
           <div className="relative max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="text-center p-8">Cargando datos...</div>
+            ) : districtsWithData.length === 0 ? (
+                 <div className="text-center p-8 text-muted-foreground">
+                    No hay usuarios recuperados para el mes seleccionado.
+                </div>
             ) : (
               <Table>
                 <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
@@ -100,11 +112,10 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {districts.map((district) => {
-                    const data = districtTotals.get(district) || { recoveredCount: 0, recoveredAmount: 0 };
+                  {districtsWithData.map((data) => {
                     return (
-                      <TableRow key={district}>
-                        <TableCell className="font-medium">{district}</TableCell>
+                      <TableRow key={data.district}>
+                        <TableCell className="font-medium">{data.district}</TableCell>
                         <TableCell className="text-right">{data.recoveredCount}</TableCell>
                         <TableCell className="text-right">{formatCurrency(data.recoveredAmount)}</TableCell>
                       </TableRow>
