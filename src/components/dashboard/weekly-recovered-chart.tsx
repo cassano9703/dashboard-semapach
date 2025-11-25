@@ -95,6 +95,12 @@ export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps
         ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
+                 <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis 
@@ -108,7 +114,7 @@ export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps
                     formatter={(value: number) => [formatCurrency(value), "Monto Recuperado"]}
                 />
                 <Legend />
-                <Bar dataKey="Monto Recuperado" fill="hsl(var(--chart-2))" />
+                <Bar dataKey="Monto Recuperado" fill="url(#chartGradient)" />
               </BarChart>
             </ResponsiveContainer>
         )}
