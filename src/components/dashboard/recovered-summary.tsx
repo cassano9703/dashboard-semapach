@@ -78,9 +78,9 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle>Resumen de Usuarios Recuperados por Distrito</CardTitle>
+            <CardTitle>Usuarios Recuperados</CardTitle>
             <CardDescription>
-              Datos correspondientes al mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}. La gestión de estos datos se realiza en el panel de Administración.
+              Datos correspondientes al mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}.
             </CardDescription>
           </div>
         </div>
