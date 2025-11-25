@@ -23,10 +23,10 @@ export default function SuspendidosRecuperadosPage() {
       <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate}/>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-6">
           <RecoveredSummary selectedDate={selectedDate} />
         </div>
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-6">
           <WeeklyRecoveredChart selectedDate={selectedDate} />
         </div>
       </div>
