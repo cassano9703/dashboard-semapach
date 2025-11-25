@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, parseISO, getWeekOfMonth, startOfWeek, addWeeks, getMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO, startOfWeek, addWeeks, getMonth, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
