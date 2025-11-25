@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
+  Line,
+  LineChart,
   CartesianGrid,
-  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  Legend,
 } from 'recharts';
 import {
   Card,
@@ -18,10 +18,22 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, startOfWeek, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, eachDayOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '../ui/chart';
+
+const chartConfig = {
+  dailyAmount: {
+    label: 'Recuperación Diaria',
+    color: 'hsl(var(--chart-1))',
+  },
+  accumulatedAmount: {
+    label: 'Acumulado Mensual',
+    color: 'hsl(var(--chart-2))',
+  },
+} satisfies ChartConfig;
 
 const formatCurrency = (value: number) =>
   `S/ ${value.toLocaleString('es-PE', {
@@ -29,11 +41,11 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-interface WeeklyRecoveredChartProps {
+interface DailyRecoveredChartProps {
   selectedDate: Date;
 }
 
-export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps) {
+export function WeeklyRecoveredChart({ selectedDate }: DailyRecoveredChartProps) {
   const firestore = useFirestore();
 
   const servicesRef = useMemoFirebase(
@@ -51,33 +63,38 @@ export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
 
-    const weeklyTotals = servicesData.reduce((acc, item) => {
-        const itemDate = parseISO(item.date + 'T00:00:00');
-        
-        if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
-            const weekStart = startOfWeek(itemDate, { weekStartsOn: 1 });
-            const weekKey = format(weekStart, 'yyyy-MM-dd');
-
-            if (!acc[weekKey]) {
-                acc[weekKey] = {
-                    name: `Sem. ${format(weekStart, 'dd MMM', { locale: es })}`,
-                    value: 0,
-                };
-            }
-            acc[weekKey].value += item.recoveredAmount;
-        }
-        return acc;
-    }, {} as Record<string, {name: string, value: number}>);
+    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
-    return Object.values(weeklyTotals);
+    let accumulated = 0;
+
+    const dailyData = daysInMonth.map(day => {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const recordsForDay = servicesData.filter(item => item.date === dayStr);
+        const dailyTotal = recordsForDay.reduce((sum, item) => sum + item.recoveredAmount, 0);
+        
+        if(recordsForDay.length > 0) {
+            accumulated += dailyTotal;
+        }
+
+        return {
+            date: format(day, 'd MMM', { locale: es }),
+            dailyAmount: dailyTotal > 0 ? dailyTotal: null,
+            accumulatedAmount: accumulated > 0 ? accumulated : null,
+        }
+    });
+
+    // Filter out days at the beginning of the month with no data
+    const firstDataIndex = dailyData.findIndex(d => d.accumulatedAmount !== null);
+    return firstDataIndex === -1 ? [] : dailyData.slice(firstDataIndex);
+
   }, [servicesData, selectedDate]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evolución Semanal de Montos Recuperados</CardTitle>
+        <CardTitle>Evolución Diaria de Montos Recuperados</CardTitle>
         <CardDescription>
-          Monto total recuperado por semana para {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}.
+          Monto diario y acumulado recuperado para {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -86,23 +103,54 @@ export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps
         ) : chartData.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en este mes.</div>
         ) : (
-            <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tickFormatter={(value) => `S/${Number(value)/1000}k`}
-                />
-                <Tooltip 
-                    contentStyle={{ fontSize: '12px' }}
-                    formatter={(value) => [formatCurrency(Number(value)), "Monto Recuperado"]}
-                />
-                <Bar dataKey="value" name="Monto Recuperado" fill="hsl(var(--chart-2))" activeBar={<Rectangle fill="hsl(var(--chart-2) / 0.8)" />} />
-            </BarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                <LineChart
+                    accessibilityLayer
+                    data={chartData}
+                    margin={{
+                        left: 12,
+                        right: 12,
+                    }}
+                >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        fontSize={12}
+                    />
+                    <YAxis
+                        tickFormatter={(value) => `S/ ${Number(value) / 1000}k`}
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        width={80}
+                    />
+                    <Tooltip
+                        content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))}/>}
+                    />
+                    <Legend />
+                    <Line
+                        dataKey="dailyAmount"
+                        type="monotone"
+                        stroke="hsl(var(--chart-1))"
+                        strokeWidth={2}
+                        dot={true}
+                        name="Recuperación Diaria"
+                        connectNulls
+                    />
+                    <Line
+                        dataKey="accumulatedAmount"
+                        type="monotone"
+                        stroke="hsl(var(--chart-2))"
+                        strokeWidth={2}
+                        dot={true}
+                        name="Acumulado Mensual"
+                        connectNulls
+                    />
+                </LineChart>
+            </ChartContainer>
         )}
       </CardContent>
     </Card>
