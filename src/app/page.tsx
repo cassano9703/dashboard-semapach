@@ -42,7 +42,11 @@ export default function Home() {
 
       <div className="flex flex-col gap-6">
         <h2 className="text-2xl font-bold tracking-tight">Análisis de Usuarios Suspendidos Recuperados</h2>
-        <RecoveredStatsCards selectedDate={selectedDate} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="lg:col-span-5">
+            <RecoveredStatsCards selectedDate={selectedDate} />
+          </div>
+        </div>
         <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
         <RecoveredSummary selectedDate={selectedDate} />
       </div>
