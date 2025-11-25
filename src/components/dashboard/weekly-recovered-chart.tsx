@@ -63,23 +63,35 @@ export function WeeklyRecoveredChart({ selectedDate }: DailyRecoveredChartProps)
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
 
+    const dataForMonth = servicesData.filter(item => {
+        const itemDate = parseISO(item.date + 'T00:00:00');
+        return isWithinInterval(itemDate, { start: monthStart, end: monthEnd });
+    });
+
+    if (dataForMonth.length === 0) return [];
+    
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
     let accumulated = 0;
+    let lastKnownAccumulated = null;
 
     const dailyData = daysInMonth.map(day => {
         const dayStr = format(day, 'yyyy-MM-dd');
-        const recordsForDay = servicesData.filter(item => item.date === dayStr);
-        const dailyTotal = recordsForDay.reduce((sum, item) => sum + item.recoveredAmount, 0);
+        const recordsForDay = dataForMonth.filter(item => item.date === dayStr);
+        const hasRecord = recordsForDay.length > 0;
         
-        if(recordsForDay.length > 0) {
+        let dailyTotal = null;
+
+        if (hasRecord) {
+            dailyTotal = recordsForDay.reduce((sum, item) => sum + item.recoveredAmount, 0);
             accumulated += dailyTotal;
+            lastKnownAccumulated = accumulated;
         }
 
         return {
             date: format(day, 'd MMM', { locale: es }),
-            dailyAmount: dailyTotal > 0 ? dailyTotal: null,
-            accumulatedAmount: accumulated > 0 ? accumulated : null,
+            dailyAmount: dailyTotal,
+            accumulatedAmount: lastKnownAccumulated,
         }
     });
 
@@ -142,7 +154,7 @@ export function WeeklyRecoveredChart({ selectedDate }: DailyRecoveredChartProps)
                     />
                     <Line
                         dataKey="accumulatedAmount"
-                        type="monotone"
+                        type="step"
                         stroke="hsl(var(--chart-2))"
                         strokeWidth={2}
                         dot={true}
