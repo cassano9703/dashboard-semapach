@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useMemo } from 'react';
-import { format, startOfWeek, parseISO } from 'date-fns';
+import { format, startOfWeek, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -29,7 +29,11 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-export function WeeklyRecoveredChart() {
+interface WeeklyRecoveredChartProps {
+  selectedDate: Date;
+}
+
+export function WeeklyRecoveredChart({ selectedDate }: WeeklyRecoveredChartProps) {
   const firestore = useFirestore();
 
   const servicesRef = useMemoFirebase(
@@ -44,38 +48,43 @@ export function WeeklyRecoveredChart() {
       return [];
     }
 
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+
     const weeklyTotals = servicesData.reduce((acc, item) => {
         const itemDate = parseISO(item.date + 'T00:00:00');
-        const weekStart = startOfWeek(itemDate, { weekStartsOn: 1 });
-        const weekKey = format(weekStart, 'yyyy-MM-dd');
+        
+        if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
+            const weekStart = startOfWeek(itemDate, { weekStartsOn: 1 });
+            const weekKey = format(weekStart, 'yyyy-MM-dd');
 
-        if (!acc[weekKey]) {
-            acc[weekKey] = {
-                name: `Sem. ${format(weekStart, 'dd MMM', { locale: es })}`,
-                value: 0,
-            };
+            if (!acc[weekKey]) {
+                acc[weekKey] = {
+                    name: `Sem. ${format(weekStart, 'dd MMM', { locale: es })}`,
+                    value: 0,
+                };
+            }
+            acc[weekKey].value += item.recoveredAmount;
         }
-        acc[weekKey].value += item.recoveredAmount;
-
         return acc;
     }, {} as Record<string, {name: string, value: number}>);
     
     return Object.values(weeklyTotals);
-  }, [servicesData]);
+  }, [servicesData, selectedDate]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Evolución Semanal de Montos Recuperados</CardTitle>
         <CardDescription>
-          Monto total recuperado por semana.
+          Monto total recuperado por semana para {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
             <div className="h-[300px] flex items-center justify-center">Cargando datos del gráfico...</div>
         ) : chartData.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar.</div>
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">No hay datos para mostrar en este mes.</div>
         ) : (
             <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>

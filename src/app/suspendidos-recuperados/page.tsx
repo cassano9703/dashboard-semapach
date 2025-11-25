@@ -24,7 +24,7 @@ export default function SuspendidosRecuperadosPage() {
       
       <RecoveredSummary selectedDate={selectedDate} />
 
-      <WeeklyRecoveredChart />
+      <WeeklyRecoveredChart selectedDate={selectedDate} />
     </div>
   );
 }
