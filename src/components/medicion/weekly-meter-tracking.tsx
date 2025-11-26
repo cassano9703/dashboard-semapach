@@ -82,20 +82,26 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
     }
 
     const currentSelectedMonthDate = startOfMonth(selectedDate);
-    const meterDataMap = new Map(meterData.map(d => [d.month, d.meter_quantity]));
-
+    
     const monthlyTotals: { [month: string]: { base: number, acumulado: number, final: number } } = {};
     const yearMonths = eachMonthOfInterval({ start: startOfYear(selectedDate), end: endOfMonth(selectedDate) });
 
-    yearMonths.forEach((month, index) => {
-      const monthKey = format(month, 'yyyy-MM');
-      const prevMonthKey = index > 0 ? format(yearMonths[index - 1], 'yyyy-MM') : null;
+    yearMonths.forEach((monthDate) => {
+      const monthKey = format(monthDate, 'yyyy-MM');
+      const prevMonth = new Date(monthDate);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      const prevMonthKey = format(prevMonth, 'yyyy-MM');
 
-      const weeklyInMonth = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(month));
+      const weeklyInMonth = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(monthDate));
       const monthAcumulado = weeklyInMonth.reduce((sum, record) => sum + record.meterCount, 0);
 
-      const base = prevMonthKey ? monthlyTotals[prevMonthKey].final : (meterDataMap.get(monthKey) || 0);
-
+      let base;
+      if (monthKey === `${getYear(selectedDate)}-01`) {
+        base = 16540; // Hardcoded initial base for January
+      } else {
+        base = monthlyTotals[prevMonthKey]?.final || 0;
+      }
+      
       const final = base + monthAcumulado;
       monthlyTotals[monthKey] = { base, acumulado: monthAcumulado, final };
     });
