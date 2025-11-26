@@ -71,7 +71,6 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
       const monthStart = startOfMonth(selectedDate);
       const monthEnd = endOfMonth(selectedDate);
       const prevMonthStart = startOfMonth(prevMonthDate);
-      const prevMonthEnd = endOfMonth(prevMonthDate);
       
       return query(
         collection(firestore, 'weekly_meter_progress'),
@@ -95,8 +94,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
     const prevMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(prevMonthDate));
     const prevMonthAcumulado = prevMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
 
-    const isPrevMonthAugust = getMonth(prevMonthDate) === 7;
-    const prevMonthMontoFinal = isPrevMonthAugust ? prevMonthBase - prevMonthAcumulado : prevMonthBase + prevMonthAcumulado;
+    const prevMonthMontoFinal = prevMonthBase + prevMonthAcumulado;
 
     if (prevMonthMontoFinal > 0) {
         return prevMonthMontoFinal;
@@ -124,16 +122,10 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
     
     return currentMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
   }, [weeklyData, weekStart, selectedDate]);
-
-
-  const isAugust = getMonth(selectedMonthDate) === 7;
   
   const montoFinal = useMemo(() => {
-    if (isAugust) {
-        return baseInicial - acumulado;
-    }
     return baseInicial + acumulado;
-  }, [baseInicial, acumulado, isAugust]);
+  }, [baseInicial, acumulado]);
 
 
   const isLoading = isLoadingBase || isLoadingWeekly;
@@ -215,7 +207,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                         title="Monto Final" 
                         value={formatNumber(montoFinal)} 
                         icon={<Target className="h-4 w-4 text-muted-foreground" />}
-                        description={isAugust ? "Base inicial - Acumulado (retiro)" : "Base inicial + Acumulado"}
+                        description={"Base inicial + Acumulado"}
                         className="border-l-4 border-chart-4"
                     />
                 </div>
