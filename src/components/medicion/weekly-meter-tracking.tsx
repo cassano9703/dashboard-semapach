@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfMonth, getMonth, getYear, eachMonthOfInterval, startOfYear, startOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfMonth, getMonth, getYear, eachMonthOfInterval, startOfYear, startOfMonth, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -88,8 +88,8 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
       const monthAcumulado = weeklyInMonth.reduce((sum, record) => sum + record.meterCount, 0);
 
       let base;
-      if (monthKey === `${getYear(selectedDate)}-01`) {
-        base = 16540; // Hardcoded initial base for January
+      if (getMonth(monthDate) === 0) { // Enero
+        base = 16540; 
       } else {
         base = monthlyTotals[prevMonthKey]?.final || 0;
       }
