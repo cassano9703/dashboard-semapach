@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfMonth, getMonth, getYear, eachMonthOfInterval, startOfYear } from 'date-fns';
+import { format, startOfWeek, endOfMonth, getMonth, getYear, eachMonthOfInterval, startOfYear, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -91,10 +91,10 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
       const monthKey = format(month, 'yyyy-MM');
       const prevMonthKey = index > 0 ? format(yearMonths[index - 1], 'yyyy-MM') : null;
 
-      const base = prevMonthKey ? monthlyTotals[prevMonthKey].final : (meterDataMap.get(monthKey) || 0);
-
       const weeklyInMonth = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(month));
       const monthAcumulado = weeklyInMonth.reduce((sum, record) => sum + record.meterCount, 0);
+
+      const base = prevMonthKey ? monthlyTotals[prevMonthKey].final : (meterDataMap.get(monthKey) || 0);
 
       const final = base + monthAcumulado;
       monthlyTotals[monthKey] = { base, acumulado: monthAcumulado, final };
