@@ -56,7 +56,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
   const firestore = useFirestore();
 
   const selectedMonthDate = useMemo(() => startOfMonth(selectedDate), [selectedDate]);
-  const prevMonthDate = useMemo(() => startOfMonth(subMonths(selectedDate, 1)), [selectedDate]);
+  const prevMonthDate = useMemo(() => subMonths(selectedMonthDate, 1), [selectedMonthDate]);
 
   // Fetch data for the selected month and the previous month
   const monthlyBaseDataRef = useMemoFirebase(
@@ -68,14 +68,13 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
   const weeklyProgressRef = useMemoFirebase(
     () => {
       if (!firestore) return null;
-      const monthStart = startOfMonth(selectedDate);
-      const monthEnd = endOfMonth(selectedDate);
       const prevMonthStart = startOfMonth(prevMonthDate);
+      const selectedMonthEnd = endOfMonth(selectedDate);
       
       return query(
         collection(firestore, 'weekly_meter_progress'),
         where('weekStartDate', '>=', format(prevMonthStart, 'yyyy-MM-dd')),
-        where('weekStartDate', '<=', format(monthEnd, 'yyyy-MM-dd')),
+        where('weekStartDate', '<=', format(selectedMonthEnd, 'yyyy-MM-dd')),
         orderBy('weekStartDate', 'asc')
       );
     },
@@ -85,22 +84,23 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
 
   const baseInicial = useMemo(() => {
     if (!monthlyBaseData || !weeklyData) return 0;
-    
+  
     // Find base for previous month
     const prevMonthBaseRecord = monthlyBaseData.find(d => d.month === format(prevMonthDate, 'yyyy-MM'));
     const prevMonthBase = prevMonthBaseRecord?.meter_quantity || 0;
-
+  
     // Find weekly data for previous month
     const prevMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(prevMonthDate));
     const prevMonthAcumulado = prevMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
-
+  
     const prevMonthMontoFinal = prevMonthBase + prevMonthAcumulado;
-
+  
+    // If we have a calculated final amount for the previous month, use it.
     if (prevMonthMontoFinal > 0) {
         return prevMonthMontoFinal;
     }
     
-    // Fallback to current month's base if previous month has no data
+    // Fallback to the selected month's base if previous month has no data
     const currentMonthBaseRecord = monthlyBaseData.find(d => d.month === format(selectedMonthDate, 'yyyy-MM'));
     return currentMonthBaseRecord?.meter_quantity || 0;
 
