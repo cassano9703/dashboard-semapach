@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getMonth, subMonths } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getMonth, subMonths, getYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -56,55 +56,63 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
   const firestore = useFirestore();
 
   const selectedMonthDate = useMemo(() => startOfMonth(selectedDate), [selectedDate]);
-  const prevMonthDate = useMemo(() => subMonths(selectedMonthDate, 1), [selectedMonthDate]);
+  const currentYear = getYear(selectedDate);
+  const firstMonthOfYear = new Date(currentYear, 0, 1);
 
-  // Fetch data for the selected month and the previous month
+  // Fetch all meter data for the entire year to build the chain
   const monthlyBaseDataRef = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'meter_data'), where('month', 'in', [format(selectedMonthDate, 'yyyy-MM'), format(prevMonthDate, 'yyyy-MM')])) : null,
-    [firestore, selectedMonthDate, prevMonthDate]
+    () => firestore ? query(
+      collection(firestore, 'meter_data'), 
+      where('month', '>=', format(firstMonthOfYear, 'yyyy-MM')),
+      where('month', '<=', format(selectedMonthDate, 'yyyy-MM')),
+      orderBy('month', 'asc')
+    ) : null,
+    [firestore, firstMonthOfYear, selectedMonthDate]
   );
-  const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   
+  // Fetch all weekly progress for the entire year
   const weeklyProgressRef = useMemoFirebase(
     () => {
       if (!firestore) return null;
-      const prevMonthStart = startOfMonth(prevMonthDate);
-      const selectedMonthEnd = endOfMonth(selectedDate);
-      
       return query(
         collection(firestore, 'weekly_meter_progress'),
-        where('weekStartDate', '>=', format(prevMonthStart, 'yyyy-MM-dd')),
-        where('weekStartDate', '<=', format(selectedMonthEnd, 'yyyy-MM-dd')),
+        where('weekStartDate', '>=', format(firstMonthOfYear, 'yyyy-MM-dd')),
+        where('weekStartDate', '<=', format(endOfMonth(selectedMonthDate), 'yyyy-MM-dd')),
         orderBy('weekStartDate', 'asc')
       );
     },
-    [firestore, selectedDate, prevMonthDate]
+    [firestore, firstMonthOfYear, selectedMonthDate]
   );
+
+  const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
 
   const baseInicial = useMemo(() => {
     if (!monthlyBaseData || !weeklyData) return 0;
-  
-    // Find base for previous month
+    
+    const prevMonthDate = subMonths(selectedMonthDate, 1);
+    
+    // If selected month is January, there is no previous month in the year.
+    // The base is simply the meter_quantity for January.
+    if (getMonth(selectedMonthDate) === 0) {
+      const januaryBase = monthlyBaseData.find(d => d.month === format(selectedMonthDate, 'yyyy-MM'));
+      return januaryBase?.meter_quantity || 0;
+    }
+
+    // Find the base for the previous month
     const prevMonthBaseRecord = monthlyBaseData.find(d => d.month === format(prevMonthDate, 'yyyy-MM'));
     const prevMonthBase = prevMonthBaseRecord?.meter_quantity || 0;
-  
-    // Find weekly data for previous month
+
+    // Find and sum weekly progress for the previous month
     const prevMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(prevMonthDate));
     const prevMonthAcumulado = prevMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
-  
-    const prevMonthMontoFinal = prevMonthBase + prevMonthAcumulado;
-  
-    // If we have a calculated final amount for the previous month, use it.
-    if (prevMonthMontoFinal > 0) {
-        return prevMonthMontoFinal;
-    }
-    
-    // Fallback to the selected month's base if previous month has no data
-    const currentMonthBaseRecord = monthlyBaseData.find(d => d.month === format(selectedMonthDate, 'yyyy-MM'));
-    return currentMonthBaseRecord?.meter_quantity || 0;
 
-  }, [monthlyBaseData, weeklyData, selectedMonthDate, prevMonthDate]);
+    // The final amount of the previous month IS the initial base for the current month
+    const prevMonthMontoFinal = prevMonthBase + prevMonthAcumulado;
+
+    return prevMonthMontoFinal;
+
+  }, [monthlyBaseData, weeklyData, selectedMonthDate]);
   
   const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
 
