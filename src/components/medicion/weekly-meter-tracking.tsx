@@ -11,7 +11,6 @@ import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '../ui/chart';
 import { Separator } from '../ui/separator';
-import { cn } from '@/lib/utils';
 
 const formatNumber = (value?: number) => {
   if (value === undefined || value === null) return '0';
@@ -56,17 +55,11 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
   const firestore = useFirestore();
   const currentYear = getYear(selectedDate);
 
-  const meterDataRef = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'meter_data'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`), orderBy('month', 'asc')) : null,
-    [firestore, currentYear]
-  );
-  
   const weeklyProgressRef = useMemoFirebase(
     () => firestore ? query(collection(firestore, 'weekly_meter_progress'), where('weekStartDate', '>=', `${currentYear}-01-01`), where('weekStartDate', '<=', `${currentYear}-12-31`), orderBy('weekStartDate', 'asc')) : null,
     [firestore, currentYear]
   );
 
-  const { data: meterData, isLoading: isLoadingBase } = useCollection(meterDataRef);
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
 
   const {
@@ -77,14 +70,13 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
     chartData,
     selectedMonthDate,
   } = useMemo(() => {
-    if (!meterData || !weeklyData) {
-      return { baseInicial: 0, evolucionFecha: 0, acumulado: 0, montoFinal: 0, chartData: [], selectedMonthDate: startOfMonth(selectedDate) };
+    const currentSelectedMonthDate = startOfMonth(selectedDate);
+    if (!weeklyData) {
+      return { baseInicial: 0, evolucionFecha: 0, acumulado: 0, montoFinal: 0, chartData: [], selectedMonthDate: currentSelectedMonthDate };
     }
 
-    const currentSelectedMonthDate = startOfMonth(selectedDate);
-    
     const monthlyTotals: { [month: string]: { base: number, acumulado: number, final: number } } = {};
-    const yearMonths = eachMonthOfInterval({ start: startOfYear(selectedDate), end: endOfMonth(selectedDate) });
+    const yearMonths = eachMonthOfInterval({ start: startOfYear(selectedDate), end: endOfYear(selectedDate) });
 
     yearMonths.forEach((monthDate) => {
       const monthKey = format(monthDate, 'yyyy-MM');
@@ -137,9 +129,9 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
       chartData: finalChartData,
       selectedMonthDate: currentSelectedMonthDate
     };
-  }, [meterData, weeklyData, selectedDate]);
+  }, [weeklyData, selectedDate]);
 
-  const isLoading = isLoadingBase || isLoadingWeekly;
+  const isLoading = isLoadingWeekly;
   const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
 
   const StatCard = ({ title, value, icon, description, className }: { title: string; value: string; icon: React.ReactNode; description?: string, className?: string }) => (
