@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getMonth, subMonths, getYear } from 'date-fns';
+import { format, startOfWeek, endOfMonth, getMonth, getYear, eachMonthOfInterval, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Gauge, TrendingUp, Target, Flag, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -54,108 +54,87 @@ interface WeeklyMeterTrackingProps {
 
 export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterTrackingProps) {
   const firestore = useFirestore();
-
-  const selectedMonthDate = useMemo(() => startOfMonth(selectedDate), [selectedDate]);
   const currentYear = getYear(selectedDate);
-  const firstMonthOfYear = new Date(currentYear, 0, 1);
 
-  // Fetch all meter data for the entire year to build the chain
-  const monthlyBaseDataRef = useMemoFirebase(
-    () => firestore ? query(
-      collection(firestore, 'meter_data'), 
-      where('month', '>=', format(firstMonthOfYear, 'yyyy-MM')),
-      where('month', '<=', format(selectedMonthDate, 'yyyy-MM')),
-      orderBy('month', 'asc')
-    ) : null,
-    [firestore, firstMonthOfYear, selectedMonthDate]
+  const meterDataRef = useMemoFirebase(
+    () => firestore ? query(collection(firestore, 'meter_data'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`), orderBy('month', 'asc')) : null,
+    [firestore, currentYear]
   );
   
-  // Fetch all weekly progress for the entire year
   const weeklyProgressRef = useMemoFirebase(
-    () => {
-      if (!firestore) return null;
-      return query(
-        collection(firestore, 'weekly_meter_progress'),
-        where('weekStartDate', '>=', format(firstMonthOfYear, 'yyyy-MM-dd')),
-        where('weekStartDate', '<=', format(endOfMonth(selectedMonthDate), 'yyyy-MM-dd')),
-        orderBy('weekStartDate', 'asc')
-      );
-    },
-    [firestore, firstMonthOfYear, selectedMonthDate]
+    () => firestore ? query(collection(firestore, 'weekly_meter_progress'), where('weekStartDate', '>=', `${currentYear}-01-01`), where('weekStartDate', '<=', `${currentYear}-12-31`), orderBy('weekStartDate', 'asc')) : null,
+    [firestore, currentYear]
   );
 
-  const { data: monthlyBaseData, isLoading: isLoadingBase } = useCollection(monthlyBaseDataRef);
+  const { data: meterData, isLoading: isLoadingBase } = useCollection(meterDataRef);
   const { data: weeklyData, isLoading: isLoadingWeekly } = useCollection(weeklyProgressRef);
 
-  const baseInicial = useMemo(() => {
-    if (!monthlyBaseData || !weeklyData) return 0;
-    
-    const prevMonthDate = subMonths(selectedMonthDate, 1);
-    
-    // If selected month is January, there is no previous month in the year.
-    // The base is simply the meter_quantity for January.
-    if (getMonth(selectedMonthDate) === 0) {
-      const januaryBase = monthlyBaseData.find(d => d.month === format(selectedMonthDate, 'yyyy-MM'));
-      return januaryBase?.meter_quantity || 0;
+  const {
+    baseInicial,
+    evolucionFecha,
+    acumulado,
+    montoFinal,
+    chartData,
+    selectedMonthDate,
+  } = useMemo(() => {
+    if (!meterData || !weeklyData) {
+      return { baseInicial: 0, evolucionFecha: 0, acumulado: 0, montoFinal: 0, chartData: [], selectedMonthDate: startOfMonth(selectedDate) };
     }
 
-    // Find the base for the previous month
-    const prevMonthBaseRecord = monthlyBaseData.find(d => d.month === format(prevMonthDate, 'yyyy-MM'));
-    const prevMonthBase = prevMonthBaseRecord?.meter_quantity || 0;
+    const currentSelectedMonthDate = startOfMonth(selectedDate);
+    const meterDataMap = new Map(meterData.map(d => [d.month, d.meter_quantity]));
 
-    // Find and sum weekly progress for the previous month
-    const prevMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(prevMonthDate));
-    const prevMonthAcumulado = prevMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
+    const monthlyTotals: { [month: string]: { base: number, acumulado: number, final: number } } = {};
+    const yearMonths = eachMonthOfInterval({ start: startOfYear(selectedDate), end: endOfMonth(selectedDate) });
 
-    // The final amount of the previous month IS the initial base for the current month
-    const prevMonthMontoFinal = prevMonthBase + prevMonthAcumulado;
+    yearMonths.forEach((month, index) => {
+      const monthKey = format(month, 'yyyy-MM');
+      const prevMonthKey = index > 0 ? format(yearMonths[index - 1], 'yyyy-MM') : null;
 
-    return prevMonthMontoFinal;
+      const base = prevMonthKey ? monthlyTotals[prevMonthKey].final : (meterDataMap.get(monthKey) || 0);
 
-  }, [monthlyBaseData, weeklyData, selectedMonthDate]);
-  
-  const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
+      const weeklyInMonth = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(month));
+      const monthAcumulado = weeklyInMonth.reduce((sum, record) => sum + record.meterCount, 0);
 
-  const evolucionFecha = useMemo(() => {
-    if (!weeklyData || !weekStart) return 0;
+      const final = base + monthAcumulado;
+      monthlyTotals[monthKey] = { base, acumulado: monthAcumulado, final };
+    });
+    
+    const selectedMonthKey = format(currentSelectedMonthDate, 'yyyy-MM');
+    const selectedMonthTotals = monthlyTotals[selectedMonthKey] || { base: 0, acumulado: 0, final: 0 };
+    
+    const finalBaseInicial = selectedMonthTotals.base;
+    const finalAcumulado = selectedMonthTotals.acumulado;
+    const finalMontoFinal = selectedMonthTotals.final;
+    
+    const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
     const weekStartStr = format(weekStart, 'yyyy-MM-dd');
     const weekRecord = weeklyData.find(d => d.weekStartDate === weekStartStr);
-    return weekRecord?.meterCount || 0;
-  }, [weeklyData, weekStart]);
-  
-  const acumulado = useMemo(() => {
-    if (!weeklyData || !weekStart) return 0;
-    
+    const finalEvolucionFecha = weekRecord?.meterCount || 0;
+
     const currentMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(selectedDate));
-    
-    return currentMonthWeeklyData.reduce((sum, record) => sum + record.meterCount, 0);
-  }, [weeklyData, weekStart, selectedDate]);
-  
-  const montoFinal = useMemo(() => {
-    return baseInicial + acumulado;
-  }, [baseInicial, acumulado]);
-
-
-  const isLoading = isLoadingBase || isLoadingWeekly;
-  
-  const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
-
-  const chartData = useMemo(() => {
-    if (!weeklyData) return [];
-    
-    const currentMonthWeeklyData = weeklyData.filter(d => getMonth(new Date(d.weekStartDate + 'T00:00:00')) === getMonth(selectedDate));
-    
-    let accumulatedTotal = 0;
-    
-    return currentMonthWeeklyData.map(item => {
-      accumulatedTotal += item.meterCount;
+    let accumulatedChartTotal = 0;
+    const finalChartData = currentMonthWeeklyData.map(item => {
+      accumulatedChartTotal += item.meterCount;
       return {
         name: `Sem. ${format(new Date(item.weekStartDate + 'T00:00'), 'dd MMM', { locale: es })}`,
         weeklyCount: item.meterCount,
-        accumulatedCount: accumulatedTotal,
-      }
+        accumulatedCount: accumulatedChartTotal,
+      };
     });
-  }, [weeklyData, selectedDate]);
+
+    return {
+      baseInicial: finalBaseInicial,
+      evolucionFecha: finalEvolucionFecha,
+      acumulado: finalAcumulado,
+      montoFinal: finalMontoFinal,
+      chartData: finalChartData,
+      selectedMonthDate: currentSelectedMonthDate
+    };
+  }, [meterData, weeklyData, selectedDate]);
+
+  const isLoading = isLoadingBase || isLoadingWeekly;
+  const acumuladoIcon = acumulado >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />;
 
   const StatCard = ({ title, value, icon, description, className }: { title: string; value: string; icon: React.ReactNode; description?: string, className?: string }) => (
     <Card className={className}>
@@ -201,7 +180,7 @@ export function WeeklyMeterTracking({ selectedDate, onDateChange }: WeeklyMeterT
                         title="Evolución a la Fecha" 
                         value={formatNumber(evolucionFecha)} 
                         icon={<Gauge className="h-4 w-4 text-muted-foreground" />}
-                        description={weekStart ? `Medidores en la semana del ${format(weekStart, 'dd MMM', { locale: es })}` : 'Seleccione una semana'}
+                        description={`Medidores en la semana seleccionada`}
                         className="border-l-4 border-chart-1"
                     />
                     <StatCard 
