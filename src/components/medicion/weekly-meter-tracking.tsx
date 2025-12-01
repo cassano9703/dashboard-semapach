@@ -26,7 +26,7 @@ const CustomizedDot = (props) => {
     return (
       <g>
         <circle cx={cx} cy={cy} r={3} stroke={stroke} fill={stroke} />
-        <path d={`M${cx},${cy} L${cx + 8},${cy - 5} L${cx + 8},${cy + 5} Z`} fill={stroke} transform={`rotate(0 ${cx} ${cy})`} />
+        <path d={`M${cx + 4},${cy}L${cx + 9},${cy - 4}L${cx + 9},${cy + 4}Z`} fill={stroke} />
       </g>
     );
   }
