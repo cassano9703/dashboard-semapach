@@ -15,6 +15,7 @@ import {
   History,
   Clock3,
   FileLock,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -82,6 +83,19 @@ const allNavItems: NavItem[] = [
         href: '/catastro/contratos-cerrados',
         label: 'Contratos Cerrados',
         icon: ClipboardCheck,
+      },
+    ],
+  },
+   {
+    href: '/reportes',
+    label: 'Reportes',
+    icon: FileText,
+    isCollapsible: true,
+    subItems: [
+      {
+        href: '/reportes/cobranza',
+        label: 'Oficina de Cobranza',
+        icon: Briefcase,
       },
     ],
   },
