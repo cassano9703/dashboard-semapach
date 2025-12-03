@@ -14,6 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { useMemo, useRef } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -71,6 +72,9 @@ export function MonthlyAchievementsGallery() {
                                     data-ai-hint={achievement.imageHint}
                                 />
                             </CardContent>
+                            <CardDescription className="p-4 text-sm text-muted-foreground">
+                                Breve resumen del hito o logro alcanzado durante este mes.
+                            </CardDescription>
                             <CardFooter className="flex justify-center p-4 bg-muted/50 rounded-b-lg">
                                 <span className="text-sm font-medium text-muted-foreground">{achievement.month}</span>
                             </CardFooter>
