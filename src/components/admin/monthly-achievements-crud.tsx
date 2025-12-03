@@ -186,25 +186,28 @@ export function MonthlyAchievementsCRUD() {
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Imagen del Logro</Label>
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-full">
-                {imagePreview ? (
-                    <div className="relative w-full h-48">
-                         <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
-                    </div>
-                ) : (
-                    <div className="text-center text-muted-foreground">
-                        <Upload className="mx-auto h-12 w-12" />
-                        <p className="mt-2">Suba o arrastre una imagen</p>
-                    </div>
-                )}
-                <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
-                <Button variant="outline" size="sm" className="mt-4" onClick={() => fileInputRef.current?.click()}>
-                    Seleccionar Imagen
-                </Button>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+                <Label>Imagen del Logro</Label>
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-full">
+                    {imagePreview ? (
+                        <div className="relative w-full h-48">
+                            <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground">
+                            <Upload className="mx-auto h-12 w-12" />
+                            <p className="mt-2">Suba o arrastre una imagen</p>
+                        </div>
+                    )}
+                    <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
+                    <Button variant="outline" size="sm" className="mt-4" onClick={() => fileInputRef.current?.click()}>
+                        Seleccionar Imagen
+                    </Button>
+                </div>
             </div>
           </div>
+          
           <div className="md:col-span-2 flex items-end gap-2">
             <Button className="w-full" onClick={handleAddOrUpdate}>
                 {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
