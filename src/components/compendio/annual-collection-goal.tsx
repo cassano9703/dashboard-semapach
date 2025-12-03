@@ -49,7 +49,7 @@ export function AnnualCollectionGoal() {
   const totalExecuted = useMemo(() => {
     if (!monthlyGoalsData) return 0;
     return monthlyGoalsData
-        .filter(goal => goal.goalType === 'collection')
+        .filter(goal => goal.goalType === 'collection' && goal.executedAmount)
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
   }, [monthlyGoalsData]);
   
