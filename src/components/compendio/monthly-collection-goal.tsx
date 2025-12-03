@@ -91,7 +91,12 @@ export function MonthlyCollectionGoal() {
                     </div>
                 </div>
                 <div className="col-span-2 md:col-span-1 flex items-center gap-2">
-                    <Progress value={goal.progress} className="h-2 w-full" />
+                    <div className="w-full bg-secondary rounded-full h-2.5">
+                      <div
+                        className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2.5 rounded-full"
+                        style={{ width: `${goal.progress}%` }}
+                      ></div>
+                    </div>
                     <span className="text-sm font-semibold w-10 text-right">{goal.progress.toFixed(0)}%</span>
                 </div>
               </div>
