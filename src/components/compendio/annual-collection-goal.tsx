@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -23,6 +22,8 @@ const formatCurrency = (value: number | undefined) => {
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
+
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
   const monthlyGoalsRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'monthly_goals'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
@@ -53,6 +54,15 @@ export function AnnualCollectionGoal() {
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
   
+  useEffect(() => {
+    if (!isLoadingMonthly && !isLoadingAnnual) {
+      const animation = requestAnimationFrame(() => {
+        setAnimatedProgress(progressPercentage);
+      });
+      return () => cancelAnimationFrame(animation);
+    }
+  }, [progressPercentage, isLoadingMonthly, isLoadingAnnual]);
+  
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
@@ -68,9 +78,9 @@ export function AnnualCollectionGoal() {
         ) : (
           <div className="flex flex-col items-center gap-4">
             <div className="text-4xl font-bold tracking-tighter">
-                {progressPercentage.toFixed(2)}%
+                {animatedProgress.toFixed(2)}%
             </div>
-            <Progress value={progressPercentage} className="h-4" />
+            <Progress value={animatedProgress} className="h-4" variant="striped" />
             <div className="w-full flex justify-between text-sm text-muted-foreground mt-2">
                 <span>{formatCurrency(totalExecuted)}</span>
                 <span>{formatCurrency(annualGoal)}</span>
