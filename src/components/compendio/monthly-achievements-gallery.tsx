@@ -16,8 +16,9 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card";
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Autoplay from "embla-carousel-autoplay";
 
 const months = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -25,6 +26,10 @@ const months = [
 ];
 
 export function MonthlyAchievementsGallery() {
+  const plugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  );
+
   const achievements = useMemo(() => {
     return months.slice(0, 6).map((month, index) => {
       const placeholder = PlaceHolderImages.find(img => img.id === `logro-${month.toLowerCase()}`);
@@ -44,15 +49,18 @@ export function MonthlyAchievementsGallery() {
         </CardHeader>
         <CardContent>
             <Carousel
+                plugins={[plugin.current]}
                 opts={{
                     align: "start",
                     loop: true,
                 }}
                 className="w-full"
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
             >
                 <CarouselContent>
                     {achievements.map((achievement, index) => (
-                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                    <CarouselItem key={index}>
                         <div className="p-1">
                         <Card>
                             <CardContent className="flex aspect-video items-center justify-center p-0 overflow-hidden rounded-t-lg">
