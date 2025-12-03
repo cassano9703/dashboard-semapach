@@ -1,4 +1,3 @@
-import { CutsAndReconnectionsReport } from '@/components/compendio/cuts-reconnections-report';
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 
 export default function ReporteCobranzaPage() {
@@ -7,8 +6,11 @@ export default function ReporteCobranzaPage() {
       <h1 className="text-3xl font-bold tracking-tight">
         Oficina de Cobranza 2025
       </h1>
-      <MonthlyAchievementsGallery />
-      <CutsAndReconnectionsReport />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-4">
+          <MonthlyAchievementsGallery />
+        </div>
+      </div>
     </div>
   );
 }
