@@ -47,9 +47,9 @@ export function AnnualCollectionGoal() {
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
-    <Card className="border-blue-900/10">
-      <CardHeader className="items-center text-center">
-        <CardTitle>Avance Total</CardTitle>
+    <Card className="border-2 border-blue-900/20 shadow-lg">
+      <CardHeader>
+        <CardTitle>Meta Anual de Recaudación 2025</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -64,7 +64,7 @@ export function AnnualCollectionGoal() {
             <Progress
               value={progressPercentage}
               className="h-2 w-full bg-gray-200"
-              indicatorClassName="bg-gray-400"
+              indicatorClassName="bg-blue-600"
             />
           </div>
         )}
