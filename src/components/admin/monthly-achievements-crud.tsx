@@ -205,8 +205,7 @@ export function MonthlyAchievementsCRUD() {
                 </Button>
             </div>
           </div>
-          
-          <div className="flex items-end gap-2 col-span-1 md:col-span-2">
+          <div className="md:col-span-2 flex items-end gap-2">
             <Button className="w-full" onClick={handleAddOrUpdate}>
                 {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
             </Button>
