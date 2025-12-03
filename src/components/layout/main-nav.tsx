@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -135,15 +135,17 @@ export function MainNav() {
     return subItems?.some((item) => pathname.startsWith(item.href));
   };
   
-  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>(() => {
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
     const openState: Record<string, boolean> = {};
     navItems.forEach(item => {
       if(item.subItems && isSubItemActive(item.subItems)) {
         openState[item.href] = true;
       }
     });
-    return openState;
-  });
+    setOpenCollapsibles(openState);
+  }, [pathname]);
 
   const handleCollapsibleToggle = (href: string) => {
     setOpenCollapsibles(prev => ({...prev, [href]: !prev[href]}));
