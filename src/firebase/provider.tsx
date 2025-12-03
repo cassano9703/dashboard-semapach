@@ -4,12 +4,14 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo } 
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
+import { FirebaseStorage } from 'firebase/storage';
 
 interface FirebaseProviderProps {
   children: ReactNode;
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null;
+  storage: FirebaseStorage | null;
 }
 
 // Combined state for the Firebase context
@@ -17,6 +19,7 @@ export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null;
+  storage: FirebaseStorage | null;
 }
 
 // React Context
@@ -30,6 +33,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firebaseApp,
   firestore,
   auth,
+  storage,
 }) => {
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
@@ -37,8 +41,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       firebaseApp: firebaseApp,
       firestore: firestore,
       auth: auth,
+      storage: storage,
     };
-  }, [firebaseApp, firestore, auth]);
+  }, [firebaseApp, firestore, auth, storage]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -84,6 +89,18 @@ export const useFirebaseApp = (): FirebaseApp | null => {
   const { firebaseApp } = useFirebase();
   return firebaseApp;
 };
+
+/** Hook to access Firebase Storage instance. */
+export const useStorage = (): FirebaseStorage => {
+    const context = useContext(FirebaseContext);
+    if (context === undefined) {
+        throw new Error('useStorage must be used within a FirebaseProvider.');
+    }
+    if (!context.storage) {
+        throw new Error('Storage not available. Check FirebaseProvider props.');
+    }
+    return context.storage;
+}
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 

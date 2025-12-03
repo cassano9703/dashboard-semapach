@@ -18,19 +18,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, Upload } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useStorage } from "@/firebase";
 import { collection, query, doc, deleteDoc, setDoc, Timestamp, orderBy } from "firebase/firestore";
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
+import Image from "next/image";
 
 export function MonthlyAchievementsCRUD() {
   const firestore = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
   
   const dataRef = useMemoFirebase(
@@ -40,56 +43,82 @@ export function MonthlyAchievementsCRUD() {
   const { data, isLoading, error } = useCollection(dataRef);
 
   const [date, setDate] = useState<Date>();
-  const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sortedData = data || [];
   
   const clearForm = () => {
     setDate(undefined);
-    setImageUrl('');
     setDescription('');
-    setEditingId(null);
+    setEditingItem(null);
+    setImageFile(null);
+    setImagePreview(null);
+    if(fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleEdit = (item: any) => {
-    setEditingId(item.id);
+    setEditingItem(item);
     const itemDate = parse(item.month, 'yyyy-MM', new Date());
     if (isValid(itemDate)) {
       setDate(itemDate);
     }
-    setImageUrl(item.imageUrl);
     setDescription(item.description);
+    setImagePreview(item.imageUrl);
+    setImageFile(null);
   };
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !date || !imageUrl || !description) {
+    if (!firestore || !storage || !date || !description || (!imageFile && !editingItem)) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
-        description: 'Por favor, complete todos los campos.',
+        description: 'Por favor, complete todos los campos, incluida la imagen.',
       });
       return;
     }
   
     const monthStr = format(date, 'yyyy-MM');
-    
-    const dataToSave = {
-      month: monthStr,
-      imageUrl,
-      description,
-      updatedAt: Timestamp.now(),
-    };
+    let imageUrl = editingItem?.imageUrl || '';
 
     try {
-      // Use monthStr as document ID to prevent duplicates for the same month
-      const docRef = doc(firestore, 'monthly_achievements', monthStr);
-      await setDoc(docRef, dataToSave, { merge: true });
+        if (imageFile) {
+            const filePath = `monthly_achievements/${monthStr}/${imageFile.name}`;
+            const fileRef = storageRef(storage, filePath);
+            const uploadResult = await uploadBytes(fileRef, imageFile);
+            imageUrl = await getDownloadURL(uploadResult.ref);
+        }
+
+        const dataToSave = {
+            month: monthStr,
+            imageUrl,
+            description,
+            updatedAt: Timestamp.now(),
+        };
+
+        const docRef = doc(firestore, 'monthly_achievements', monthStr);
+        await setDoc(docRef, dataToSave, { merge: true });
       
-      toast({ variant: 'success', title: 'Éxito', description: `El logro para ${format(date, 'MMMM yyyy', {locale: es})} ha sido ${editingId ? 'actualizado' : 'creado'}.` });
+        toast({ variant: 'success', title: 'Éxito', description: `El logro para ${format(date, 'MMMM yyyy', {locale: es})} ha sido ${editingItem ? 'actualizado' : 'creado'}.` });
       
-      clearForm();
+        clearForm();
+
     } catch (e: any) {
       toast({
         variant: 'destructive',
@@ -99,11 +128,19 @@ export function MonthlyAchievementsCRUD() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, "monthly_achievements", id);
+  const handleDelete = async (item: any) => {
+    if (!firestore || !storage) return;
+
+    const docRef = doc(firestore, "monthly_achievements", item.id);
+    const imageRef = storageRef(storage, item.imageUrl);
+
     try {
-        deleteDoc(docRef);
+        await deleteDoc(docRef);
+        await deleteObject(imageRef).catch(error => {
+            if (error.code !== 'storage/object-not-found') {
+                throw error;
+            }
+        });
         toast({
             variant: "success",
             title: "Éxito",
@@ -127,34 +164,53 @@ export function MonthlyAchievementsCRUD() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 p-4 border rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-6 p-4 border rounded-lg">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="month">Mes</Label>
+                <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant={"outline"} className="justify-start text-left font-normal" disabled={!!editingItem}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "MMMM 'de' yyyy", { locale: es }) : <span>Seleccione un mes</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={es} defaultMonth={date} />
+                </PopoverContent>
+                </Popover>
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea id="description" placeholder="Breve resumen del hito o logro alcanzado..." value={description} onChange={e => setDescription(e.target.value)} rows={5}/>
+            </div>
+          </div>
+
           <div className="grid gap-2">
-            <Label htmlFor="month">Mes</Label>
-             <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="justify-start text-left font-normal" disabled={!!editingId}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "MMMM 'de' yyyy", { locale: es }) : <span>Seleccione un mes</span>}
+            <Label>Imagen del Logro</Label>
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-full">
+                {imagePreview ? (
+                    <div className="relative w-full h-48">
+                         <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground">
+                        <Upload className="mx-auto h-12 w-12" />
+                        <p className="mt-2">Suba o arrastre una imagen</p>
+                    </div>
+                )}
+                <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
+                <Button variant="outline" size="sm" className="mt-4" onClick={() => fileInputRef.current?.click()}>
+                    Seleccionar Imagen
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={es} defaultMonth={date} />
-              </PopoverContent>
-            </Popover>
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="imageUrl">URL de la Imagen</Label>
-            <Input id="imageUrl" placeholder="https://images.unsplash.com/..." type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
-          </div>
-          <div className="grid gap-2 col-span-1 md:col-span-2">
-            <Label htmlFor="description">Descripción</Label>
-            <Textarea id="description" placeholder="Breve resumen del hito o logro alcanzado..." value={description} onChange={e => setDescription(e.target.value)} />
-          </div>
+          
           <div className="flex items-end gap-2 col-span-1 md:col-span-2">
             <Button className="w-full" onClick={handleAddOrUpdate}>
-                {editingId ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
+                {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
             </Button>
-            {editingId && (
+            {editingItem && (
                 <Button variant="outline" size="icon" onClick={clearForm}>
                     <X className="h-4 w-4" />
                 </Button>
@@ -200,7 +256,7 @@ export function MonthlyAchievementsCRUD() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -215,5 +271,3 @@ export function MonthlyAchievementsCRUD() {
     </Card>
   );
 }
-
-    
