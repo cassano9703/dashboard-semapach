@@ -18,6 +18,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, Upload, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
@@ -48,6 +59,8 @@ export function MonthlyAchievementsCRUD() {
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   const sortedData = data || [];
   
@@ -113,33 +126,39 @@ export function MonthlyAchievementsCRUD() {
     }
   };
 
-  const handleDelete = async (item: any) => {
-    if (!firestore) return;
-
-    const confirmed = window.confirm("¿Está seguro de que desea eliminar este logro?");
-    if (!confirmed) return;
-
+  const handleDeleteClick = (item: any) => {
+    setItemToDelete(item);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!firestore || !itemToDelete) return;
+  
     try {
-        const docRef = doc(firestore, "monthly_achievements", item.id);
-        await deleteDoc(docRef);
-
-        toast({
-            variant: "success",
-            title: "Éxito",
-            description: "El logro ha sido eliminado.",
-        });
+      const docRef = doc(firestore, "monthly_achievements", itemToDelete.id);
+      await deleteDoc(docRef);
+  
+      toast({
+        variant: "success",
+        title: "Éxito",
+        description: "El logro ha sido eliminado.",
+      });
     } catch (e: any) {
-        toast({
-            variant: "destructive",
-            title: "Error al eliminar",
-            description: e.message,
-        });
+      toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: e.message,
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setItemToDelete(null);
     }
   };
 
   const isUrlValidForPreview = isValidImageUrl(imageUrl);
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Gestionar Logros Mensuales (Galería)</CardTitle>
@@ -253,7 +272,7 @@ export function MonthlyAchievementsCRUD() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(item)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -266,5 +285,23 @@ export function MonthlyAchievementsCRUD() {
         </div>
       </CardContent>
     </Card>
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Está seguro de que desea eliminar este logro?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acción no se puede deshacer. Esto eliminará permanentemente el logro de la base de datos.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
