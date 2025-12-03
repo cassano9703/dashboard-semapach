@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardHeader,
 } from '@/components/ui/card';
 import {
   Tooltip,
@@ -24,21 +23,10 @@ const formatCurrency = (value: number | undefined) => {
   })}`;
 };
 
-const getProgressColor = (percentage: number) => {
-  if (percentage < 40) {
-    return 'from-red-500 to-yellow-500';
-  }
-  if (percentage < 80) {
-    return 'from-yellow-500 to-green-500';
-  }
-  return 'from-green-500 to-cyan-400';
-};
-
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
 
-  // Simplified query to avoid composite index
   const monthlyGoalsRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'monthly_goals'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
     [firestore, currentYear]
@@ -57,7 +45,6 @@ export function AnnualCollectionGoal() {
 
   const totalExecuted = useMemo(() => {
     if (!monthlyGoalsData) return 0;
-    // Filter for 'collection' type on the client side
     return monthlyGoalsData
         .filter(goal => goal.goalType === 'collection')
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
@@ -77,10 +64,8 @@ export function AnnualCollectionGoal() {
   const progressColorClass = 'from-cyan-400 to-blue-500';
 
   return (
-    <Card className="border-blue-900/10">
-      <CardHeader>
-      </CardHeader>
-      <CardContent>
+    <Card className="border-2 border-blue-900/20 shadow-lg">
+      <CardContent className="pt-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
             <p className="text-muted-foreground">Cargando meta anual...</p>
