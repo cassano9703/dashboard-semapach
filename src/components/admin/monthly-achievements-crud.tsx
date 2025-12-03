@@ -85,11 +85,19 @@ export function MonthlyAchievementsCRUD() {
   };
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !storage || !date || !description || (!imageFile && !editingItem)) {
+    if (!firestore || !storage || !date || !description) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
-        description: 'Por favor, complete todos los campos. Si está creando un nuevo logro, asegúrese de subir una imagen.',
+        description: 'Por favor, complete el mes y la descripción.',
+      });
+      return;
+    }
+     if (!imageFile && !editingItem) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de validación',
+        description: 'Por favor, suba una imagen para un nuevo logro.',
       });
       return;
     }
@@ -199,8 +207,8 @@ export function MonthlyAchievementsCRUD() {
                         <p className="mt-2">Suba o arrastre una imagen</p>
                     </div>
                 )}
-                <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
             </Label>
+            <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
           </div>
           
           <div className="md:col-span-2 flex items-end gap-2">
