@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import {
   Tooltip,
@@ -76,10 +75,10 @@ export function AnnualCollectionGoal() {
   }, [annualGoal, totalExecuted]);
 
   const isLoading = isLoadingMonthly || isLoadingAnnual;
-  const progressColorClass = getProgressColor(progressPercentage);
+  const progressColorClass = 'from-cyan-400 to-blue-500';
 
   return (
-    <Card>
+    <Card className="border-blue-900/10">
       <CardHeader>
         <CardTitle>Meta Anual de Recaudación {currentYear}</CardTitle>
       </CardHeader>

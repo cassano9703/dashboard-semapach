@@ -57,7 +57,7 @@ export function MonthlyCollectionGoal() {
   }, [goalsData]);
 
   return (
-    <Card>
+    <Card className="border-blue-900/10">
       <CardHeader>
         <CardTitle>Meta de Recaudación por mes</CardTitle>
       </CardHeader>
