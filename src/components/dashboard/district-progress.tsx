@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle, Download } from 'lucide-react';
@@ -218,11 +218,9 @@ export function DistrictProgress() {
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                  <Slider
-                                    value={[item.progress]}
-                                    max={100}
-                                    step={1}
-                                    disabled
+                                  <Progress
+                                    value={item.progress}
+                                    className="w-full"
                                   />
                                   <span className="text-sm font-medium w-10 text-right">
                                     {item.progress.toFixed(0)}%
