@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Progress } from '@/components/ui/progress';
@@ -25,14 +25,7 @@ export function MonthlyCollectionGoal() {
   const firestore = useFirestore();
 
   const goalsRef = useMemoFirebase(
-    () => {
-      if (!firestore) return null;
-      return query(
-        collection(firestore, 'monthly_goals'),
-        where('goalType', '==', 'collection'),
-        orderBy('month', 'asc')
-      );
-    },
+    () => (firestore ? query(collection(firestore, 'monthly_goals')) : null),
     [firestore]
   );
   const { data: goalsData, isLoading } = useCollection(goalsRef);
@@ -43,7 +36,8 @@ export function MonthlyCollectionGoal() {
     const currentYear = new Date().getFullYear().toString();
 
     return goalsData
-      .filter(goal => goal.month.startsWith(currentYear))
+      .filter(goal => goal.goalType === 'collection' && goal.month.startsWith(currentYear))
+      .sort((a, b) => a.month.localeCompare(b.month))
       .map(goal => {
         const progress = goal.proposedAmount > 0 && goal.executedAmount
           ? (goal.executedAmount / goal.proposedAmount) * 100
