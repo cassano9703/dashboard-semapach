@@ -54,7 +54,7 @@ export function MonthlyAchievementsGallery() {
                     align: "start",
                     loop: true,
                 }}
-                className="w-full"
+                className="w-full group"
                 onMouseEnter={plugin.current.stop}
                 onMouseLeave={plugin.current.reset}
             >
@@ -81,8 +81,8 @@ export function MonthlyAchievementsGallery() {
                     </CarouselItem>
                     ))}
                 </CarouselContent>
-                <CarouselPrevious className="hidden sm:flex" />
-                <CarouselNext className="hidden sm:flex" />
+                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white" />
+                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white" />
             </Carousel>
         </CardContent>
     </Card>
