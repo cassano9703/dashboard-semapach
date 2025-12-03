@@ -66,22 +66,22 @@ export function AnnualCollectionGoal() {
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
-    <Card>
-      <CardHeader className="items-center text-center">
-        <CardTitle className="text-2xl">Meta Anual de Recaudación 2025</CardTitle>
+    <Card className="border-2 border-blue-900/20 shadow-lg">
+      <CardHeader className="items-center text-center p-4">
+        <CardTitle className="text-xl">Avance Total</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
             <p className="text-muted-foreground">Cargando meta anual...</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-2">
             <div className="text-4xl font-bold tracking-tighter">
                 {animatedProgress.toFixed(2)}%
             </div>
             <Progress value={animatedProgress} className="h-4" variant="striped" />
-            <div className="w-full flex justify-between text-sm text-muted-foreground mt-2">
+            <div className="w-full flex justify-between text-sm text-muted-foreground mt-1">
                 <span>{formatCurrency(totalExecuted)}</span>
                 <span>{formatCurrency(annualGoal)}</span>
             </div>
