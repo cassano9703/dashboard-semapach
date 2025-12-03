@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -67,10 +68,7 @@ export function AnnualCollectionGoal() {
 
   return (
     <Card className="border-2 border-blue-900/20 shadow-lg">
-      <CardHeader className="items-center text-center p-4">
-        <CardTitle className="text-xl">Avance Total</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-4 pt-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
             <p className="text-muted-foreground">Cargando meta anual...</p>
@@ -88,6 +86,9 @@ export function AnnualCollectionGoal() {
           </div>
         )}
       </CardContent>
+      <CardFooter className="p-3 justify-center">
+        <CardTitle className="text-lg">Avance Total Recaudación Anual</CardTitle>
+      </CardFooter>
     </Card>
   );
 }
