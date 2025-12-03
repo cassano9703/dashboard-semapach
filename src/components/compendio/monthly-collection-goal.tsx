@@ -27,12 +27,9 @@ export function MonthlyCollectionGoal() {
   const goalsRef = useMemoFirebase(
     () => {
       if (!firestore) return null;
-      const currentYear = new Date().getFullYear();
       return query(
         collection(firestore, 'monthly_goals'),
         where('goalType', '==', 'collection'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
         orderBy('month', 'asc')
       );
     },
@@ -42,17 +39,21 @@ export function MonthlyCollectionGoal() {
 
   const monthlyGoals = useMemo(() => {
     if (!goalsData) return [];
+    
+    const currentYear = new Date().getFullYear().toString();
 
-    return goalsData.map(goal => {
-      const progress = goal.proposedAmount > 0 && goal.executedAmount
-        ? (goal.executedAmount / goal.proposedAmount) * 100
-        : 0;
+    return goalsData
+      .filter(goal => goal.month.startsWith(currentYear))
+      .map(goal => {
+        const progress = goal.proposedAmount > 0 && goal.executedAmount
+          ? (goal.executedAmount / goal.proposedAmount) * 100
+          : 0;
 
-      return {
-        ...goal,
-        monthName: format(parseISO(`${goal.month}-01T00:00:00`), 'LLLL', { locale: es }),
-        progress: Math.min(progress, 100),
-      };
+        return {
+          ...goal,
+          monthName: format(parseISO(`${goal.month}-01T00:00:00`), 'LLLL', { locale: es }),
+          progress: Math.min(progress, 100),
+        };
     });
   }, [goalsData]);
 
