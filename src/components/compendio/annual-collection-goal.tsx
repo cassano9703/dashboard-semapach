@@ -82,9 +82,6 @@ export function AnnualCollectionGoal() {
     <Card>
       <CardHeader>
         <CardTitle>Meta Anual de Recaudación {currentYear}</CardTitle>
-        <CardDescription>
-          Seguimiento del progreso hacia la meta de recaudación anual.
-        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
