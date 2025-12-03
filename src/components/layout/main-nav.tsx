@@ -15,6 +15,7 @@ import {
   History,
   Clock3,
   FileLock,
+  BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -85,6 +86,7 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
+  { href: '/compendio', label: 'Compendio', icon: BookOpen },
   {
     href: '/admin',
     label: 'Administración',
@@ -187,7 +189,7 @@ export function MainNav() {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   href={item.href}
-                  isActive={pathname.startsWith(item.href)}
+                  isActive={pathname === item.href}
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
