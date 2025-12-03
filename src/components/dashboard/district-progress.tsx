@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle, Download } from 'lucide-react';
@@ -217,9 +217,14 @@ export function DistrictProgress() {
                                     <span>Meta Cumplida</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-4">
-                                  <Progress value={item.progress} className="w-full h-2" />
-                                  <span className="text-sm font-medium w-16 text-right">
+                                <div className="flex items-center gap-2">
+                                  <Slider
+                                    value={[item.progress]}
+                                    max={100}
+                                    step={1}
+                                    disabled
+                                  />
+                                  <span className="text-sm font-medium w-10 text-right">
                                     {item.progress.toFixed(0)}%
                                   </span>
                                 </div>

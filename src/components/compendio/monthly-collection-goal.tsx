@@ -11,7 +11,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0';
@@ -91,13 +91,10 @@ export function MonthlyCollectionGoal() {
                     </div>
                 </div>
                 <div className="col-span-2 md:col-span-1 flex items-center gap-2">
-                  <Slider
-                    defaultValue={[goal.progress]}
-                    value={[goal.progress]}
-                    max={100}
-                    step={1}
-                    className="w-full"
-                    disabled
+                  <Progress
+                    value={goal.progress}
+                    className="w-full h-2.5 bg-gradient-to-r from-cyan-400 to-blue-500"
+                    indicatorClassName="bg-transparent"
                   />
                   <span className="text-sm font-semibold w-10 text-right">{goal.progress.toFixed(0)}%</span>
                 </div>
