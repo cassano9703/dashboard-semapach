@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0';
@@ -31,7 +32,7 @@ export function AnnualCollectionGoal() {
   const yearStr = currentYear.toString();
 
   const monthlyGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals')) : null),
+    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'collection')) : null),
     [firestore]
   );
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
@@ -49,7 +50,7 @@ export function AnnualCollectionGoal() {
   const totalExecuted = useMemo(() => {
     if (!monthlyGoalsData) return 0;
     return monthlyGoalsData
-        .filter(goal => goal.month.startsWith(yearStr) && goal.goalType === 'collection')
+        .filter(goal => goal.month.startsWith(yearStr))
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
   }, [monthlyGoalsData, yearStr]);
   
@@ -61,6 +62,16 @@ export function AnnualCollectionGoal() {
     if (annualGoal === 0) return 0;
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage < 40) {
+      return "from-red-500 to-yellow-500";
+    } else if (percentage < 80) {
+      return "from-yellow-500 to-green-500";
+    } else {
+      return "from-green-500 to-cyan-500";
+    }
+  };
   
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
@@ -90,7 +101,7 @@ export function AnnualCollectionGoal() {
                 <TooltipTrigger asChild>
                   <div className="w-full bg-secondary rounded-full h-2.5 cursor-pointer">
                     <div
-                      className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2.5 rounded-full"
+                      className={cn("bg-gradient-to-r h-2.5 rounded-full", getProgressColor(progressPercentage))}
                       style={{ width: `${progressPercentage}%` }}
                     ></div>
                   </div>
