@@ -144,6 +144,15 @@ service cloud.firestore {
         allow write: if isSignedIn();
     }
 
+    /**
+     * @description Allows read access to any user and write access to authenticated users for monthly achievements.
+     * @path /monthly_achievements/{achievementId}
+     */
+    match /monthly_achievements/{achievementId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+    }
+
     // Helper function to determine if a user is signed in
     function isSignedIn() {
       return request.auth != null;
@@ -155,3 +164,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

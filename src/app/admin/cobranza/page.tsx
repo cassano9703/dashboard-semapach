@@ -6,6 +6,7 @@ import { RecoveredServicesCRUD } from "@/components/admin/recovered-services-cru
 import { MonthlyGoalsCRUD } from "@/components/admin/monthly-goals-crud";
 import { ServiceOperationsCRUD } from "@/components/admin/service-operations-crud";
 import { AnnualGoalsCRUD } from "@/components/admin/annual-goals-crud";
+import { MonthlyAchievementsCRUD } from "@/components/admin/monthly-achievements-crud";
 
 export default function AdminCobranzaPage() {
   return (
@@ -26,6 +27,7 @@ export default function AdminCobranzaPage() {
       <MonthlyGoalsCRUD />
       <AnnualGoalsCRUD />
       <ServiceOperationsCRUD />
+      <MonthlyAchievementsCRUD />
     </div>
   );
 }
