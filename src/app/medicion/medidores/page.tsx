@@ -3,30 +3,11 @@
 import { MeterDataTable } from '@/components/medicion/meter-data-table';
 import { MeterIndicatorsChart } from '@/components/medicion/meter-indicators-chart';
 import { WeeklyMeterTracking } from '@/components/medicion/weekly-meter-tracking';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function MedidoresPage() {
   const year = 2025;
-  const [selectedDate, setSelectedWeekDate] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setSelectedWeekDate(new Date());
-  }, []);
-
-  if (!selectedDate) {
-    return (
-        <div className="flex flex-col gap-8">
-            <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-                Reporte de Indicadores de Medición ({year})
-            </h1>
-            </div>
-            <div className="h-96 flex items-center justify-center">
-                <p>Cargando datos...</p>
-            </div>
-        </div>
-    );
-  }
+  const [selectedDate, setSelectedWeekDate] = useState<Date>(new Date());
 
   return (
     <div className="flex flex-col gap-8">
