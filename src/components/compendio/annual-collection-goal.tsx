@@ -4,10 +4,20 @@ import { useMemo } from 'react';
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '../ui/progress';
+
+const formatCurrency = (value: number | undefined) => {
+    if (value === undefined) return 'S/ 0';
+    return `S/ ${value.toLocaleString('es-PE', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    })}`;
+};
 
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
@@ -46,22 +56,28 @@ export function AnnualCollectionGoal() {
 
   return (
     <Card className="border-2 border-blue-900/20 shadow-lg">
-      <CardContent className="pt-6">
+      <CardHeader>
+        <CardTitle>Avance Total</CardTitle>
+      </CardHeader>
+      <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center h-16">
+          <div className="flex items-center justify-center h-24">
             <p className="text-muted-foreground">Cargando meta anual...</p>
           </div>
         ) : (
           <div className="space-y-4">
-            <span className="text-muted-foreground">Avance Total</span>
             <Progress
               value={progressPercentage}
-              className="h-2"
-              indicatorClassName="bg-gray-400"
+              variant="striped"
+              className="h-4"
+              indicatorClassName="bg-gradient-to-r from-blue-400 to-cyan-400"
             />
-            <div className="text-sm">
+            <div className="flex justify-between text-sm font-medium">
               <span className="text-muted-foreground">
-                {progressPercentage.toFixed(2)}% completado
+                {progressPercentage.toFixed(2)}% Completado
+              </span>
+              <span className="font-bold">
+                 {formatCurrency(totalExecuted)} / <span className="text-muted-foreground">{formatCurrency(annualGoal)}</span>
               </span>
             </div>
           </div>
