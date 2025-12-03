@@ -36,7 +36,12 @@ export function MonthlyCollectionGoal() {
     const currentYear = new Date().getFullYear().toString();
 
     return goalsData
-      .filter(goal => goal.goalType === 'collection' && goal.month.startsWith(currentYear))
+      .filter(goal => {
+        const monthIndex = new Date(goal.month + '-02').getMonth(); // 0-indexed
+        return goal.goalType === 'collection' && 
+               goal.month.startsWith(currentYear) &&
+               monthIndex >= 7; // 7 is August
+      })
       .sort((a, b) => a.month.localeCompare(b.month))
       .map(goal => {
         const progress = goal.proposedAmount > 0 && goal.executedAmount
