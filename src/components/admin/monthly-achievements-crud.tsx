@@ -82,7 +82,7 @@ export function MonthlyAchievementsCRUD() {
         toast({
             variant: 'destructive',
             title: 'URL de Imagen no Válida',
-            description: 'Por favor, use la URL directa de la imagen (que termine en .jpg, .png, etc.). Haga clic derecho en la imagen y seleccione "Copiar dirección de la imagen".',
+            description: 'La URL debe ser un enlace directo a la imagen (terminar en .jpg, .png, etc.).',
         });
         return;
     }
@@ -184,8 +184,8 @@ export function MonthlyAchievementsCRUD() {
                             <div className="flex flex-col items-center justify-center text-center text-amber-600 dark:text-amber-400">
                                 <Info className="h-10 w-10 mb-2" />
                                 <p className="font-semibold">URL no válida</p>
-                                <p className="text-xs text-muted-foreground">
-                                    Copie la <span className="font-bold">dirección de la imagen</span>, no la del navegador.
+                                <p className="text-xs text-muted-foreground px-4">
+                                    La URL debe terminar en .jpg o .png. En Imgur, haz clic derecho en la imagen y elige "Copiar dirección de la imagen".
                                 </p>
                             </div>
                         )
