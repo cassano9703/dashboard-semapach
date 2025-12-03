@@ -9,7 +9,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0';
@@ -21,27 +21,38 @@ const formatCurrency = (value: number | undefined) => {
 
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
-  const annualGoal = 31867690;
   const currentYear = 2025;
   const yearStr = currentYear.toString();
 
-  const goalsRef = useMemoFirebase(
+  const monthlyGoalsRef = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'monthly_goals')) : null),
     [firestore]
   );
-  const { data: goalsData, isLoading } = useCollection(goalsRef);
+  const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
+
+  const annualGoalsRef = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'annual_goals'), where('year', '==', currentYear), where('goalType', '==', 'collection')) : null),
+    [firestore, currentYear]
+  );
+  const { data: annualGoalsData, isLoading: isLoadingAnnual } = useCollection(annualGoalsRef);
+  
+  const annualGoal = useMemo(() => {
+      return annualGoalsData?.[0]?.amount || 31867690;
+  }, [annualGoalsData]);
 
   const totalExecuted = useMemo(() => {
-    if (!goalsData) return 0;
-    return goalsData
+    if (!monthlyGoalsData) return 0;
+    return monthlyGoalsData
         .filter(goal => goal.month.startsWith(yearStr) && goal.goalType === 'collection')
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
-  }, [goalsData, yearStr]);
+  }, [monthlyGoalsData, yearStr]);
 
   const progressPercentage = useMemo(() => {
     if (annualGoal === 0) return 0;
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
+  
+  const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
     <Card>
