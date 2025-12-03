@@ -163,8 +163,6 @@ export function MonthlyAchievementsCRUD() {
     }
   };
 
-  const isSaveDisabled = !description || !date || (!imageFile && !editingItem);
-
   return (
     <Card>
       <CardHeader>
@@ -216,7 +214,7 @@ export function MonthlyAchievementsCRUD() {
               <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
             </div>
             <div className="flex items-end gap-2">
-              <Button className="w-full" onClick={handleAddOrUpdate} disabled={isSaveDisabled}>
+              <Button className="w-full" onClick={handleAddOrUpdate}>
                 {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
               </Button>
               {editingItem && (
