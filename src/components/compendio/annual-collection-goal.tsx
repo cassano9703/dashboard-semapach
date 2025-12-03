@@ -9,7 +9,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
 
 const formatCurrency = (value: number | undefined) => {
@@ -24,26 +24,20 @@ export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const annualGoal = 31867690;
   const currentYear = 2025;
+  const yearStr = currentYear.toString();
 
   const goalsRef = useMemoFirebase(
-    () => {
-      if (!firestore) return null;
-      const yearStr = currentYear.toString();
-      return query(
-        collection(firestore, 'monthly_goals'),
-        where('month', '>=', `${yearStr}-01`),
-        where('month', '<=', `${yearStr}-12`),
-        where('goalType', '==', 'collection')
-      );
-    },
-    [firestore, currentYear]
+    () => (firestore ? query(collection(firestore, 'monthly_goals')) : null),
+    [firestore]
   );
   const { data: goalsData, isLoading } = useCollection(goalsRef);
 
   const totalExecuted = useMemo(() => {
     if (!goalsData) return 0;
-    return goalsData.reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
-  }, [goalsData]);
+    return goalsData
+        .filter(goal => goal.month.startsWith(yearStr) && goal.goalType === 'collection')
+        .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
+  }, [goalsData, yearStr]);
 
   const progressPercentage = useMemo(() => {
     if (annualGoal === 0) return 0;
