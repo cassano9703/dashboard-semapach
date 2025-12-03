@@ -15,7 +15,6 @@ import {
   History,
   Clock3,
   FileLock,
-  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -85,11 +84,6 @@ const allNavItems: NavItem[] = [
         icon: ClipboardCheck,
       },
     ],
-  },
-  {
-    href: '/reportes/cobranza',
-    label: 'Reportes',
-    icon: FileText,
   },
   {
     href: '/admin',
