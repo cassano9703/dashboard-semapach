@@ -39,7 +39,7 @@ export function MonthlyAchievementsGallery() {
     if (!achievementsData) return [];
     return achievementsData.map(item => ({
       ...item,
-      monthFormatted: format(parseISO(`${item.month}-01`), "MMMM yyyy", { locale: es }),
+      monthFormatted: format(parseISO(`${item.month}-01T00:00:00`), "MMMM yyyy", { locale: es }),
     }));
   }, [achievementsData]);
 
@@ -97,5 +97,3 @@ export function MonthlyAchievementsGallery() {
     </Card>
   );
 }
-
-    
