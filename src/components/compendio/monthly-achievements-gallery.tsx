@@ -69,13 +69,15 @@ export function MonthlyAchievementsGallery() {
                     <CarouselItem key={achievement.id}>
                         <div className="p-1">
                         <Card>
-                            <CardContent className="h-64 p-0 overflow-hidden rounded-t-lg relative">
-                                <Image
-                                    src={achievement.imageUrl}
-                                    alt={`Logro de ${achievement.monthFormatted}`}
-                                    fill
-                                    className="object-cover"
-                                />
+                            <CardContent className="p-0 rounded-t-lg">
+                                <div className="h-64 relative">
+                                    <Image
+                                        src={achievement.imageUrl}
+                                        alt={`Logro de ${achievement.monthFormatted}`}
+                                        fill
+                                        className="object-cover rounded-t-lg"
+                                    />
+                                </div>
                             </CardContent>
                             <CardDescription className="p-4 text-sm text-muted-foreground">
                                 {achievement.description}
