@@ -47,6 +47,22 @@ type NavItem = {
   isCollapsible?: boolean;
 };
 
+// Simple component to prevent SSR for its children
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
+
 const allNavItems: NavItem[] = [
   { href: '/', label: 'Inicio', icon: Home },
   {
@@ -185,19 +201,21 @@ export function MainNav() {
                   </CollapsibleTrigger>
                 </SidebarMenuItem>
                 <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.subItems.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.href}>
-                        <SidebarMenuSubButton
-                          href={subItem.href}
-                          isActive={pathname === subItem.href}
-                        >
-                          <subItem.icon className="h-4 w-4" />
-                          <span>{subItem.label}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
+                   <ClientOnly>
+                      <SidebarMenuSub>
+                        {item.subItems.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.href}>
+                            <SidebarMenuSubButton
+                              href={subItem.href}
+                              isActive={pathname === subItem.href}
+                            >
+                              <subItem.icon className="h-4 w-4" />
+                              <span>{subItem.label}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                   </ClientOnly>
                 </CollapsibleContent>
               </Collapsible>
             ) : (
