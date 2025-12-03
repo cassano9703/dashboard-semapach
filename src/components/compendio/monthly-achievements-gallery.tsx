@@ -20,7 +20,7 @@ import { useMemo, useRef } from 'react';
 import Autoplay from "embla-carousel-autoplay";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { format, parseISO } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function MonthlyAchievementsGallery() {
@@ -39,7 +39,7 @@ export function MonthlyAchievementsGallery() {
     if (!achievementsData) return [];
     return achievementsData.map(item => ({
       ...item,
-      monthFormatted: format(parseISO(`${item.month}-01T00:00:00`), "MMMM yyyy", { locale: es }),
+      monthFormatted: format(parse(item.month, 'yyyy-MM', new Date()), "MMMM yyyy", { locale: es }),
     }));
   }, [achievementsData]);
 
@@ -69,13 +69,12 @@ export function MonthlyAchievementsGallery() {
                     <CarouselItem key={achievement.id}>
                         <div className="p-1">
                         <Card>
-                            <CardContent className="flex aspect-video items-center justify-center p-0 overflow-hidden rounded-t-lg">
+                            <CardContent className="relative h-64 p-0 overflow-hidden rounded-t-lg">
                                 <Image
                                     src={achievement.imageUrl}
                                     alt={`Logro de ${achievement.monthFormatted}`}
-                                    width={800}
-                                    height={600}
-                                    className="object-cover w-full h-full"
+                                    fill
+                                    className="object-cover"
                                 />
                             </CardContent>
                             <CardDescription className="p-4 text-sm text-muted-foreground">
