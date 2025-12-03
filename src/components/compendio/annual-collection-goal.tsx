@@ -4,12 +4,21 @@ import { useMemo } from 'react';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '../ui/progress';
+
+const formatCurrency = (value: number | undefined) => {
+  if (value === undefined) return 'S/ 0.00';
+  return `S/ ${value.toLocaleString('es-PE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
 
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
@@ -47,9 +56,9 @@ export function AnnualCollectionGoal() {
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
-    <Card className="border-2 border-blue-900/20 shadow-lg">
-      <CardHeader>
-        <CardTitle>Meta Anual de Recaudación 2025</CardTitle>
+    <Card>
+      <CardHeader className="items-center text-center">
+        <CardTitle className="text-2xl">Meta Anual de Recaudación 2025</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -58,14 +67,14 @@ export function AnnualCollectionGoal() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="text-5xl font-bold tracking-tighter">
+            <div className="text-4xl font-bold tracking-tighter">
                 {progressPercentage.toFixed(2)}%
             </div>
-            <Progress
-              value={progressPercentage}
-              className="h-2 w-full bg-gray-200"
-              indicatorClassName="bg-blue-600"
-            />
+            <Progress value={progressPercentage} className="h-4" />
+            <div className="w-full flex justify-between text-sm text-muted-foreground mt-2">
+                <span>{formatCurrency(totalExecuted)}</span>
+                <span>{formatCurrency(annualGoal)}</span>
+            </div>
           </div>
         )}
       </CardContent>

@@ -41,7 +41,7 @@ export function MonthlyAchievementsGallery() {
   }, []);
 
   return (
-    <Card className="border-blue-900/10">
+    <Card>
         <CardHeader>
             <CardTitle>Galería de Logros Mensuales</CardTitle>
         </CardHeader>
