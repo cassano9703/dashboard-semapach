@@ -14,7 +14,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription
 } from "@/components/ui/card";
 import { useMemo, useRef } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -45,7 +44,6 @@ export function MonthlyAchievementsGallery() {
     <Card>
         <CardHeader>
             <CardTitle>Galería de Logros Mensuales</CardTitle>
-            <CardDescription>Un resumen visual de los hitos alcanzados cada mes.</CardDescription>
         </CardHeader>
         <CardContent>
             <Carousel
