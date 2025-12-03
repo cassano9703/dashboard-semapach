@@ -14,6 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { useMemo, useRef } from 'react';
 import Autoplay from "embla-carousel-autoplay";
@@ -21,7 +22,6 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CardDescription } from '../ui/card';
 
 export function MonthlyAchievementsGallery() {
   const plugin = useRef(
@@ -47,12 +47,13 @@ export function MonthlyAchievementsGallery() {
     <Card>
         <CardHeader>
             <CardTitle>Galería de Logros Mensuales</CardTitle>
+            <CardDescription>Hitos importantes alcanzados cada mes.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">Cargando logros...</div>
+            <div className="flex items-center justify-center h-80 text-muted-foreground">Cargando logros...</div>
           ) : achievements.length === 0 ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">No hay logros para mostrar.</div>
+            <div className="flex items-center justify-center h-80 text-muted-foreground">No hay logros para mostrar.</div>
           ) : (
             <Carousel
                 plugins={[plugin.current]}
@@ -68,24 +69,25 @@ export function MonthlyAchievementsGallery() {
                     {achievements.map((achievement) => (
                     <CarouselItem key={achievement.id}>
                         <div className="p-1">
-                        <Card>
-                            <CardContent className="p-0 rounded-t-lg">
+                          <Card className="overflow-hidden">
+                            <CardContent className="p-0">
                                 <div className="h-64 relative">
                                     <Image
                                         src={achievement.imageUrl}
                                         alt={`Logro de ${achievement.monthFormatted}`}
                                         fill
-                                        className="object-cover rounded-t-lg"
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
                                 </div>
                             </CardContent>
-                            <CardDescription className="p-4 text-sm text-muted-foreground">
+                            <div className="p-4 text-sm text-muted-foreground">
                                 {achievement.description}
-                            </CardDescription>
-                            <CardFooter className="flex justify-center p-4 bg-muted/50 rounded-b-lg">
+                            </div>
+                            <CardFooter className="flex justify-center p-2 bg-muted/50">
                                 <span className="text-sm font-medium text-muted-foreground capitalize">{achievement.monthFormatted}</span>
                             </CardFooter>
-                        </Card>
+                          </Card>
                         </div>
                     </CarouselItem>
                     ))}
