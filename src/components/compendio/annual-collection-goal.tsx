@@ -8,6 +8,12 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 
@@ -37,7 +43,7 @@ export function AnnualCollectionGoal() {
   const { data: annualGoalsData, isLoading: isLoadingAnnual } = useCollection(annualGoalsRef);
   
   const annualGoal = useMemo(() => {
-      return annualGoalsData?.[0]?.amount || 31867690;
+      return annualGoalsData?.[0]?.amount || 0;
   }, [annualGoalsData]);
 
   const totalExecuted = useMemo(() => {
@@ -46,6 +52,10 @@ export function AnnualCollectionGoal() {
         .filter(goal => goal.month.startsWith(yearStr) && goal.goalType === 'collection')
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
   }, [monthlyGoalsData, yearStr]);
+  
+  const remainingAmount = useMemo(() => {
+    return annualGoal > totalExecuted ? annualGoal - totalExecuted : 0;
+  }, [annualGoal, totalExecuted]);
 
   const progressPercentage = useMemo(() => {
     if (annualGoal === 0) return 0;
@@ -75,12 +85,21 @@ export function AnnualCollectionGoal() {
                 {formatCurrency(totalExecuted)}
               </span>
             </div>
-            <div className="w-full bg-secondary rounded-full h-2.5">
-              <div
-                className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2.5 rounded-full"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full bg-secondary rounded-full h-2.5 cursor-pointer">
+                    <div
+                      className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2.5 rounded-full"
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Falta {formatCurrency(remainingAmount)} para la meta.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {progressPercentage.toFixed(2)}% completado
