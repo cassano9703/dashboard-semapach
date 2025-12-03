@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Tooltip,
@@ -80,7 +79,6 @@ export function AnnualCollectionGoal() {
   return (
     <Card className="border-blue-900/10">
       <CardHeader>
-        <CardTitle>Meta Anual de Recaudación {currentYear}</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
