@@ -23,7 +23,7 @@ import { Calendar } from '../ui/calendar';
 import { format, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, where } from 'firebase/firestore';
 
 const formatNumber = (value: number) => value.toLocaleString('es-PE');
 
@@ -37,8 +37,8 @@ export function CutsAndReconnectionsReport() {
       const yearStr = year.toString();
       return query(
         collection(firestore, 'service_operations'),
-        where => where('month', '>=', `${yearStr}-01`),
-        where => where('month', '<=', `${yearStr}-12`),
+        where('month', '>=', `${yearStr}-01`),
+        where('month', '<=', `${yearStr}-12`),
         orderBy('month', 'asc')
       );
     },
