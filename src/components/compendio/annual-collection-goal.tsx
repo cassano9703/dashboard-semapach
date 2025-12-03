@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import {
   Tooltip,
@@ -14,6 +16,7 @@ import {
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Progress } from '../ui/progress';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0.00';
@@ -82,10 +85,12 @@ export function AnnualCollectionGoal() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="w-full bg-secondary rounded-full h-2.5">
-                    <div
-                      className={cn("h-2.5 rounded-full bg-gradient-to-r", progressColorClass)}
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
+                    <Progress
+                      value={progressPercentage}
+                      variant="striped"
+                      className="h-2.5"
+                      indicatorClassName={cn("rounded-full bg-gradient-to-r", progressColorClass)}
+                    />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
