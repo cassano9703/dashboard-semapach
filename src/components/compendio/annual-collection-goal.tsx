@@ -19,7 +19,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (value: number | undefined) => {
-  if (value === undefined) return 'S/ 0';
+  if (value === undefined) return 'S/ 0.00';
   return `S/ ${value.toLocaleString('es-PE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -29,11 +29,10 @@ const formatCurrency = (value: number | undefined) => {
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
-  const yearStr = currentYear.toString();
 
   const monthlyGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'collection')) : null),
-    [firestore]
+    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'collection'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
+    [firestore, currentYear]
   );
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
@@ -50,29 +49,14 @@ export function AnnualCollectionGoal() {
   const totalExecuted = useMemo(() => {
     if (!monthlyGoalsData) return 0;
     return monthlyGoalsData
-        .filter(goal => goal.month.startsWith(yearStr))
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
-  }, [monthlyGoalsData, yearStr]);
+  }, [monthlyGoalsData]);
   
-  const remainingAmount = useMemo(() => {
-    return annualGoal > totalExecuted ? annualGoal - totalExecuted : 0;
-  }, [annualGoal, totalExecuted]);
-
   const progressPercentage = useMemo(() => {
     if (annualGoal === 0) return 0;
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
 
-  const getProgressColor = (percentage: number) => {
-    if (percentage < 40) {
-      return "from-red-500 to-yellow-500";
-    } else if (percentage < 80) {
-      return "from-yellow-500 to-green-500";
-    } else {
-      return "from-green-500 to-cyan-500";
-    }
-  };
-  
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
@@ -96,21 +80,12 @@ export function AnnualCollectionGoal() {
                 {formatCurrency(totalExecuted)}
               </span>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="w-full bg-secondary rounded-full h-2.5 cursor-pointer">
-                    <div
-                      className={cn("bg-gradient-to-r h-2.5 rounded-full", getProgressColor(progressPercentage))}
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Falta {formatCurrency(remainingAmount)} para la meta.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+              <div className="w-full bg-secondary rounded-full h-2.5">
+                <div
+                  className="bg-gradient-to-r from-green-400 to-cyan-400 h-2.5 rounded-full"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {progressPercentage.toFixed(2)}% completado
