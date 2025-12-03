@@ -163,6 +163,8 @@ export function MonthlyAchievementsCRUD() {
     }
   };
 
+  const isSaveDisabled = !description || !date || (!imageFile && !editingItem);
+
   return (
     <Card>
       <CardHeader>
@@ -173,53 +175,56 @@ export function MonthlyAchievementsCRUD() {
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-6 p-4 border rounded-lg">
+          {/* Columna de Formulario */}
           <div className="grid gap-4">
             <div className="grid gap-2">
-                <Label htmlFor="month">Mes</Label>
-                <Popover>
+              <Label htmlFor="month">Mes</Label>
+              <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant={"outline"} className="justify-start text-left font-normal" disabled={!!editingItem}>
+                  <Button variant={"outline"} className="justify-start text-left font-normal" disabled={!!editingItem}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "MMMM 'de' yyyy", { locale: es }) : <span>Seleccione un mes</span>}
-                    </Button>
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={es} defaultMonth={date} />
+                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={es} defaultMonth={date} />
                 </PopoverContent>
-                </Popover>
+              </Popover>
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="description">Descripción</Label>
-                <Textarea id="description" placeholder="Breve resumen del hito o logro alcanzado..." value={description} onChange={e => setDescription(e.target.value)} rows={5}/>
+              <Label htmlFor="description">Descripción</Label>
+              <Textarea id="description" placeholder="Breve resumen del hito o logro alcanzado..." value={description} onChange={e => setDescription(e.target.value)} rows={5}/>
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Imagen del Logro</Label>
-            <Label htmlFor="image-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-full cursor-pointer hover:bg-muted/50 transition-colors">
+          {/* Columna de Imagen y Acciones */}
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Imagen del Logro</Label>
+              <Label htmlFor="image-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-48 cursor-pointer hover:bg-muted/50 transition-colors">
                 {imagePreview ? (
-                    <div className="relative w-full h-48">
-                        <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
-                    </div>
+                  <div className="relative w-full h-full">
+                    <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
+                  </div>
                 ) : (
-                    <div className="text-center text-muted-foreground">
-                        <Upload className="mx-auto h-12 w-12" />
-                        <p className="mt-2">Suba o arrastre una imagen</p>
-                    </div>
+                  <div className="text-center text-muted-foreground">
+                    <Upload className="mx-auto h-12 w-12" />
+                    <p className="mt-2">Haga clic para subir una imagen</p>
+                  </div>
                 )}
-            </Label>
-            <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
-          </div>
-          
-          <div className="md:col-span-2 flex items-end gap-2">
-            <Button className="w-full" onClick={handleAddOrUpdate}>
+              </Label>
+              <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
+            </div>
+            <div className="flex items-end gap-2">
+              <Button className="w-full" onClick={handleAddOrUpdate} disabled={isSaveDisabled}>
                 {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
-            </Button>
-            {editingItem && (
+              </Button>
+              {editingItem && (
                 <Button variant="outline" size="icon" onClick={clearForm}>
-                    <X className="h-4 w-4" />
+                  <X className="h-4 w-4" />
                 </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
