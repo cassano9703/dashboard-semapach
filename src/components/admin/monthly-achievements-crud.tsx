@@ -18,22 +18,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, Upload } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, Upload, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { useState, ChangeEvent, useMemo } from "react";
+import { useState } from "react";
 import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCollection, useFirestore, useMemoFirebase, useStorage } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, doc, deleteDoc, setDoc, Timestamp, orderBy } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
 import Image from "next/image";
 
+const isValidImageUrl = (url: string) => {
+    return url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+};
+
 export function MonthlyAchievementsCRUD() {
   const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   
   const dataRef = useMemoFirebase(
@@ -74,6 +76,15 @@ export function MonthlyAchievementsCRUD() {
         description: 'Por favor, complete todos los campos.',
       });
       return;
+    }
+
+    if (!isValidImageUrl(imageUrl)) {
+        toast({
+            variant: 'destructive',
+            title: 'URL de Imagen no Válida',
+            description: 'Por favor, use la URL directa de la imagen (que termine en .jpg, .png, etc.). Haga clic derecho en la imagen y seleccione "Copiar dirección de la imagen".',
+        });
+        return;
     }
 
     const monthStr = format(date, 'yyyy-MM');
@@ -126,6 +137,8 @@ export function MonthlyAchievementsCRUD() {
     }
   };
 
+  const isUrlValidForPreview = isValidImageUrl(imageUrl);
+
   return (
     <Card>
       <CardHeader>
@@ -153,7 +166,7 @@ export function MonthlyAchievementsCRUD() {
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="imageUrl">URL de la Imagen</Label>
-                    <Input id="imageUrl" placeholder="https://imgur.com/gallery/..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+                    <Input id="imageUrl" placeholder="https://i.imgur.com/imagen.jpg" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="description">Descripción</Label>
@@ -163,9 +176,19 @@ export function MonthlyAchievementsCRUD() {
 
             <div className="grid gap-4">
                 <Label>Vista Previa de la Imagen</Label>
-                <div className="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg bg-muted">
+                <div className="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg bg-muted p-4">
                     {imageUrl ? (
-                         <Image src={imageUrl} alt="Vista previa" layout="fill" objectFit="contain" className="rounded-lg" />
+                        isUrlValidForPreview ? (
+                            <Image src={imageUrl} alt="Vista previa" fill objectFit="contain" className="rounded-lg" />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-center text-amber-600 dark:text-amber-400">
+                                <Info className="h-10 w-10 mb-2" />
+                                <p className="font-semibold">URL no válida</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Copie la <span className="font-bold">dirección de la imagen</span>, no la del navegador.
+                                </p>
+                            </div>
+                        )
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center text-muted-foreground">
                             <Upload className="h-10 w-10 mb-2" />
