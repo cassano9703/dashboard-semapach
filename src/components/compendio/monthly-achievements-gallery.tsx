@@ -14,7 +14,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { useMemo, useRef } from 'react';
 import Autoplay from "embla-carousel-autoplay";
@@ -22,6 +21,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { CardDescription } from '../ui/card';
 
 export function MonthlyAchievementsGallery() {
   const plugin = useRef(
@@ -69,7 +69,7 @@ export function MonthlyAchievementsGallery() {
                     <CarouselItem key={achievement.id}>
                         <div className="p-1">
                         <Card>
-                            <CardContent className="relative h-64 p-0 overflow-hidden rounded-t-lg">
+                            <CardContent className="h-64 p-0 overflow-hidden rounded-t-lg relative">
                                 <Image
                                     src={achievement.imageUrl}
                                     alt={`Logro de ${achievement.monthFormatted}`}
