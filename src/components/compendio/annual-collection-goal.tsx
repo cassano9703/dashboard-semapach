@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
-import { Progress } from '@/components/ui/progress';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0';
@@ -58,21 +57,26 @@ export function AnnualCollectionGoal() {
             <p className="text-muted-foreground">Cargando meta anual...</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-lg font-medium text-muted-foreground">Avance Total</div>
-              <div className="text-2xl font-bold text-primary">
-                {formatCurrency(totalExecuted)}
-              </div>
-            </div>
-            <Progress value={progressPercentage} className="h-4" />
+          <div className="space-y-2">
             <div className="flex justify-between items-baseline">
-              <div className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{progressPercentage.toFixed(2)}%</span> completado
-              </div>
-              <div className="text-sm font-medium text-muted-foreground">
-                Meta: <span className="font-bold text-foreground">{formatCurrency(annualGoal)}</span>
-              </div>
+              <span className="text-muted-foreground">Avance Total</span>
+              <span className="text-2xl font-bold text-primary">
+                {formatCurrency(totalExecuted)}
+              </span>
+            </div>
+            <div className="w-full bg-secondary rounded-full h-2.5">
+              <div
+                className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2.5 rounded-full"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">
+                {progressPercentage.toFixed(2)}% completado
+              </span>
+              <span className="text-muted-foreground">
+                Meta: <span className="font-semibold text-foreground">{formatCurrency(annualGoal)}</span>
+              </span>
             </div>
           </div>
         )}
