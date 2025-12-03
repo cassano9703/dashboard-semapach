@@ -89,7 +89,7 @@ export function MonthlyAchievementsCRUD() {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
-        description: 'Por favor, complete todos los campos, incluida la imagen.',
+        description: 'Por favor, complete todos los campos. Si está creando un nuevo logro, asegúrese de subir una imagen.',
       });
       return;
     }
