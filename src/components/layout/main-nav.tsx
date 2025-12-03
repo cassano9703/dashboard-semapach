@@ -154,14 +154,18 @@ export function MainNav() {
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    // This effect now only runs on the client and sets the initial open state
+    // based on the current path, avoiding server/client mismatch.
     const openState: Record<string, boolean> = {};
     navItems.forEach(item => {
-      if(item.subItems && isSubItemActive(item.subItems)) {
-        openState[item.href] = true;
+      if (item.isCollapsible && item.subItems) {
+        openState[item.href] = isSubItemActive(item.subItems);
       }
     });
     setOpenCollapsibles(openState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
 
   const handleCollapsibleToggle = (href: string) => {
     setOpenCollapsibles(prev => ({...prev, [href]: !prev[href]}));
