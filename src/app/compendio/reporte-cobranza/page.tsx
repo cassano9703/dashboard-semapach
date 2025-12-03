@@ -1,6 +1,5 @@
 'use client';
 import { AnnualCollectionGoal } from '@/components/compendio/annual-collection-goal';
-import { CutsAndReconnectionsReport } from '@/components/compendio/cuts-reconnections-report';
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 import { MonthlyCollectionGoal } from '@/components/compendio/monthly-collection-goal';
 
@@ -19,7 +18,6 @@ export default function ReporteCobranzaPage() {
           <MonthlyCollectionGoal />
         </div>
       </div>
-      <CutsAndReconnectionsReport />
     </div>
   );
 }
