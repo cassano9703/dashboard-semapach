@@ -91,13 +91,10 @@ export const useFirebaseApp = (): FirebaseApp | null => {
 };
 
 /** Hook to access Firebase Storage instance. */
-export const useStorage = (): FirebaseStorage => {
+export const useStorage = (): FirebaseStorage | null => {
     const context = useContext(FirebaseContext);
     if (context === undefined) {
         throw new Error('useStorage must be used within a FirebaseProvider.');
-    }
-    if (!context.storage) {
-        throw new Error('Storage not available. Check FirebaseProvider props.');
     }
     return context.storage;
 }

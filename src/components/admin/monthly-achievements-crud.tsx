@@ -18,22 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2, X, Upload } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { format, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCollection, useFirestore, useMemoFirebase, useStorage } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, doc, deleteDoc, setDoc, Timestamp, orderBy } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
-import Image from "next/image";
 
 export function MonthlyAchievementsCRUD() {
   const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   
   const dataRef = useMemoFirebase(
@@ -44,33 +41,16 @@ export function MonthlyAchievementsCRUD() {
 
   const [date, setDate] = useState<Date>();
   const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
   const [editingItem, setEditingItem] = useState<any>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sortedData = data || [];
   
   const clearForm = () => {
     setDate(undefined);
     setDescription('');
+    setImageUrl('');
     setEditingItem(null);
-    setImageFile(null);
-    setImagePreview(null);
-    if(fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleEdit = (item: any) => {
@@ -80,39 +60,22 @@ export function MonthlyAchievementsCRUD() {
       setDate(itemDate);
     }
     setDescription(item.description);
-    setImagePreview(item.imageUrl);
-    setImageFile(null);
+    setImageUrl(item.imageUrl);
   };
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !storage || !date || !description) {
+    if (!firestore || !date || !description || !imageUrl) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
-        description: 'Por favor, complete el mes y la descripción.',
-      });
-      return;
-    }
-     if (!imageFile && !editingItem) {
-      toast({
-        variant: 'destructive',
-        title: 'Error de validación',
-        description: 'Por favor, suba una imagen para un nuevo logro.',
+        description: 'Por favor, complete todos los campos.',
       });
       return;
     }
   
     const monthStr = format(date, 'yyyy-MM');
-    let imageUrl = editingItem?.imageUrl || '';
-
+    
     try {
-        if (imageFile) {
-            const filePath = `monthly_achievements/${monthStr}/${imageFile.name}`;
-            const fileRef = storageRef(storage, filePath);
-            const uploadResult = await uploadBytes(fileRef, imageFile);
-            imageUrl = await getDownloadURL(uploadResult.ref);
-        }
-
         const dataToSave = {
             month: monthStr,
             imageUrl,
@@ -137,18 +100,10 @@ export function MonthlyAchievementsCRUD() {
   };
 
   const handleDelete = async (item: any) => {
-    if (!firestore || !storage) return;
-
+    if (!firestore) return;
     const docRef = doc(firestore, "monthly_achievements", item.id);
-    const imageRef = storageRef(storage, item.imageUrl);
-
     try {
         await deleteDoc(docRef);
-        await deleteObject(imageRef).catch(error => {
-            if (error.code !== 'storage/object-not-found') {
-                throw error;
-            }
-        });
         toast({
             variant: "success",
             title: "Éxito",
@@ -173,7 +128,6 @@ export function MonthlyAchievementsCRUD() {
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-6 p-4 border rounded-lg">
-          {/* Columna de Formulario */}
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="month">Mes</Label>
@@ -190,41 +144,29 @@ export function MonthlyAchievementsCRUD() {
               </Popover>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="imageUrl">URL de la Imagen</Label>
+              <Input id="imageUrl" placeholder="https://example.com/imagen.jpg" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="grid gap-2">
               <Label htmlFor="description">Descripción</Label>
               <Textarea id="description" placeholder="Breve resumen del hito o logro alcanzado..." value={description} onChange={e => setDescription(e.target.value)} rows={5}/>
             </div>
           </div>
-
-          {/* Columna de Imagen y Acciones */}
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label>Imagen del Logro</Label>
-              <Label htmlFor="image-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-lg p-4 h-48 cursor-pointer hover:bg-muted/50 transition-colors">
-                {imagePreview ? (
-                  <div className="relative w-full h-full">
-                    <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="contain" />
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    <Upload className="mx-auto h-12 w-12" />
-                    <p className="mt-2">Haga clic para subir una imagen</p>
-                  </div>
-                )}
-              </Label>
-              <Input ref={fileInputRef} id="image-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
-            </div>
-            <div className="flex items-end gap-2">
-              <Button className="w-full" onClick={handleAddOrUpdate}>
-                {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
-              </Button>
-              {editingItem && (
-                <Button variant="outline" size="icon" onClick={clearForm}>
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
         </div>
+        <div className="flex items-center justify-end gap-2 px-4">
+            {editingItem && (
+            <Button variant="outline" size="icon" onClick={clearForm}>
+                <X className="h-4 w-4" />
+            </Button>
+            )}
+            <Button onClick={handleAddOrUpdate}>
+                {editingItem ? <><Edit className="mr-2 h-4 w-4" /> Actualizar Logro</> : <><Plus className="mr-2 h-4 w-4" /> Agregar Logro</>}
+            </Button>
+        </div>
+
 
         <div className="border rounded-lg overflow-hidden">
           <div className="relative max-h-96 overflow-y-auto">

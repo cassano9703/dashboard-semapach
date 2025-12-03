@@ -22,15 +22,18 @@ export function initializeFirebase() {
     firebaseApp = getApp();
   }
 
-  return getSdks(firebaseApp);
-}
+  let storage = null;
+  try {
+    storage = getStorage(firebaseApp);
+  } catch (e) {
+    console.warn('Firebase Storage could not be initialized.', e);
+  }
 
-export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     firestore: getFirestore(firebaseApp),
     auth: getAuth(firebaseApp),
-    storage: getStorage(firebaseApp),
+    storage,
   };
 }
 
