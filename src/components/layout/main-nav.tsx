@@ -86,18 +86,10 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
-   {
-    href: '/reportes',
+  {
+    href: '/reportes/cobranza',
     label: 'Reportes',
     icon: FileText,
-    isCollapsible: true,
-    subItems: [
-      {
-        href: '/reportes/cobranza',
-        label: 'Oficina de Cobranza',
-        icon: Briefcase,
-      },
-    ],
   },
   {
     href: '/admin',
@@ -201,7 +193,7 @@ export function MainNav() {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   href={item.href}
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
