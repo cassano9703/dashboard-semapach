@@ -26,12 +26,23 @@ const formatCurrency = (value: number | undefined) => {
   })}`;
 };
 
+const getProgressColor = (percentage: number) => {
+  if (percentage < 40) {
+    return 'from-red-500 to-yellow-500';
+  }
+  if (percentage < 80) {
+    return 'from-yellow-500 to-green-500';
+  }
+  return 'from-green-500 to-cyan-400';
+};
+
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
 
+  // Simplified query to avoid composite index
   const monthlyGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('goalType', '==', 'collection'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
+    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
     [firestore, currentYear]
   );
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
@@ -48,7 +59,9 @@ export function AnnualCollectionGoal() {
 
   const totalExecuted = useMemo(() => {
     if (!monthlyGoalsData) return 0;
+    // Filter for 'collection' type on the client side
     return monthlyGoalsData
+        .filter(goal => goal.goalType === 'collection')
         .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
   }, [monthlyGoalsData]);
   
@@ -56,8 +69,14 @@ export function AnnualCollectionGoal() {
     if (annualGoal === 0) return 0;
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
+  
+  const missingAmount = useMemo(() => {
+    const missing = annualGoal - totalExecuted;
+    return missing > 0 ? missing : 0;
+  }, [annualGoal, totalExecuted]);
 
   const isLoading = isLoadingMonthly || isLoadingAnnual;
+  const progressColorClass = getProgressColor(progressPercentage);
 
   return (
     <Card>
@@ -80,12 +99,21 @@ export function AnnualCollectionGoal() {
                 {formatCurrency(totalExecuted)}
               </span>
             </div>
-              <div className="w-full bg-secondary rounded-full h-2.5">
-                <div
-                  className="bg-gradient-to-r from-green-400 to-cyan-400 h-2.5 rounded-full"
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
-              </div>
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full bg-secondary rounded-full h-2.5">
+                    <div
+                      className={cn("h-2.5 rounded-full bg-gradient-to-r", progressColorClass)}
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Faltan {formatCurrency(missingAmount)} para la meta</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {progressPercentage.toFixed(2)}% completado
