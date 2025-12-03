@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Home,
@@ -16,6 +16,7 @@ import {
   Clock3,
   FileLock,
   BookOpen,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -86,7 +87,19 @@ const allNavItems: NavItem[] = [
       },
     ],
   },
-  { href: '/compendio', label: 'Compendio', icon: BookOpen },
+  {
+    href: '/compendio',
+    label: 'Compendio',
+    icon: BookOpen,
+    isCollapsible: true,
+    subItems: [
+      {
+        href: '/compendio/reporte-cobranza',
+        label: 'Reporte de Cobranza',
+        icon: ClipboardList,
+      },
+    ],
+  },
   {
     href: '/admin',
     label: 'Administración',
