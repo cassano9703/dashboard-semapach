@@ -7,9 +7,6 @@ import { MonthlyCollectionGoal } from '@/components/compendio/monthly-collection
 export default function ReporteCobranzaPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight text-center uppercase">
-        Reporte Anual Cobranza
-      </h1>
       <AnnualCollectionGoal />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5">

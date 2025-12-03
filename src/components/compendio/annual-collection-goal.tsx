@@ -5,24 +5,9 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
+import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '../ui/progress';
-
-const formatCurrency = (value: number | undefined) => {
-  if (value === undefined) return 'S/ 0.00';
-  return `S/ ${value.toLocaleString('es-PE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-};
 
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
@@ -57,52 +42,26 @@ export function AnnualCollectionGoal() {
     return (totalExecuted / annualGoal) * 100;
   }, [totalExecuted, annualGoal]);
   
-  const missingAmount = useMemo(() => {
-    const missing = annualGoal - totalExecuted;
-    return missing > 0 ? missing : 0;
-  }, [annualGoal, totalExecuted]);
-
   const isLoading = isLoadingMonthly || isLoadingAnnual;
-  const progressColorClass = 'from-cyan-400 to-blue-500';
 
   return (
     <Card className="border-2 border-blue-900/20 shadow-lg">
       <CardContent className="pt-6">
         {isLoading ? (
-          <div className="flex items-center justify-center h-24">
+          <div className="flex items-center justify-center h-16">
             <p className="text-muted-foreground">Cargando meta anual...</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="flex justify-between items-baseline">
-              <span className="text-muted-foreground">Avance Total</span>
-              <span className="text-2xl font-bold text-primary">
-                {formatCurrency(totalExecuted)}
-              </span>
-            </div>
-             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="w-full bg-secondary rounded-full h-4">
-                    <Progress
-                      value={progressPercentage}
-                      variant="striped"
-                      className="h-4"
-                      indicatorClassName={cn("rounded-full bg-gradient-to-r", progressColorClass)}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Faltan {formatCurrency(missingAmount)} para la meta</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <div className="flex justify-between text-sm">
+          <div className="space-y-4">
+            <span className="text-muted-foreground">Avance Total</span>
+            <Progress
+              value={progressPercentage}
+              className="h-2"
+              indicatorClassName="bg-gray-400"
+            />
+            <div className="text-sm">
               <span className="text-muted-foreground">
                 {progressPercentage.toFixed(2)}% completado
-              </span>
-              <span className="text-muted-foreground">
-                Meta: <span className="font-semibold text-foreground">{formatCurrency(annualGoal)}</span>
               </span>
             </div>
           </div>
