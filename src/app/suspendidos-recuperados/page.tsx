@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
@@ -10,7 +10,15 @@ import { WeeklyRecoveredChart } from '@/components/dashboard/weekly-recovered-ch
 
 
 export default function SuspendidosRecuperadosPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
   
   return (
     <div className="flex flex-col gap-6">

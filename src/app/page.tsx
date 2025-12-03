@@ -6,7 +6,7 @@ import { StatCards } from '@/components/dashboard/stat-cards';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 import { RecoveredStatsCards } from '@/components/dashboard/recovered-stats-cards';
@@ -18,7 +18,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
   
   const currentMonth = format(selectedDate, "MMMM 'de' yyyy", { locale: es });
 

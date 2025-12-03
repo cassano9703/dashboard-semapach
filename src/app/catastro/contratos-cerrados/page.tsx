@@ -1,11 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ClosedContractsData } from '@/components/catastro/closed-contracts-data';
 import { ContractStatCards } from '@/components/catastro/contract-stat-cards';
 
 export default function ContratosCerradosPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -8,7 +8,15 @@ import { Recovered2to3StatCards } from '@/components/dashboard/recovered-2-to-3-
 import { Recovered2to3Chart } from '@/components/dashboard/recovered-2-to-3-chart';
 
 export default function Recuperados23MesesPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6">
