@@ -11,14 +11,6 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '../ui/progress';
 
-const formatCurrency = (value: number | undefined) => {
-    if (value === undefined) return 'S/ 0';
-    return `S/ ${value.toLocaleString('es-PE', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    })}`;
-};
-
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
@@ -55,8 +47,8 @@ export function AnnualCollectionGoal() {
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
-    <Card className="border-2 border-blue-900/20 shadow-lg">
-      <CardHeader>
+    <Card className="border-blue-900/10">
+      <CardHeader className="items-center text-center">
         <CardTitle>Avance Total</CardTitle>
       </CardHeader>
       <CardContent>
@@ -65,21 +57,15 @@ export function AnnualCollectionGoal() {
             <p className="text-muted-foreground">Cargando meta anual...</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-5xl font-bold tracking-tighter">
+                {progressPercentage.toFixed(2)}%
+            </div>
             <Progress
               value={progressPercentage}
-              variant="striped"
-              className="h-4"
-              indicatorClassName="bg-gradient-to-r from-blue-400 to-cyan-400"
+              className="h-2 w-full bg-gray-200"
+              indicatorClassName="bg-gray-400"
             />
-            <div className="flex justify-between text-sm font-medium">
-              <span className="text-muted-foreground">
-                {progressPercentage.toFixed(2)}% Completado
-              </span>
-              <span className="font-bold">
-                 {formatCurrency(totalExecuted)} / <span className="text-muted-foreground">{formatCurrency(annualGoal)}</span>
-              </span>
-            </div>
           </div>
         )}
       </CardContent>
