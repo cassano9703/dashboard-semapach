@@ -15,6 +15,7 @@ import { es } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '../ui/chart';
 import { Target } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 const formatCurrency = (value: number | undefined) => {
@@ -93,6 +94,11 @@ export function Debt3PlusGoal() {
     return monthlyGoals.find(g => g.month.endsWith('-10'));
   }, [monthlyGoals]);
 
+  const reductionDifference = useMemo(() => {
+    if (!octoberData) return null;
+    return annualGoalAmount - octoberData.executedAmount;
+  }, [annualGoalAmount, octoberData]);
+
 
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
@@ -100,7 +106,6 @@ export function Debt3PlusGoal() {
     <Card className="rounded-t-none">
       <CardHeader>
         <CardTitle>Deuda de 3 a Más</CardTitle>
-        <CardDescription>Muestra la reducción mensual de la deuda de 3 a más meses.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -121,6 +126,19 @@ export function Debt3PlusGoal() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Deuda de Octubre: {formatCurrency(octoberData.executedAmount)}
                 </p>
+              )}
+               {reductionDifference !== null && (
+                <div className={cn(
+                    "text-xs font-semibold px-2 py-1 rounded-full mt-1",
+                    reductionDifference > 0 
+                        ? "bg-red-100 text-red-800" 
+                        : "bg-green-100 text-green-800"
+                )}>
+                    {reductionDifference > 0 
+                        ? `Falta reducir: ${formatCurrency(reductionDifference)}`
+                        : `Reducción superada por: ${formatCurrency(Math.abs(reductionDifference))}`
+                    }
+                </div>
               )}
             </div>
             {monthlyGoals.length === 0 ? (
