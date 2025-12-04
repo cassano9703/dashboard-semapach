@@ -1,25 +1,30 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scissors, Repeat, Building, UserCog } from 'lucide-react';
+import { Scissors, Repeat, Building, UserCog, CalendarIcon } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Button } from '../ui/button';
+import { Calendar } from '../ui/calendar';
 
 const formatNumber = (value: number) => value.toLocaleString('es-PE');
 
-interface ServiceOperationStatsProps {
-    selectedDate: Date;
-}
+export function ServiceOperationStats() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-export function ServiceOperationStats({ selectedDate }: ServiceOperationStatsProps) {
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+  
   const firestore = useFirestore();
-  const selectedMonth = format(selectedDate, 'yyyy-MM');
+  const selectedMonth = selectedDate ? format(selectedDate, 'yyyy-MM') : null;
 
   const operationsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'service_operations'), where('month', '==', selectedMonth)) : null),
+    () => (firestore && selectedMonth) ? query(collection(firestore, 'service_operations'), where('month', '==', selectedMonth)) : null,
     [firestore, selectedMonth]
   );
   const { data: operationsData, isLoading } = useCollection(operationsRef);
@@ -52,6 +57,10 @@ export function ServiceOperationStats({ selectedDate }: ServiceOperationStatsPro
 
     return { semapachCuts, servisCuts, semapachReconnections, servisReconnections };
   }, [operationsData]);
+  
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
 
   const StatCard = ({ title, value, description, icon, isLoading, borderColor }: { title: string, value: number, description: string, icon: React.ReactNode, isLoading: boolean, borderColor: string }) => (
     <Card className={`border-l-4 ${borderColor}`}>
@@ -67,39 +76,65 @@ export function ServiceOperationStats({ selectedDate }: ServiceOperationStatsPro
   );
 
   return (
-    <div className="grid gap-4 grid-cols-2">
-        <StatCard 
-            title="Cortes SEMAPACH" 
-            value={stats.semapachCuts} 
-            description={`Total en ${format(selectedDate, 'LLLL', { locale: es })}`}
-            icon={<Scissors className="h-4 w-4 text-muted-foreground" />}
-            isLoading={isLoading}
-            borderColor="border-red-500"
-        />
-        <StatCard 
-            title="Cortes SERVIS" 
-            value={stats.servisCuts} 
-            description="Total por la entidad"
-            icon={<Building className="h-4 w-4 text-muted-foreground" />}
-            isLoading={isLoading}
-            borderColor="border-amber-500"
-        />
-        <StatCard 
-            title="Reaperturas SEMAPACH" 
-            value={stats.semapachReconnections} 
-            description="Total de reconexiones"
-            icon={<Repeat className="h-4 w-4 text-muted-foreground" />}
-            isLoading={isLoading}
-            borderColor="border-green-500"
-        />
-        <StatCard 
-            title="Reaperturas SERVIS" 
-            value={stats.servisReconnections} 
-            description="Total por la entidad"
-            icon={<UserCog className="h-4 w-4 text-muted-foreground" />}
-            isLoading={isLoading}
-            borderColor="border-sky-500"
-        />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Cortes y Reaperturas</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-full sm:w-auto justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+                <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+                locale={es}
+                defaultMonth={selectedDate}
+                />
+            </PopoverContent>
+        </Popover>
+
+        <div className="grid gap-4 grid-cols-2">
+            <StatCard 
+                title="Cortes SEMAPACH" 
+                value={stats.semapachCuts} 
+                description={`Total en ${format(selectedDate, 'LLLL', { locale: es })}`}
+                icon={<Scissors className="h-4 w-4 text-muted-foreground" />}
+                isLoading={isLoading}
+                borderColor="border-red-500"
+            />
+            <StatCard 
+                title="Cortes SERVIS" 
+                value={stats.servisCuts} 
+                description="Total por la entidad"
+                icon={<Building className="h-4 w-4 text-muted-foreground" />}
+                isLoading={isLoading}
+                borderColor="border-amber-500"
+            />
+            <StatCard 
+                title="Reaperturas SEMAPACH" 
+                value={stats.semapachReconnections} 
+                description="Total de reconexiones"
+                icon={<Repeat className="h-4 w-4 text-muted-foreground" />}
+                isLoading={isLoading}
+                borderColor="border-green-500"
+            />
+            <StatCard 
+                title="Reaperturas SERVIS" 
+                value={stats.servisReconnections} 
+                description="Total por la entidad"
+                icon={<UserCog className="h-4 w-4 text-muted-foreground" />}
+                isLoading={isLoading}
+                borderColor="border-sky-500"
+            />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
