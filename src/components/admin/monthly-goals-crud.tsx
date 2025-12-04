@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Info, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { useState } from "react";
@@ -34,6 +34,7 @@ import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, Timestamp, updateDoc, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 const formatCurrency = (value: number | string) => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -104,7 +105,14 @@ export function MonthlyGoalsCRUD() {
       updatedAt: Timestamp.now(),
     };
 
-    if (executedAmount) dataToSave.executedAmount = parseFloat(executedAmount);
+    if (executedAmount) {
+      dataToSave.executedAmount = parseFloat(executedAmount);
+    } else {
+      // If executed is empty and it's a collection goal, it will be updated by daily collection CRUD
+      // If it's a debt goal, it should be explicitly set
+      if(goalType === 'debt_3_plus') dataToSave.executedAmount = null;
+    }
+
 
     try {
       if (editingId) {
@@ -165,8 +173,10 @@ export function MonthlyGoalsCRUD() {
     proposed: goalType === 'debt_3_plus' ? 'Monto Inicial (Deuda)' : 'Monto Propuesto',
     executed: goalType === 'debt_3_plus' ? 'Monto Actual (Deuda)' : 'Monto Ejecutado',
     proposedPlaceholder: goalType === 'debt_3_plus' ? '1000000.00' : '500000.00',
-    executedPlaceholder: goalType === 'debt_3_plus' ? '800000.00' : '550000.00',
+    executedPlaceholder: goalType === 'debt_3_plus' ? '800000.00' : 'Actualizado automáticamente',
   }
+
+  const isExecutedDisabled = goalType === 'collection';
 
   return (
     <Card>
@@ -221,7 +231,10 @@ export function MonthlyGoalsCRUD() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="executedAmount">{labels.executed}</Label>
-            <Input id="executedAmount" placeholder={labels.executedPlaceholder} type="number" value={executedAmount} onChange={e => setExecutedAmount(e.target.value)} />
+            <Input id="executedAmount" placeholder={labels.executedPlaceholder} type="number" value={executedAmount} onChange={e => setExecutedAmount(e.target.value)} disabled={isExecutedDisabled} />
+             {isExecutedDisabled && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Este campo se actualiza desde el CRUD de Recaudación Mensual.</p>
+            )}
           </div>
           <div className="flex items-end gap-2 col-span-full">
             <Button className="w-full" onClick={handleAddOrUpdate}>

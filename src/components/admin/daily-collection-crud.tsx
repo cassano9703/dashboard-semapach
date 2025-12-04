@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +21,11 @@ import {
 import { Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { useState, useEffect } from "react";
-import { format, parse, isValid, startOfMonth, endOfMonth } from "date-fns";
+import { useState } from "react";
+import { format, parse, isValid, lastDayOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, writeBatch, Timestamp, orderBy, WriteBatch, updateDoc, addDoc } from "firebase/firestore";
+import { collection, runTransaction, doc, deleteDoc, query, where, getDocs, Timestamp, orderBy, updateDoc, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formatCurrency = (value: number | string) => {
@@ -47,95 +48,48 @@ export function DailyCollectionCRUD() {
   const { data: dailyCollectionData, isLoading: isDataLoading, error } = useCollection(dailyCollectionsRef);
 
   const [date, setDate] = useState<Date>();
-  const [dailyAmount, setDailyAmount] = useState('');
+  const [monthlyAmount, setMonthlyAmount] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (!date || !dailyCollectionData || editingId) return;
-
-    const monthStr = format(date, 'yyyy-MM');
-    const recordsForMonth = dailyCollectionData.filter(item => item.date.startsWith(monthStr));
-
-    if (recordsForMonth.length > 0) {
-      // Sort to get the most recent goal entry for that month, just in case
-      recordsForMonth.sort((a, b) => b.date.localeCompare(a.date));
-      setMonthlyGoal(recordsForMonth[0].monthlyGoal.toString());
-    } else {
-      setMonthlyGoal(''); // Clear if no records for the new month
-    }
-  }, [date, dailyCollectionData, editingId]);
-
 
   const sortedData = dailyCollectionData || [];
 
-  const recalculateMonthAndCommit = async (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
+  const updateMonthlyGoal = async (monthStr: string, executedAmount: number) => {
     if (!firestore) return;
-
-    const monthStart = format(startOfMonth(monthDate), 'yyyy-MM-dd');
-    const monthEnd = format(endOfMonth(monthDate), 'yyyy-MM-dd');
-    const monthStr = format(monthDate, 'yyyy-MM');
-  
     try {
-      await runTransaction(firestore, async (transaction) => {
-        const dailyCollectionQuery = query(
-          collection(firestore, 'daily_collections'),
-          where('date', '>=', monthStart),
-          where('date', '<=', monthEnd),
-          orderBy('date')
-        );
-  
-        const snapshot = await getDocs(dailyCollectionQuery);
-  
-        let accumulatedTotal = 0;
-        let finalAccumulatedTotal = 0;
-  
-        snapshot.docs.forEach(docSnap => {
-          const data = docSnap.data();
-          accumulatedTotal += data.dailyCollectionAmount;
-          transaction.update(doc(firestore, 'daily_collections', docSnap.id), {
-            accumulatedMonthlyTotal: accumulatedTotal
-          });
-        });
-        finalAccumulatedTotal = accumulatedTotal;
-  
-        // Now update the monthly goal
-        const monthlyGoalQuery = query(
-          collection(firestore, 'monthly_goals'),
-          where('month', '==', monthStr),
-          where('goalType', '==', 'collection')
-        );
-        const monthlyGoalSnapshot = await getDocs(monthlyGoalQuery);
-        
-        if (!monthlyGoalSnapshot.empty) {
-          const goalDoc = monthlyGoalSnapshot.docs[0];
-          transaction.update(goalDoc.ref, { executedAmount: finalAccumulatedTotal });
-        }
-      });
-  
+      const monthlyGoalQuery = query(
+        collection(firestore, 'monthly_goals'),
+        where('month', '==', monthStr),
+        where('goalType', '==', 'collection')
+      );
+      const monthlyGoalSnapshot = await getDocs(monthlyGoalQuery);
+      
+      if (!monthlyGoalSnapshot.empty) {
+        const goalDoc = monthlyGoalSnapshot.docs[0];
+        await updateDoc(goalDoc.ref, { executedAmount });
+      }
     } catch (e: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error al recalcular',
-        description: `No se pudo actualizar la meta ejecutada: ${e.message}`,
-      });
+        toast({
+            variant: 'destructive',
+            title: 'Error al actualizar meta',
+            description: `No se pudo sincronizar la meta mensual: ${e.message}`,
+        });
     }
   };
   
   const handleDelete = async (item: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "daily_collections", item.id);
-    const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
+    const monthStr = format(parse(item.date, 'yyyy-MM-dd', new Date()), 'yyyy-MM');
     
     try {
         await deleteDoc(docRef);
         toast({
             variant: "success",
             title: "Éxito",
-            description: "El registro ha sido eliminado. Recalculando totales...",
+            description: "El registro mensual ha sido eliminado.",
         });
-        // After deletion, run a full recalculation
-        recalculateMonthAndCommit(itemDate);
+        await updateMonthlyGoal(monthStr, 0); // Set executed to 0 after deleting
     } catch (e: any) {
         toast({
             variant: "destructive",
@@ -152,19 +106,19 @@ export function DailyCollectionCRUD() {
     if(isValid(itemDate)) {
         setDate(itemDate);
     }
-    setDailyAmount(item.dailyCollectionAmount.toString());
+    setMonthlyAmount(item.dailyCollectionAmount.toString());
     setMonthlyGoal(item.monthlyGoal.toString());
   };
 
   const clearForm = () => {
     setEditingId(null);
     setDate(undefined);
-    setDailyAmount('');
+    setMonthlyAmount('');
     setMonthlyGoal('');
   }
 
   const handleAddOrUpdate = async () => {
-    if (!firestore || !date || !dailyAmount || !monthlyGoal) {
+    if (!firestore || !date || !monthlyAmount || !monthlyGoal) {
       toast({
         variant: 'destructive',
         title: 'Error de validación',
@@ -173,15 +127,18 @@ export function DailyCollectionCRUD() {
       return;
     }
 
-    const formattedDate = format(date, 'yyyy-MM-dd');
-    const newDailyAmount = parseFloat(dailyAmount);
+    const lastDay = lastDayOfMonth(date);
+    const formattedDate = format(lastDay, 'yyyy-MM-dd');
+    const monthStr = format(date, 'yyyy-MM');
+    const newMonthlyAmount = parseFloat(monthlyAmount);
     const newMonthlyGoal = parseFloat(monthlyGoal);
     
     try {
         if (editingId) {
             const docRef = doc(firestore, 'daily_collections', editingId);
             await updateDoc(docRef, {
-                dailyCollectionAmount: newDailyAmount,
+                dailyCollectionAmount: newMonthlyAmount,
+                accumulatedMonthlyTotal: newMonthlyAmount, // For monthly, daily and accumulated are the same
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
@@ -189,26 +146,27 @@ export function DailyCollectionCRUD() {
             const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
             const existingDocs = await getDocs(q);
             if (!existingDocs.empty) {
-                toast({ variant: 'destructive', title: 'Error', description: `Ya existe un registro para la fecha ${formattedDate}.`});
+                toast({ variant: 'destructive', title: 'Error', description: `Ya existe un registro para ${format(date, 'MMMM yyyy', {locale: es})}.`});
                 return;
             }
             await addDoc(collection(firestore, 'daily_collections'), {
                 date: formattedDate,
-                dailyCollectionAmount: newDailyAmount,
-                accumulatedMonthlyTotal: 0, // Will be recalculated
+                dailyCollectionAmount: newMonthlyAmount,
+                accumulatedMonthlyTotal: newMonthlyAmount, // For monthly, daily and accumulated are the same
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
         }
         
+        await updateMonthlyGoal(monthStr, newMonthlyAmount);
+
         toast({
             variant: "success",
             title: 'Éxito',
-            description: 'El registro ha sido guardado. Recalculando totales...',
+            description: 'El registro mensual ha sido guardado.',
         });
         
         clearForm();
-        recalculateMonthAndCommit(date);
         
     } catch (error: any) {
        toast({
@@ -220,18 +178,18 @@ export function DailyCollectionCRUD() {
   };
 
   const isLoading = isDataLoading;
-  const isGoalDisabled = date && (dailyCollectionData || []).some(item => item.date.startsWith(format(date, 'yyyy-MM'))) && !editingId;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestionar Recaudación Diaria</CardTitle>
+        <CardTitle>Gestionar Recaudación Mensual</CardTitle>
+        <CardDescription>Añada o edite los totales de recaudación para cada mes.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         {/* Input Form */}
         <div className="grid grid-cols-1 md:grid-cols-4 items-end gap-4 p-4 border rounded-lg">
           <div className="grid gap-2">
-            <Label htmlFor="date">Fecha</Label>
+            <Label htmlFor="date">Mes</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -240,7 +198,7 @@ export function DailyCollectionCRUD() {
                   disabled={!!editingId}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd/MM/yyyy") : <span>Seleccione una fecha</span>}
+                  {date ? format(date, "MMMM 'de' yyyy", { locale: es }) : <span>Seleccione un mes</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -256,12 +214,12 @@ export function DailyCollectionCRUD() {
             </Popover>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="daily-collection">Recaudación Diaria</Label>
-            <Input id="daily-collection" placeholder="S/ 0.00" type="number" value={dailyAmount} onChange={(e) => setDailyAmount(e.target.value)} />
+            <Label htmlFor="monthly-collection">Total Recaudado en el Mes</Label>
+            <Input id="monthly-collection" placeholder="S/ 0.00" type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="monthly-goal">Meta Mensual</Label>
-            <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} disabled={isGoalDisabled} />
+            <Input id="monthly-goal" placeholder="2850000" type="number" value={monthlyGoal} onChange={(e) => setMonthlyGoal(e.target.value)} />
           </div>
           <div className="flex items-end gap-2">
             <Button className="w-full" onClick={handleAddOrUpdate}>
@@ -281,9 +239,8 @@ export function DailyCollectionCRUD() {
             <Table>
               <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Recaudación Diaria</TableHead>
-                  <TableHead>Acumulado Mensual</TableHead>
+                  <TableHead>Mes</TableHead>
+                  <TableHead>Total Recaudado</TableHead>
                   <TableHead>Meta Mensual</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -291,22 +248,21 @@ export function DailyCollectionCRUD() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">Cargando datos...</TableCell>
+                    <TableCell colSpan={4} className="text-center py-8">Cargando datos...</TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
+                    <TableCell colSpan={4} className="text-center py-8 text-red-500">Error: {error.message}</TableCell>
                   </TableRow>
                 ) : sortedData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">No hay datos para mostrar.</TableCell>
+                    <TableCell colSpan={4} className="text-center py-8">No hay datos para mostrar.</TableCell>
                   </TableRow>
                 ) : (
                   sortedData.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{format(parse(item.date, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy', {locale: es})}</TableCell>
+                    <TableCell>{format(parse(item.date, 'yyyy-MM-dd', new Date()), 'MMMM yyyy', {locale: es})}</TableCell>
                     <TableCell>{formatCurrency(item.dailyCollectionAmount)}</TableCell>
-                    <TableCell>{formatCurrency(item.accumulatedMonthlyTotal)}</TableCell>
                     <TableCell>{formatCurrency(item.monthlyGoal)}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
