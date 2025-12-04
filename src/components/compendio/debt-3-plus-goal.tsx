@@ -9,7 +9,7 @@ import {
   CardDescription
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -42,7 +42,9 @@ export function Debt3PlusGoal() {
   const goalsRef = useMemoFirebase(
     () => (firestore ? query(
         collection(firestore, 'monthly_goals'),
-        where('year', '==', currentYear)
+        where('month', '>=', `${currentYear}-01`),
+        where('month', '<=', `${currentYear}-12`),
+        orderBy('month')
     ) : null),
     [firestore, currentYear]
   );
