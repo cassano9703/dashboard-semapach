@@ -19,28 +19,35 @@ import {
 import { useMemo, useRef } from 'react';
 import Autoplay from "embla-carousel-autoplay";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export function MonthlyAchievementsGallery() {
+interface MonthlyAchievementsGalleryProps {
+    selectedDate: Date;
+}
+
+export function MonthlyAchievementsGallery({ selectedDate }: MonthlyAchievementsGalleryProps) {
   const plugin = useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   );
 
   const firestore = useFirestore();
+  const selectedMonth = format(selectedDate, 'yyyy-MM');
+
   const achievementsRef = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'monthly_achievements'), orderBy('month', 'desc')) : null,
-    [firestore]
+    () => firestore ? query(collection(firestore, 'monthly_achievements'), where('month', '==', selectedMonth)) : null,
+    [firestore, selectedMonth]
   );
   const { data: achievementsData, isLoading } = useCollection(achievementsRef);
 
-  const achievements = useMemo(() => {
-    if (!achievementsData) return [];
-    return achievementsData.map(item => ({
+  const achievement = useMemo(() => {
+    if (!achievementsData || achievementsData.length === 0) return null;
+    const item = achievementsData[0];
+    return {
       ...item,
       monthFormatted: format(parse(item.month, 'yyyy-MM', new Date()), "MMMM yyyy", { locale: es }),
-    }));
+    };
   }, [achievementsData]);
 
   return (
@@ -52,49 +59,30 @@ export function MonthlyAchievementsGallery() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center h-80 text-muted-foreground">Cargando logros...</div>
-          ) : achievements.length === 0 ? (
-            <div className="flex items-center justify-center h-80 text-muted-foreground">No hay logros para mostrar.</div>
+          ) : !achievement ? (
+            <div className="flex items-center justify-center h-80 text-muted-foreground">No hay logro para el mes seleccionado.</div>
           ) : (
-            <Carousel
-                plugins={[plugin.current]}
-                opts={{
-                    align: "start",
-                    loop: true,
-                }}
-                className="w-full group"
-                onMouseEnter={plugin.current.stop}
-                onMouseLeave={plugin.current.reset}
-            >
-                <CarouselContent>
-                    {achievements.map((achievement) => (
-                    <CarouselItem key={achievement.id}>
-                        <div className="p-1">
-                          <Card className="overflow-hidden">
-                            <CardContent className="p-0">
-                                <div className="h-64 relative">
-                                    <Image
-                                        src={achievement.imageUrl}
-                                        alt={`Logro de ${achievement.monthFormatted}`}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    />
-                                </div>
-                            </CardContent>
-                            <div className="p-4 text-sm text-muted-foreground">
-                                {achievement.description}
-                            </div>
-                            <CardFooter className="flex justify-center p-2 bg-muted/50">
-                                <span className="text-sm font-medium text-muted-foreground capitalize">{achievement.monthFormatted}</span>
-                            </CardFooter>
-                          </Card>
-                        </div>
-                    </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white" />
-                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white" />
-            </Carousel>
+            <div className="p-1">
+                <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                    <div className="h-64 relative">
+                        <Image
+                            src={achievement.imageUrl}
+                            alt={`Logro de ${achievement.monthFormatted}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                    </div>
+                </CardContent>
+                <div className="p-4 text-sm text-muted-foreground">
+                    {achievement.description}
+                </div>
+                <CardFooter className="flex justify-center p-2 bg-muted/50">
+                    <span className="text-sm font-medium text-muted-foreground capitalize">{achievement.monthFormatted}</span>
+                </CardFooter>
+                </Card>
+            </div>
           )}
         </CardContent>
     </Card>
