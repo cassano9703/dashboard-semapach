@@ -9,7 +9,7 @@ import {
   CardDescription
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -42,8 +42,7 @@ export function Debt3PlusGoal() {
   const goalsRef = useMemoFirebase(
     () => (firestore ? query(
         collection(firestore, 'monthly_goals'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
+        where('year', '==', currentYear)
     ) : null),
     [firestore, currentYear]
   );
@@ -68,7 +67,7 @@ export function Debt3PlusGoal() {
           executedAmount: goal.executedAmount || goal.proposedAmount,
         })
       )
-      .sort((a, b) => a.month.localeCompare(b.month)); // Ensure chronological order for vertical layout
+      .sort((a, b) => a.month.localeCompare(b.month));
   }, [goalsData]);
 
   return (
@@ -124,12 +123,16 @@ export function Debt3PlusGoal() {
                     fill="var(--color-proposedAmount)"
                     radius={[0, 4, 4, 0]}
                     name="Deuda Inicial"
+                    isAnimationActive={true}
+                    animationDuration={800}
                 />
                 <Bar 
                     dataKey="executedAmount" 
                     fill="var(--color-executedAmount)"
                     radius={[0, 4, 4, 0]}
                     name="Deuda Actual"
+                    isAnimationActive={true}
+                    animationDuration={800}
                 />
               </BarChart>
             </ResponsiveContainer>
