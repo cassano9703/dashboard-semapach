@@ -7,7 +7,7 @@ import { DistrictProgressChart } from '@/components/dashboard/district-progress-
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 import { ServiceOperationStats } from '@/components/compendio/service-operation-stats';
 import { Debt3PlusGoal } from '@/components/compendio/debt-3-plus-goal';
-import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
+import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
 
 export default function ReporteCobranzaPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -40,7 +40,7 @@ export default function ReporteCobranzaPage() {
         <div className='lg:col-span-7 flex flex-col gap-8'>
             <MonthlyCollectionGoal />
             <DistrictProgressChart />
-            <RecoveredSummary selectedDate={selectedDate} />
+            <RecoveredComparisonChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
       </div>
     </div>
