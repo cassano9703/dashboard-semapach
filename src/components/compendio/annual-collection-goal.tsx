@@ -20,18 +20,6 @@ const formatCurrency = (value: number | undefined) => {
   })}`;
 };
 
-// Montos fijos ejecutados de Enero a Julio 2025
-const fixedExecutedAmounts = {
-  '2025-01': 2750000.00,
-  '2025-02': 2680000.00,
-  '2025-03': 2820000.00,
-  '2025-04': 2780000.00,
-  '2025-05': 2850000.00,
-  '2025-06': 2750000.00,
-  '2025-07': 2790000.00,
-};
-
-
 export function AnnualCollectionGoal() {
   const firestore = useFirestore();
   const currentYear = 2025;
@@ -56,17 +44,12 @@ export function AnnualCollectionGoal() {
   }, [annualGoalsData]);
 
   const totalExecuted = useMemo(() => {
-    // Sumar los montos fijos de Enero a Julio
-    const fixedTotal = Object.values(fixedExecutedAmounts).reduce((sum, amount) => sum + amount, 0);
-
-    // Sumar los montos dinámicos de Agosto en adelante
-    const dynamicTotal = monthlyGoalsData
-        ? monthlyGoalsData
-            .filter(goal => goal.goalType === 'collection' && goal.executedAmount && !fixedExecutedAmounts[goal.month as keyof typeof fixedExecutedAmounts])
-            .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0)
-        : 0;
-
-    return fixedTotal + dynamicTotal;
+    if (!monthlyGoalsData) return 0;
+    
+    // Sum all executed amounts for the collection goal type throughout the year from Firestore.
+    return monthlyGoalsData
+      .filter(goal => goal.goalType === 'collection' && goal.executedAmount)
+      .reduce((sum, goal) => sum + (goal.executedAmount || 0), 0);
   }, [monthlyGoalsData]);
   
   const progressPercentage = useMemo(() => {
