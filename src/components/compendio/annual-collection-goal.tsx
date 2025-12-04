@@ -86,19 +86,21 @@ export function AnnualCollectionGoal() {
             <div className="text-4xl font-bold tracking-tighter">
                 {animatedProgress.toFixed(2)}%
             </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="w-full cursor-pointer">
-                  <Progress value={animatedProgress} className="h-4" variant="striped" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Faltan {formatCurrency(remainingAmount)} para llegar a la meta.</p>
-              </TooltipContent>
-            </Tooltip>
-            <div className="w-full flex justify-between text-sm text-muted-foreground mt-1">
-                <span>{formatCurrency(totalExecuted)}</span>
-                <span>{formatCurrency(annualGoal)}</span>
+            <div className="relative w-full">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full cursor-pointer">
+                    <Progress value={animatedProgress} className="h-4" variant="striped" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Faltan {formatCurrency(remainingAmount)} para llegar a la meta.</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="absolute inset-0 flex items-center justify-between px-4">
+                  <span className="text-sm font-bold text-white/90 drop-shadow-sm">{formatCurrency(totalExecuted)}</span>
+                  <span className="text-lg font-extrabold text-white text-shadow-lg" style={{textShadow: '0 0 5px hsl(var(--primary))'}}>{formatCurrency(annualGoal)}</span>
+              </div>
             </div>
           </div>
         )}
