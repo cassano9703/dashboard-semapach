@@ -10,6 +10,7 @@ import {
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '../ui/progress';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 const formatCurrency = (value: number | undefined) => {
   if (value === undefined) return 'S/ 0.00';
@@ -65,6 +66,11 @@ export function AnnualCollectionGoal() {
   
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
+  const remainingAmount = useMemo(() => {
+    const remaining = annualGoal - totalExecuted;
+    return remaining > 0 ? remaining : 0;
+  }, [annualGoal, totalExecuted]);
+
   return (
     <Card className="border-2 border-blue-900/20 shadow-lg">
       <CardHeader className='p-4 text-center'>
@@ -80,7 +86,16 @@ export function AnnualCollectionGoal() {
             <div className="text-4xl font-bold tracking-tighter">
                 {animatedProgress.toFixed(2)}%
             </div>
-            <Progress value={animatedProgress} className="h-4" variant="striped" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="w-full cursor-pointer">
+                  <Progress value={animatedProgress} className="h-4" variant="striped" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Faltan {formatCurrency(remainingAmount)} para llegar a la meta.</p>
+              </TooltipContent>
+            </Tooltip>
             <div className="w-full flex justify-between text-sm text-muted-foreground mt-1">
                 <span>{formatCurrency(totalExecuted)}</span>
                 <span>{formatCurrency(annualGoal)}</span>
