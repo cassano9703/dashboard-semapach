@@ -89,6 +89,11 @@ export function Debt3PlusGoal() {
       .sort((a, b) => b.month.localeCompare(a.month));
   }, [goalsData]);
 
+  const octoberData = useMemo(() => {
+    return monthlyGoals.find(g => g.month.endsWith('-10'));
+  }, [monthlyGoals]);
+
+
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
   return (
@@ -104,12 +109,19 @@ export function Debt3PlusGoal() {
           </div>
         ) : (
           <div className="space-y-4">
-             <div className="flex items-center justify-center gap-4 rounded-lg bg-amber-100/70 dark:bg-amber-900/30 p-4 border border-blue-300 dark:border-blue-700 shadow-lg">
-              <Target className="h-8 w-8 text-blue-600" />
-              <div className="text-center">
-                <p className="text-sm text-blue-800 dark:text-blue-200">Meta Anual de Reducción</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(annualGoalAmount)}</p>
+             <div className="flex flex-col items-center justify-center gap-2 rounded-lg bg-amber-100/70 dark:bg-amber-900/30 p-4 border border-blue-300 dark:border-blue-700 shadow-lg">
+              <div className="flex items-center gap-4">
+                <Target className="h-8 w-8 text-blue-600" />
+                <div className="text-center">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">Meta Anual de Reducción</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(annualGoalAmount)}</p>
+                </div>
               </div>
+              {octoberData && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deuda de Octubre: {formatCurrency(octoberData.executedAmount)}
+                </p>
+              )}
             </div>
             {monthlyGoals.length === 0 ? (
               <div className="flex justify-center items-center h-[250px] text-muted-foreground">
