@@ -8,18 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { format, startOfYear, endOfYear, parseISO, isWithinInterval, getYear, getMonth } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getYear, getMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { ChartContainer, ChartTooltipContent } from '../ui/chart';
 
 const districts = [
   "Chincha Alta",
@@ -50,7 +44,7 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
   );
   const { data: servicesData, isLoading } = useCollection(servicesRef);
 
-  const districtsWithData = useMemo(() => {
+  const chartData = useMemo(() => {
     if (!servicesData) {
       return [];
     }
@@ -73,55 +67,56 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
     
     return districts
         .map(district => ({
-            district,
-            ... (totals.get(district) || { recoveredCount: 0, recoveredAmount: 0 })
+            name: district,
+            'Monto Recuperado': (totals.get(district) || { recoveredAmount: 0 }).recoveredAmount
         }))
-        .filter(d => d.recoveredCount > 0 || d.recoveredAmount > 0)
-        .sort((a,b) => b.recoveredAmount - a.recoveredAmount);
+        .filter(d => d['Monto Recuperado'] > 0)
+        .sort((a,b) => b['Monto Recuperado'] - a['Monto Recuperado']);
 
   }, [servicesData, selectedDate]);
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Usuarios Recuperados</CardTitle>
+        <CardTitle>Usuarios Recuperados por Distrito</CardTitle>
         <CardDescription>
-            Resumen del periodo Agosto - Diciembre de {getYear(selectedDate)}.
+            Monto total recuperado en el periodo Agosto - Diciembre de {getYear(selectedDate)}.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
-          <div className="relative max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="text-center p-8">Cargando datos...</div>
-            ) : districtsWithData.length === 0 ? (
-                 <div className="text-center p-8 text-muted-foreground">
-                    No hay usuarios recuperados para el periodo seleccionado.
-                </div>
-            ) : (
-              <Table>
-                <TableHeader className="sticky top-0 bg-table-header text-table-header-foreground z-10">
-                  <TableRow>
-                    <TableHead>Distrito</TableHead>
-                    <TableHead className="w-[200px] text-right">Recuperados (Cantidad)</TableHead>
-                    <TableHead className="w-[200px] text-right">Monto (S/)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {districtsWithData.map((data) => {
-                    return (
-                      <TableRow key={data.district}>
-                        <TableCell className="font-medium">{data.district}</TableCell>
-                        <TableCell className="text-right">{data.recoveredCount}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(data.recoveredAmount)}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64 text-muted-foreground">Cargando gráfico...</div>
+        ) : chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-64 text-muted-foreground">No hay datos para mostrar.</div>
+        ) : (
+          <ChartContainer config={{}} className="h-64 w-full">
+            <ResponsiveContainer>
+              <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                    type="number" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(value) => `S/${Number(value)/1000}k`}
+                />
+                <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    width={80}
+                />
+                <Tooltip
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                    content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))}/>}
+                />
+                <Bar dataKey="Monto Recuperado" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );
