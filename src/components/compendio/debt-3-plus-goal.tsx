@@ -28,11 +28,11 @@ const formatCurrency = (value: number | undefined) => {
 const chartConfig = {
     proposedAmount: {
         label: 'Deuda Inicial',
-        color: 'hsl(50 95% 75%)',
+        color: 'hsl(250 90% 80%)',
     },
     executedAmount: {
         label: 'Deuda Actual',
-        color: 'hsl(250 90% 80%)',
+        color: 'hsl(50 95% 75%)',
     },
 } satisfies ChartConfig;
 
@@ -104,11 +104,11 @@ export function Debt3PlusGoal() {
           </div>
         ) : (
           <div className="space-y-4">
-             <div className="flex items-center justify-center gap-4 rounded-lg bg-green-100/70 dark:bg-green-900/30 p-4 border border-green-200 dark:border-green-800 shadow-lg">
-              <Target className="h-8 w-8 text-green-600" />
+             <div className="flex items-center justify-center gap-4 rounded-lg bg-sky-100/70 dark:bg-sky-900/30 p-4 border border-sky-200 dark:border-sky-800 shadow-lg">
+              <Target className="h-8 w-8 text-sky-600" />
               <div className="text-center">
-                <p className="text-sm text-green-800 dark:text-green-200">Meta Anual de Reducción</p>
-                <p className="text-2xl font-bold text-green-900 dark:text-green-100">{formatCurrency(annualGoalAmount)}</p>
+                <p className="text-sm text-sky-800 dark:text-sky-200">Meta Anual de Reducción</p>
+                <p className="text-2xl font-bold text-sky-900 dark:text-sky-100">{formatCurrency(annualGoalAmount)}</p>
               </div>
             </div>
             {monthlyGoals.length === 0 ? (
