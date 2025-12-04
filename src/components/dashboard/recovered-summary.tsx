@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
+import { format, startOfYear, endOfYear, parseISO, isWithinInterval, getYear, getMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -54,15 +54,16 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
     if (!servicesData) {
       return [];
     }
-
-    const monthStart = startOfMonth(selectedDate);
-    const monthEnd = endOfMonth(selectedDate);
+    
+    const year = getYear(selectedDate);
     const totals = new Map<string, { recoveredCount: number; recoveredAmount: number }>();
 
     servicesData.forEach(item => {
       const itemDate = parseISO(item.date + 'T00:00:00');
-      
-      if (isWithinInterval(itemDate, { start: monthStart, end: monthEnd })) {
+      const itemYear = getYear(itemDate);
+      const itemMonth = getMonth(itemDate); // 0-indexed (7 is August, 11 is December)
+
+      if (itemYear === year && itemMonth >= 7 && itemMonth <= 11) {
         const current = totals.get(item.district) || { recoveredCount: 0, recoveredAmount: 0 };
         current.recoveredCount += item.recoveredCount;
         current.recoveredAmount += item.recoveredAmount;
@@ -78,7 +79,6 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
         .filter(d => d.recoveredCount > 0 || d.recoveredAmount > 0)
         .sort((a,b) => b.recoveredAmount - a.recoveredAmount);
 
-
   }, [servicesData, selectedDate]);
   
   return (
@@ -86,7 +86,7 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
       <CardHeader>
         <CardTitle>Usuarios Recuperados</CardTitle>
         <CardDescription>
-            Resumen del mes de {format(selectedDate, "LLLL 'de' yyyy", { locale: es })}.
+            Resumen del periodo Agosto - Diciembre de {getYear(selectedDate)}.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -96,7 +96,7 @@ export function RecoveredSummary({ selectedDate }: RecoveredSummaryProps) {
               <div className="text-center p-8">Cargando datos...</div>
             ) : districtsWithData.length === 0 ? (
                  <div className="text-center p-8 text-muted-foreground">
-                    No hay usuarios recuperados para el mes seleccionado.
+                    No hay usuarios recuperados para el periodo seleccionado.
                 </div>
             ) : (
               <Table>
