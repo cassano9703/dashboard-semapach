@@ -1,13 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { AnnualCollectionGoal } from '@/components/compendio/annual-collection-goal';
 import { MonthlyCollectionGoal } from '@/components/compendio/monthly-collection-goal';
 import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 import { ServiceOperationStats } from '@/components/compendio/service-operation-stats';
 import { Debt3PlusGoal } from '@/components/compendio/debt-3-plus-goal';
+import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 
 export default function ReporteCobranzaPage() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  if (!selectedDate) {
+    return <div className="flex justify-center items-center h-full">Cargando...</div>;
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
@@ -28,6 +40,7 @@ export default function ReporteCobranzaPage() {
         <div className='lg:col-span-7 flex flex-col gap-8'>
             <MonthlyCollectionGoal />
             <DistrictProgressChart />
+            <RecoveredSummary selectedDate={selectedDate} />
         </div>
       </div>
     </div>
