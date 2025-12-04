@@ -5,7 +5,6 @@ import { DistrictProgress } from '@/components/dashboard/district-progress';
 import { StatCards } from '@/components/dashboard/stat-cards';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { RecoveredSummary } from '@/components/dashboard/recovered-summary';
 import { RecoveredComparisonChart } from '@/components/dashboard/recovered-comparison-chart';
@@ -16,9 +15,6 @@ import { Recovered2to3StatCards } from '@/components/dashboard/recovered-2-to-3-
 import { Recovered2to3Chart } from '@/components/dashboard/recovered-2-to-3-chart';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -31,8 +27,6 @@ export default function Home() {
     return <div className="flex justify-center items-center h-full">Cargando...</div>;
   }
   
-  const currentMonth = format(selectedDate, "MMMM 'de' yyyy", { locale: es });
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -40,27 +34,9 @@ export default function Home() {
             <h1 className="text-3xl font-bold tracking-tight">Panel Principal</h1>
             <p className="text-lg text-muted-foreground capitalize">Resumen de indicadores clave.</p>
         </div>
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-full sm:w-[280px] justify-start text-left font-normal text-lg">
-                <CalendarIcon className="mr-2 h-5 w-5" />
-                {format(selectedDate, "eeee, d 'de' MMMM 'de' yyyy", { locale: es })}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-                locale={es}
-                defaultMonth={selectedDate}
-                />
-            </PopoverContent>
-        </Popover>
       </div>
       <StatCards selectedDate={selectedDate} />
-      <DailyCollectionChart selectedDate={selectedDate} />
+      <DailyCollectionChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
       <hr className="my-4" />
 
