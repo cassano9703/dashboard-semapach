@@ -57,7 +57,6 @@ export function DistrictProgressChart() {
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Conexiones Inactivas</CardTitle>
-        <CardDescription>Visualización del progreso para el mes actual.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
