@@ -291,7 +291,7 @@
         "id": { "type": "string", "description": "Unique identifier for the record." },
         "month": { "type": "string", "description": "The month of the operation, in YYYY-MM format." },
         "operationType": { "type": "string", "enum": ["cut", "reconnection"], "description": "Type of operation." },
-        "entity": { "type": "string", "enum": ["servis", "semapach"], "description": "The entity performing the operation." },
+        "entity": { "type": "string", "enum": ["service", "semapach"], "description": "The entity performing the operation." },
         "quantity": { "type": "number", "description": "The number of operations performed." },
         "updatedAt": { "type": "string", "description": "Timestamp of the last update.", "format": "date-time" }
       },

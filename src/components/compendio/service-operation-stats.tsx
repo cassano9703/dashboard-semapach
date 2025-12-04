@@ -33,9 +33,9 @@ export function ServiceOperationStats() {
     if (!operationsData) {
       return {
         semapachCuts: 0,
-        servisCuts: 0,
+        serviceCuts: 0,
         semapachReconnections: 0,
-        servisReconnections: 0,
+        serviceReconnections: 0,
       };
     }
 
@@ -43,19 +43,19 @@ export function ServiceOperationStats() {
       .filter(op => op.entity === 'semapach' && op.operationType === 'cut')
       .reduce((sum, op) => sum + op.quantity, 0);
 
-    const servisCuts = operationsData
-      .filter(op => op.entity === 'servis' && op.operationType === 'cut')
+    const serviceCuts = operationsData
+      .filter(op => op.entity === 'service' && op.operationType === 'cut')
       .reduce((sum, op) => sum + op.quantity, 0);
 
     const semapachReconnections = operationsData
       .filter(op => op.entity === 'semapach' && op.operationType === 'reconnection')
       .reduce((sum, op) => sum + op.quantity, 0);
 
-    const servisReconnections = operationsData
-      .filter(op => op.entity === 'servis' && op.operationType === 'reconnection')
+    const serviceReconnections = operationsData
+      .filter(op => op.entity === 'service' && op.operationType === 'reconnection')
       .reduce((sum, op) => sum + op.quantity, 0);
 
-    return { semapachCuts, servisCuts, semapachReconnections, servisReconnections };
+    return { semapachCuts, serviceCuts, semapachReconnections, serviceReconnections };
   }, [operationsData]);
   
   if (!selectedDate) {
@@ -110,8 +110,8 @@ export function ServiceOperationStats() {
                 borderColor="border-red-500"
             />
             <StatCard 
-                title="Cortes SERVIS" 
-                value={stats.servisCuts} 
+                title="Cortes Service" 
+                value={stats.serviceCuts} 
                 description="Total por la entidad"
                 icon={<Building className="h-4 w-4 text-muted-foreground" />}
                 isLoading={isLoading}
@@ -126,8 +126,8 @@ export function ServiceOperationStats() {
                 borderColor="border-green-500"
             />
             <StatCard 
-                title="Reaperturas SERVIS" 
-                value={stats.servisReconnections} 
+                title="Reaperturas Service" 
+                value={stats.serviceReconnections} 
                 description="Total por la entidad"
                 icon={<UserCog className="h-4 w-4 text-muted-foreground" />}
                 isLoading={isLoading}
@@ -138,3 +138,5 @@ export function ServiceOperationStats() {
     </Card>
   );
 }
+
+    

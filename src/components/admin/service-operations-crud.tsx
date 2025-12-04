@@ -205,7 +205,7 @@ export function ServiceOperationsCRUD() {
                     <SelectValue placeholder="Seleccione entidad" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="servis">Servis</SelectItem>
+                    <SelectItem value="service">Service</SelectItem>
                     <SelectItem value="semapach">Semapach</SelectItem>
                 </SelectContent>
             </Select>
@@ -277,3 +277,5 @@ export function ServiceOperationsCRUD() {
     </Card>
   );
 }
+
+    
