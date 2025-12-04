@@ -12,7 +12,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '../ui/chart';
 
 
@@ -81,7 +81,7 @@ export function Debt3PlusGoal() {
         ) : (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <ResponsiveContainer>
-              <LineChart
+              <BarChart
                 data={monthlyGoals}
                 margin={{
                   top: 5,
@@ -102,21 +102,19 @@ export function Debt3PlusGoal() {
                     content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))}/>} 
                 />
                 <Legend />
-                <Line 
-                    type="monotone" 
+                <Bar 
                     dataKey="proposedAmount" 
-                    stroke="hsl(var(--chart-4))" 
-                    strokeWidth={2}
+                    fill="var(--color-proposedAmount)"
+                    radius={[4, 4, 0, 0]}
                     name="Deuda Inicial"
                 />
-                <Line 
-                    type="monotone" 
+                <Bar 
                     dataKey="executedAmount" 
-                    stroke="hsl(var(--chart-2))" 
-                    strokeWidth={2}
+                    fill="var(--color-executedAmount)"
+                    radius={[4, 4, 0, 0]}
                     name="Deuda Actual"
                 />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         )}
