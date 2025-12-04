@@ -69,62 +69,73 @@ export function DailyCollectionCRUD() {
 
   const sortedData = dailyCollectionData || [];
 
-  const recalculateMonthAndCommit = (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
+  const recalculateMonthAndCommit = async (monthDate: Date, preBatch?: (batch: WriteBatch) => void) => {
     if (!firestore) return;
 
     const monthStart = format(startOfMonth(monthDate), 'yyyy-MM-dd');
     const monthEnd = format(endOfMonth(monthDate), 'yyyy-MM-dd');
-
-    const q = query(
-      collection(firestore, 'daily_collections'),
-      where('date', '>=', monthStart),
-      where('date', '<=', monthEnd),
-      orderBy('date')
-    );
-
-    getDocs(q).then(snapshot => {
-      const batch = writeBatch(firestore);
-
-      // Apply any pre-batch operations (like delete)
-      preBatch?.(batch);
-      
-      let accumulatedTotal = 0;
-      
-      snapshot.docs.forEach(docSnap => {
-        const data = docSnap.data();
-        // Skip the document if it's marked for deletion in the pre-batch
-        if (preBatch && docSnap.id === (preBatch as any).__deletedDocId) {
-            return;
-        }
-        accumulatedTotal += data.dailyCollectionAmount;
-        batch.update(doc(firestore, 'daily_collections', docSnap.id), {
-          accumulatedMonthlyTotal: accumulatedTotal
+    const monthStr = format(monthDate, 'yyyy-MM');
+  
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const dailyCollectionQuery = query(
+          collection(firestore, 'daily_collections'),
+          where('date', '>=', monthStart),
+          where('date', '<=', monthEnd),
+          orderBy('date')
+        );
+  
+        const snapshot = await getDocs(dailyCollectionQuery);
+  
+        let accumulatedTotal = 0;
+        let finalAccumulatedTotal = 0;
+  
+        snapshot.docs.forEach(docSnap => {
+          const data = docSnap.data();
+          accumulatedTotal += data.dailyCollectionAmount;
+          transaction.update(doc(firestore, 'daily_collections', docSnap.id), {
+            accumulatedMonthlyTotal: accumulatedTotal
+          });
         });
+        finalAccumulatedTotal = accumulatedTotal;
+  
+        // Now update the monthly goal
+        const monthlyGoalQuery = query(
+          collection(firestore, 'monthly_goals'),
+          where('month', '==', monthStr),
+          where('goalType', '==', 'collection')
+        );
+        const monthlyGoalSnapshot = await getDocs(monthlyGoalQuery);
+        
+        if (!monthlyGoalSnapshot.empty) {
+          const goalDoc = monthlyGoalSnapshot.docs[0];
+          transaction.update(goalDoc.ref, { executedAmount: finalAccumulatedTotal });
+        }
       });
-
-      batch.commit();
-    });
+  
+    } catch (e: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al recalcular',
+        description: `No se pudo actualizar la meta ejecutada: ${e.message}`,
+      });
+    }
   };
   
-  const handleDelete = (item: any) => {
+  const handleDelete = async (item: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "daily_collections", item.id);
     const itemDate = parse(item.date, 'yyyy-MM-dd', new Date());
     
     try {
-        const batch = writeBatch(firestore);
-        batch.delete(docRef);
-        batch.commit();
-        
+        await deleteDoc(docRef);
         toast({
             variant: "success",
             title: "Éxito",
             description: "El registro ha sido eliminado. Recalculando totales...",
         });
-
-        // After deletion, run a full recalculation in the background
+        // After deletion, run a full recalculation
         recalculateMonthAndCommit(itemDate);
-
     } catch (e: any) {
         toast({
             variant: "destructive",
@@ -152,7 +163,7 @@ export function DailyCollectionCRUD() {
     setMonthlyGoal('');
   }
 
-  const handleAddOrUpdate = () => {
+  const handleAddOrUpdate = async () => {
     if (!firestore || !date || !dailyAmount || !monthlyGoal) {
       toast({
         variant: 'destructive',
@@ -169,24 +180,24 @@ export function DailyCollectionCRUD() {
     try {
         if (editingId) {
             const docRef = doc(firestore, 'daily_collections', editingId);
-            updateDoc(docRef, {
+            await updateDoc(docRef, {
                 dailyCollectionAmount: newDailyAmount,
                 monthlyGoal: newMonthlyGoal,
                 updatedAt: Timestamp.now(),
             });
         } else {
             const q = query(collection(firestore, 'daily_collections'), where('date', '==', formattedDate));
-            getDocs(q).then(existingDocs => {
-                if (!existingDocs.empty) {
-                    throw new Error(`Ya existe un registro para la fecha ${formattedDate}.`);
-                }
-                addDoc(collection(firestore, 'daily_collections'), {
-                    date: formattedDate,
-                    dailyCollectionAmount: newDailyAmount,
-                    accumulatedMonthlyTotal: 0, // Will be recalculated
-                    monthlyGoal: newMonthlyGoal,
-                    updatedAt: Timestamp.now(),
-                });
+            const existingDocs = await getDocs(q);
+            if (!existingDocs.empty) {
+                toast({ variant: 'destructive', title: 'Error', description: `Ya existe un registro para la fecha ${formattedDate}.`});
+                return;
+            }
+            await addDoc(collection(firestore, 'daily_collections'), {
+                date: formattedDate,
+                dailyCollectionAmount: newDailyAmount,
+                accumulatedMonthlyTotal: 0, // Will be recalculated
+                monthlyGoal: newMonthlyGoal,
+                updatedAt: Timestamp.now(),
             });
         }
         
@@ -197,8 +208,6 @@ export function DailyCollectionCRUD() {
         });
         
         clearForm();
-        
-        // After adding or updating, recalculate the entire month in the background
         recalculateMonthAndCommit(date);
         
     } catch (error: any) {
