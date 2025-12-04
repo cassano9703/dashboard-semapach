@@ -35,9 +35,7 @@ import {useMemo} from 'react';
 import {format} from 'date-fns';
 import {es} from 'date-fns/locale';
 import { Button } from '../ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { CalendarIcon, Download } from 'lucide-react';
-import { Calendar } from '../ui/calendar';
+import { Download } from 'lucide-react';
 import Papa from 'papaparse';
 
 const chartConfig = {
@@ -59,10 +57,9 @@ const formatCurrency = (value: number) =>
   
 interface DailyCollectionChartProps {
   selectedDate: Date;
-  onDateChange: (date: Date) => void;
 }
 
-export function DailyCollectionChart({ selectedDate, onDateChange }: DailyCollectionChartProps) {
+export function DailyCollectionChart({ selectedDate }: DailyCollectionChartProps) {
   const firestore = useFirestore();
 
   const dailyCollectionsRef = useMemoFirebase(
@@ -131,24 +128,6 @@ export function DailyCollectionChart({ selectedDate, onDateChange }: DailyCollec
                 </CardDescription>
             </div>
             <div className='flex items-center gap-2'>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className="w-[240px] justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && onDateChange(date)}
-                    initialFocus
-                    locale={es}
-                    defaultMonth={selectedDate}
-                  />
-                </PopoverContent>
-              </Popover>
               <Button onClick={handleDownloadCsv} variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Descargar Excel
