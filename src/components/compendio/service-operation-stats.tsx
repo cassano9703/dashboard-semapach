@@ -76,7 +76,7 @@ export function ServiceOperationStats() {
   );
 
   return (
-    <Card className="rounded-b-none">
+    <Card className="rounded-none">
       <CardHeader>
         <CardTitle>Cortes y Reaperturas</CardTitle>
       </CardHeader>
