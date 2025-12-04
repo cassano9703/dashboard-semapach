@@ -5,6 +5,7 @@ import { MonthlyCollectionGoal } from '@/components/compendio/monthly-collection
 import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 import { ServiceOperationStats } from '@/components/compendio/service-operation-stats';
+import { Debt3PlusGoal } from '@/components/compendio/debt-3-plus-goal';
 
 export default function ReporteCobranzaPage() {
   return (
@@ -20,14 +21,15 @@ export default function ReporteCobranzaPage() {
       <AnnualCollectionGoal />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className='lg:col-span-5 flex flex-col'>
-            <MonthlyAchievementsGallery />
-            <ServiceOperationStats />
+          <MonthlyAchievementsGallery />
+          <ServiceOperationStats />
         </div>
         <div className='lg:col-span-7 flex flex-col gap-8'>
             <MonthlyCollectionGoal />
             <DistrictProgressChart />
         </div>
       </div>
+      <Debt3PlusGoal />
     </div>
   );
 }
