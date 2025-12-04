@@ -104,7 +104,7 @@ export function Debt3PlusGoal() {
           </div>
         ) : (
           <div className="space-y-4">
-             <div className="flex items-center justify-center gap-4 rounded-lg bg-muted p-4">
+             <div className="flex items-center justify-center gap-4 rounded-lg bg-muted p-4 border shadow-lg">
               <Target className="h-8 w-8 text-primary" />
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Meta Anual de Reducción</p>
