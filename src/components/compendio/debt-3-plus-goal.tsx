@@ -32,7 +32,7 @@ const chartConfig = {
     },
     executedAmount: {
         label: 'Deuda Actual',
-        color: 'hsl(var(--chart-2))',
+        color: 'hsl(250 80% 60%)',
     },
 } satisfies ChartConfig;
 
@@ -62,8 +62,8 @@ export function Debt3PlusGoal() {
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
 
   const annualGoalAmount = useMemo(() => {
-    if (!annualGoalData || annualGoalData.length === 0) return 0;
-    return annualGoalData[0].amount || 0;
+    if (!annualGoalData || annualGoalData.length === 0) return 9300000;
+    return annualGoalData[0].amount || 9300000;
   }, [annualGoalData]);
 
 
