@@ -56,7 +56,7 @@ export function DistrictProgressChart() {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Avance por Distrito</CardTitle>
+        <CardTitle>Conexiones Inactivas</CardTitle>
         <CardDescription>Visualización del progreso para el mes actual.</CardDescription>
       </CardHeader>
       <CardContent>
