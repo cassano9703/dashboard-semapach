@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
@@ -135,7 +134,7 @@ export function Debt3PlusGoal() {
                         : "bg-green-100 text-green-800"
                 )}>
                     {reductionDifference > 0 
-                        ? `Falta reducir: ${formatCurrency(reductionDifference)}`
+                        ? `Nos falta por reducir: ${formatCurrency(reductionDifference)}`
                         : `Reducción superada por: ${formatCurrency(Math.abs(reductionDifference))}`
                     }
                 </div>
