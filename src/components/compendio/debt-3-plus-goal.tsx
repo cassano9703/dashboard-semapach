@@ -104,11 +104,11 @@ export function Debt3PlusGoal() {
           </div>
         ) : (
           <div className="space-y-4">
-             <div className="flex items-center justify-center gap-4 rounded-lg bg-sky-100/70 dark:bg-sky-900/30 p-4 border border-sky-200 dark:border-sky-800 shadow-lg">
-              <Target className="h-8 w-8 text-sky-600" />
+             <div className="flex items-center justify-center gap-4 rounded-lg bg-amber-100/70 dark:bg-amber-900/30 p-4 border border-blue-300 dark:border-blue-700 shadow-lg">
+              <Target className="h-8 w-8 text-blue-600" />
               <div className="text-center">
-                <p className="text-sm text-sky-800 dark:text-sky-200">Meta Anual de Reducción</p>
-                <p className="text-2xl font-bold text-sky-900 dark:text-sky-100">{formatCurrency(annualGoalAmount)}</p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">Meta Anual de Reducción</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(annualGoalAmount)}</p>
               </div>
             </div>
             {monthlyGoals.length === 0 ? (
