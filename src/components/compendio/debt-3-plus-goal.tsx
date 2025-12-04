@@ -28,7 +28,7 @@ const formatCurrency = (value: number | undefined) => {
 const chartConfig = {
     proposedAmount: {
         label: 'Deuda Inicial',
-        color: 'hsl(var(--chart-1))',
+        color: 'hsl(30 90% 75%)',
     },
     executedAmount: {
         label: 'Deuda Actual',
