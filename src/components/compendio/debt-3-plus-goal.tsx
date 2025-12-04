@@ -75,7 +75,7 @@ export function Debt3PlusGoal() {
   return (
     <Card className="rounded-t-none">
       <CardHeader>
-        <CardTitle>Evolución de Deuda (3 a + meses)</CardTitle>
+        <CardTitle>Deuda de 3 a Más</CardTitle>
         <CardDescription>Muestra la reducción mensual de la deuda de 3 a más meses.</CardDescription>
       </CardHeader>
       <CardContent>
