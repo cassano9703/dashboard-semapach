@@ -44,7 +44,6 @@ export function Debt3PlusGoal() {
         collection(firestore, 'monthly_goals'),
         where('month', '>=', `${currentYear}-01`),
         where('month', '<=', `${currentYear}-12`),
-        orderBy('month')
     ) : null),
     [firestore, currentYear]
   );
@@ -66,9 +65,10 @@ export function Debt3PlusGoal() {
       .map(goal => ({
           ...goal,
           name: format(parseISO(`${goal.month}-01T00:00:00`), 'LLLL', { locale: es }),
-          executedAmount: goal.executedAmount || goal.proposedAmount, // If executed is null, show it as not changed
+          executedAmount: goal.executedAmount || goal.proposedAmount,
         })
-      );
+      )
+      .sort((a, b) => a.month.localeCompare(b.month)); // Ensure chronological order for vertical layout
   }, [goalsData]);
 
   return (
@@ -91,6 +91,7 @@ export function Debt3PlusGoal() {
             <ResponsiveContainer>
               <BarChart
                 data={monthlyGoals}
+                layout="vertical"
                 margin={{
                   top: 5,
                   right: 30,
@@ -99,12 +100,20 @@ export function Debt3PlusGoal() {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis 
+                <XAxis 
+                    type="number" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false}
                     tickFormatter={(value) => `S/${Number(value) / 1000}k`}
+                />
+                <YAxis 
+                    dataKey="name" 
+                    type="category"
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    className="capitalize"
                 />
                 <Tooltip 
                     content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))}/>} 
@@ -113,13 +122,13 @@ export function Debt3PlusGoal() {
                 <Bar 
                     dataKey="proposedAmount" 
                     fill="var(--color-proposedAmount)"
-                    radius={[4, 4, 0, 0]}
+                    radius={[0, 4, 4, 0]}
                     name="Deuda Inicial"
                 />
                 <Bar 
                     dataKey="executedAmount" 
                     fill="var(--color-executedAmount)"
-                    radius={[4, 4, 0, 0]}
+                    radius={[0, 4, 4, 0]}
                     name="Deuda Actual"
                 />
               </BarChart>
