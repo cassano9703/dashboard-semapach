@@ -95,7 +95,9 @@ export function Debt3PlusGoal() {
 
   const reductionDifference = useMemo(() => {
     if (!octoberData) return null;
-    return annualGoalAmount - octoberData.executedAmount;
+    // Since it's a reduction goal, we want to know how much is left to reduce.
+    // Difference = Current Debt - Target Debt
+    return octoberData.executedAmount - annualGoalAmount;
   }, [annualGoalAmount, octoberData]);
 
 
@@ -134,7 +136,7 @@ export function Debt3PlusGoal() {
                         : "bg-green-100 text-green-800"
                 )}>
                     {reductionDifference > 0 
-                        ? `Nos falta por reducir: ${formatCurrency(reductionDifference)}`
+                        ? `Falta por reducir: ${formatCurrency(reductionDifference)}`
                         : `Reducción superada por: ${formatCurrency(Math.abs(reductionDifference))}`
                     }
                 </div>
