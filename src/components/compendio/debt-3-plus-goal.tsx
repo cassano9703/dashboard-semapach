@@ -54,7 +54,11 @@ export function Debt3PlusGoal() {
     if (!goalsData) return [];
     
     return goalsData
-      .filter(goal => goal.goalType === 'debt_3_plus' && goal.proposedAmount > 0)
+      .filter(goal => 
+        goal.goalType === 'debt_3_plus' && 
+        goal.proposedAmount > 0 &&
+        parseInt(goal.month.split('-')[1]) >= 8
+      )
       .map(goal => ({
           ...goal,
           name: format(parseISO(`${goal.month}-01T00:00:00`), 'LLLL', { locale: es }),
