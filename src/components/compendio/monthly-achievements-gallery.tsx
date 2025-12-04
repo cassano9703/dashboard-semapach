@@ -45,7 +45,7 @@ export function MonthlyAchievementsGallery() {
   }, [achievementsData]);
 
   return (
-    <Card>
+    <Card className="rounded-b-none">
         <CardHeader>
             <CardTitle>Galería de Logros Mensuales</CardTitle>
             <CardDescription>Hitos importantes alcanzados cada mes.</CardDescription>
