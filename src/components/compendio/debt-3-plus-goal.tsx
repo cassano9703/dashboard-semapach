@@ -86,7 +86,7 @@ export function Debt3PlusGoal() {
           executedAmount: goal.executedAmount || goal.proposedAmount,
         })
       )
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .sort((a, b) => b.month.localeCompare(a.month));
   }, [goalsData]);
 
   const isLoading = isLoadingMonthly || isLoadingAnnual;
