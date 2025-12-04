@@ -41,11 +41,10 @@ export function Debt3PlusGoal() {
 
   const goalsRef = useMemoFirebase(
     () => (firestore ? query(
-        collection(firestore, 'monthly_goals'), 
-        where('goalType', '==', 'debt_3_plus'),
+        collection(firestore, 'monthly_goals'),
         where('month', '>=', `${currentYear}-01`),
         where('month', '<=', `${currentYear}-12`),
-        orderBy('month', 'asc')
+        orderBy('month')
     ) : null),
     [firestore, currentYear]
   );
@@ -55,7 +54,7 @@ export function Debt3PlusGoal() {
     if (!goalsData) return [];
     
     return goalsData
-      .filter(goal => goal.proposedAmount > 0)
+      .filter(goal => goal.goalType === 'debt_3_plus' && goal.proposedAmount > 0)
       .map(goal => ({
           ...goal,
           name: format(parseISO(`${goal.month}-01T00:00:00`), 'LLLL', { locale: es }),
