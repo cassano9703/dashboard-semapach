@@ -82,8 +82,8 @@ export function MonthlyAchievementsGallery() {
                                 <div className="p-4 text-sm text-muted-foreground min-h-[60px]">
                                     {achievement.description}
                                 </div>
-                                <CardFooter className="flex justify-center p-2 bg-muted/50">
-                                    <span className="text-sm font-medium text-muted-foreground capitalize">{achievement.monthFormatted}</span>
+                                <CardFooter className="flex justify-center p-2 bg-blue-100 dark:bg-blue-900/30">
+                                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200 capitalize">{achievement.monthFormatted}</span>
                                 </CardFooter>
                                 </Card>
                             </div>
