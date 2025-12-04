@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Progress } from '@/components/ui/progress';
@@ -23,25 +23,23 @@ const formatCurrency = (value: number | undefined) => {
 
 export function MonthlyCollectionGoal() {
   const firestore = useFirestore();
+  const currentYear = new Date().getFullYear();
 
   const goalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals')) : null),
-    [firestore]
+    () => (firestore ? query(
+        collection(firestore, 'monthly_goals'),
+        where('goalType', '==', 'collection'),
+        where('month', '>=', `${currentYear}-08`),
+        where('month', '<=', `${currentYear}-12`)
+    ) : null),
+    [firestore, currentYear]
   );
   const { data: goalsData, isLoading } = useCollection(goalsRef);
 
   const monthlyGoals = useMemo(() => {
     if (!goalsData) return [];
     
-    const currentYear = new Date().getFullYear().toString();
-
     return goalsData
-      .filter(goal => {
-        const monthIndex = new Date(goal.month + '-02').getMonth(); // 0-indexed
-        return goal.goalType === 'collection' && 
-               goal.month.startsWith(currentYear) &&
-               monthIndex >= 7; // 7 is August
-      })
       .sort((a, b) => a.month.localeCompare(b.month))
       .map(goal => {
         const progress = goal.proposedAmount > 0 && goal.executedAmount
