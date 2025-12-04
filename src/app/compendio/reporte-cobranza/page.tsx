@@ -3,6 +3,7 @@
 import { AnnualCollectionGoal } from '@/components/compendio/annual-collection-goal';
 import { MonthlyAchievementsGallery } from '@/components/compendio/monthly-achievements-gallery';
 import { MonthlyCollectionGoal } from '@/components/compendio/monthly-collection-goal';
+import { ServiceOperationStats } from '@/components/compendio/service-operation-stats';
 import { DistrictProgressChart } from '@/components/dashboard/district-progress-chart';
 
 export default function ReporteCobranzaPage() {
@@ -26,6 +27,7 @@ export default function ReporteCobranzaPage() {
             <DistrictProgressChart />
         </div>
       </div>
+      <ServiceOperationStats />
     </div>
   );
 }
