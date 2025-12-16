@@ -77,7 +77,7 @@ export function Debt3PlusGoal() {
           goal.goalType === 'debt_3_plus' &&
           goal.proposedAmount > 0 &&
           monthIndex >= 8 && // August
-          monthIndex <= 10 // October
+          monthIndex <= 11 // November
         );
       })
       .map(goal => ({
@@ -89,16 +89,17 @@ export function Debt3PlusGoal() {
       .sort((a, b) => b.month.localeCompare(a.month));
   }, [goalsData]);
 
-  const octoberData = useMemo(() => {
-    return monthlyGoals.find(g => g.month.endsWith('-10'));
+  const latestMonthData = useMemo(() => {
+    if (monthlyGoals.length === 0) return null;
+    // Since it's sorted descending by month, the first element is the latest.
+    return monthlyGoals[0];
   }, [monthlyGoals]);
 
   const reductionDifference = useMemo(() => {
-    if (!octoberData) return null;
-    // Since it's a reduction goal, we want to know how much is left to reduce.
+    if (!latestMonthData) return null;
     // Difference = Current Debt - Target Debt
-    return octoberData.executedAmount - annualGoalAmount;
-  }, [annualGoalAmount, octoberData]);
+    return latestMonthData.executedAmount - annualGoalAmount;
+  }, [annualGoalAmount, latestMonthData]);
 
 
   const isLoading = isLoadingMonthly || isLoadingAnnual;
@@ -123,9 +124,9 @@ export function Debt3PlusGoal() {
                     <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(annualGoalAmount)}</p>
                 </div>
               </div>
-              {octoberData && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deuda de Octubre: {formatCurrency(octoberData.executedAmount)}
+              {latestMonthData && (
+                <p className="text-xs text-muted-foreground mt-1 capitalize">
+                  Deuda de {latestMonthData.name}: {formatCurrency(latestMonthData.executedAmount)}
                 </p>
               )}
                {reductionDifference !== null && (
