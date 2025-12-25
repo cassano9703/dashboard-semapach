@@ -17,6 +17,7 @@ import {
   FileLock,
   BookOpen,
   ClipboardList,
+  LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,9 +36,14 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 type NavItem = {
   href: string;
@@ -146,6 +152,28 @@ const allNavItems: NavItem[] = [
 export function MainNav() {
   const pathname = usePathname();
   const navItems = allNavItems;
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    if (auth) {
+      try {
+        await signOut(auth);
+        toast({
+          title: "Sesión cerrada",
+          description: "Ha cerrado sesión correctamente.",
+        });
+        router.push('/login');
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo cerrar la sesión.",
+        });
+      }
+    }
+  };
 
   const isSubItemActive = (subItems: NavItem['subItems']) => {
     return subItems?.some((item) => pathname.startsWith(item.href));
@@ -236,6 +264,16 @@ export function MainNav() {
           )}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start h-8 text-sm p-2">
+              <LogOut className="mr-2 h-5 w-5" />
+              Cerrar Sesión
+            </Button>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </>
   );
 }
