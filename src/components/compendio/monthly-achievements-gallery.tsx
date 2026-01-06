@@ -19,11 +19,15 @@ import {
 import { useMemo, useRef } from 'react';
 import Autoplay from "embla-carousel-autoplay";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export function MonthlyAchievementsGallery() {
+interface MonthlyAchievementsGalleryProps {
+  year: number;
+}
+
+export function MonthlyAchievementsGallery({ year }: MonthlyAchievementsGalleryProps) {
   const plugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
@@ -31,8 +35,13 @@ export function MonthlyAchievementsGallery() {
   const firestore = useFirestore();
 
   const achievementsRef = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'monthly_achievements'), orderBy('month', 'desc')) : null,
-    [firestore]
+    () => firestore ? query(
+      collection(firestore, 'monthly_achievements'),
+      where('month', '>=', `${year}-01`),
+      where('month', '<=', `${year}-12`),
+      orderBy('month', 'desc')
+    ) : null,
+    [firestore, year]
   );
   const { data: achievementsData, isLoading } = useCollection(achievementsRef);
 
@@ -54,7 +63,7 @@ export function MonthlyAchievementsGallery() {
           {isLoading ? (
             <div className="flex items-center justify-center h-80 text-muted-foreground">Cargando logros...</div>
           ) : achievements.length === 0 ? (
-            <div className="flex items-center justify-center h-80 text-muted-foreground">No hay logros para mostrar.</div>
+            <div className="flex items-center justify-center h-80 text-muted-foreground">No hay logros para mostrar en el año {year}.</div>
           ) : (
              <Carousel
                 plugins={[plugin.current]}

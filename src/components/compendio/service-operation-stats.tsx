@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scissors, Repeat, Building, UserCog, CalendarIcon } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
@@ -13,12 +13,18 @@ import { Calendar } from '../ui/calendar';
 
 const formatNumber = (value: number) => value.toLocaleString('es-PE');
 
-export function ServiceOperationStats() {
+interface ServiceOperationStatsProps {
+  year: number;
+}
+
+export function ServiceOperationStats({ year }: ServiceOperationStatsProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    setSelectedDate(new Date());
-  }, []);
+    const newDate = new Date();
+    newDate.setFullYear(year);
+    setSelectedDate(newDate);
+  }, [year]);
   
   const firestore = useFirestore();
   const selectedMonth = selectedDate ? format(selectedDate, 'yyyy-MM') : null;
@@ -90,12 +96,14 @@ export function ServiceOperationStats() {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="center">
                 <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-                locale={es}
-                defaultMonth={selectedDate}
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    locale={es}
+                    defaultMonth={selectedDate}
+                    fromDate={startOfYear(new Date(year, 0, 1))}
+                    toDate={endOfYear(new Date(year, 0, 1))}
                 />
             </PopoverContent>
         </Popover>
@@ -138,5 +146,3 @@ export function ServiceOperationStats() {
     </Card>
   );
 }
-
-    

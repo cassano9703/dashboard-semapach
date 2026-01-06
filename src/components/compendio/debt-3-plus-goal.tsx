@@ -36,28 +36,31 @@ const chartConfig = {
     },
 } satisfies ChartConfig;
 
-export function Debt3PlusGoal() {
+interface Debt3PlusGoalProps {
+  year: number;
+}
+
+export function Debt3PlusGoal({ year }: Debt3PlusGoalProps) {
   const firestore = useFirestore();
-  const currentYear = new Date().getFullYear();
 
   const goalsRef = useMemoFirebase(
     () => (firestore ? query(
         collection(firestore, 'monthly_goals'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
+        where('month', '>=', `${year}-01`),
+        where('month', '<=', `${year}-12`),
         orderBy('month')
     ) : null),
-    [firestore, currentYear]
+    [firestore, year]
   );
   const { data: goalsData, isLoading: isLoadingMonthly } = useCollection(goalsRef);
   
   const annualGoalRef = useMemoFirebase(
     () => (firestore ? query(
         collection(firestore, 'annual_goals'),
-        where('year', '==', currentYear),
+        where('year', '==', year),
         where('goalType', '==', 'debt_3_plus')
     ) : null),
-    [firestore, currentYear]
+    [firestore, year]
   );
   const { data: annualGoalData, isLoading: isLoadingAnnual } = useCollection(annualGoalRef);
 
@@ -72,12 +75,9 @@ export function Debt3PlusGoal() {
     
     return goalsData
       .filter(goal => {
-        const monthIndex = parseInt(goal.month.split('-')[1]);
         return (
           goal.goalType === 'debt_3_plus' &&
-          goal.proposedAmount > 0 &&
-          monthIndex >= 8 && // August
-          monthIndex <= 11 // November
+          goal.proposedAmount > 0
         );
       })
       .map(goal => ({
@@ -151,7 +151,7 @@ export function Debt3PlusGoal() {
               <ChartContainer config={chartConfig} className="h-[250px] w-full">
                 <ResponsiveContainer>
                   <BarChart
-                    data={monthlyGoals}
+                    data={monthlyGoals.slice().reverse()} // Show in chronological order
                     layout="vertical"
                     margin={{
                       top: 5,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
@@ -20,19 +20,27 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function DistrictProgressChart() {
+interface DistrictProgressChartProps {
+  year: number;
+}
+
+export function DistrictProgressChart({ year }: DistrictProgressChartProps) {
   const firestore = useFirestore();
 
   const districtProgressRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'district_progress')) : null),
-    [firestore]
+    () => (firestore ? query(
+        collection(firestore, 'district_progress'),
+        where('month', '>=', `${year}-01`),
+        where('month', '<=', `${year}-12`)
+    ) : null),
+    [firestore, year]
   );
   const { data: districtProgressData, isLoading } = useCollection(districtProgressRef);
 
   const chartData = useMemo(() => {
     if (!districtProgressData) return [];
 
-    const currentMonthStr = format(new Date(), 'yyyy-MM');
+    const currentMonthStr = format(new Date(year, new Date().getMonth()), 'yyyy-MM');
     const filteredData = districtProgressData.filter((item: any) => item.month === currentMonthStr);
 
     const dataMap = new Map(filteredData.map((item: any) => [item.district, item]));
@@ -49,7 +57,7 @@ export function DistrictProgressChart() {
         fill: `hsl(var(--chart-${(index % 5) + 1}))`,
       };
     }).filter(item => item.progress > 0);
-  }, [districtProgressData]);
+  }, [districtProgressData, year]);
 
   const sortedChartData = [...chartData].sort((a, b) => b.progress - a.progress);
 

@@ -21,18 +21,21 @@ const formatCurrency = (value: number | undefined) => {
   })}`;
 };
 
-export function MonthlyCollectionGoal() {
+interface MonthlyCollectionGoalProps {
+  year: number;
+}
+
+export function MonthlyCollectionGoal({ year }: MonthlyCollectionGoalProps) {
   const firestore = useFirestore();
-  const currentYear = new Date().getFullYear();
 
   const goalsRef = useMemoFirebase(
     () => (firestore ? query(
         collection(firestore, 'monthly_goals'),
-        where('month', '>=', `${currentYear}-01`),
-        where('month', '<=', `${currentYear}-12`),
+        where('month', '>=', `${year}-01`),
+        where('month', '<=', `${year}-12`),
         orderBy('month')
     ) : null),
-    [firestore, currentYear]
+    [firestore, year]
   );
   const { data: goalsData, isLoading } = useCollection(goalsRef);
 
@@ -41,8 +44,7 @@ export function MonthlyCollectionGoal() {
     
     return goalsData
       .filter(goal => 
-        goal.goalType === 'collection' && 
-        parseInt(goal.month.split('-')[1]) >= 8
+        goal.goalType === 'collection' && goal.proposedAmount > 0
       )
       .sort((a, b) => a.month.localeCompare(b.month))
       .map(goal => {

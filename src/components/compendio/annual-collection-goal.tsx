@@ -20,21 +20,24 @@ const formatCurrency = (value: number | undefined) => {
   })}`;
 };
 
-export function AnnualCollectionGoal() {
+interface AnnualCollectionGoalProps {
+  year: number;
+}
+
+export function AnnualCollectionGoal({ year }: AnnualCollectionGoalProps) {
   const firestore = useFirestore();
-  const currentYear = 2025;
 
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
   const monthlyGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('month', '>=', `${currentYear}-01`), where('month', '<=', `${currentYear}-12`)) : null),
-    [firestore, currentYear]
+    () => (firestore ? query(collection(firestore, 'monthly_goals'), where('month', '>=', `${year}-01`), where('month', '<=', `${year}-12`)) : null),
+    [firestore, year]
   );
   const { data: monthlyGoalsData, isLoading: isLoadingMonthly } = useCollection(monthlyGoalsRef);
 
   const annualGoalsRef = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'annual_goals'), where('year', '==', currentYear), where('goalType', '==', 'collection')) : null),
-    [firestore, currentYear]
+    () => (firestore ? query(collection(firestore, 'annual_goals'), where('year', '==', year), where('goalType', '==', 'collection')) : null),
+    [firestore, year]
   );
   const { data: annualGoalsData, isLoading: isLoadingAnnual } = useCollection(annualGoalsRef);
   
@@ -58,13 +61,15 @@ export function AnnualCollectionGoal() {
   }, [totalExecuted, annualGoal]);
   
   useEffect(() => {
+    // Reset progress on year change
+    setAnimatedProgress(0);
     if (!isLoadingMonthly && !isLoadingAnnual) {
       const animation = requestAnimationFrame(() => {
         setAnimatedProgress(progressPercentage);
       });
       return () => cancelAnimationFrame(animation);
     }
-  }, [progressPercentage, isLoadingMonthly, isLoadingAnnual]);
+  }, [progressPercentage, isLoadingMonthly, isLoadingAnnual, year]);
   
   const isLoading = isLoadingMonthly || isLoadingAnnual;
 
@@ -76,7 +81,7 @@ export function AnnualCollectionGoal() {
   return (
     <Card className="border-2 border-blue-900/20 shadow-lg">
       <CardHeader className='p-4 text-center'>
-        <div className="text-lg font-semibold">Avance Total Recaudación Anual</div>
+        <div className="text-lg font-semibold">Avance Total Recaudación Anual {year}</div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         {isLoading ? (
