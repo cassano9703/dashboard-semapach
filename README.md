@@ -11,12 +11,13 @@ Este proyecto está centralizado en **Firebase**, lo que permite una sincronizac
 Dependiendo de cómo decidas construir tu App móvil, el proceso cambia:
 
 #### A. Si usas Xcode (App Nativa para iPhone)
+*   **Instalación:** Al instalar Xcode, asegúrate de marcar la casilla **iOS** (ej. iOS 26.2). Los demás (watchOS, tvOS) son opcionales.
 *   **Editor:** Xcode (Gratis en la App Store de Mac).
-*   **Descarga:** Descarga siempre la versión **estable** (no la beta) para evitar errores inesperados durante el desarrollo.
+*   **Descarga:** Descarga siempre la versión **estable** (no la beta).
 *   **Conexión:** 
     1. Descarga el archivo `GoogleService-Info.plist` de la consola de Firebase.
     2. Arrástralo dentro de tu proyecto en Xcode.
-    3. **Muy importante:** Al arrastrarlo, asegúrate de marcar la casilla **"Add to targets"** para tu App, de lo contrario no encontrará las credenciales.
+    3. **Muy importante:** Al arrastrarlo, asegúrate de marcar la casilla **"Add to targets"** para tu App y seleccionar **"Copy items if needed"**.
     4. Ve a `File > Add Package Dependencies` y pega: `https://github.com/firebase/firebase-ios-sdk`.
     5. Selecciona `FirebaseAuth` y `FirebaseFirestore`.
 
