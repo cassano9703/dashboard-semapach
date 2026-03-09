@@ -4,22 +4,37 @@ Este es el panel administrativo y de visualización de datos para SEMAPACH, cons
 
 ## Sincronización con Aplicaciones Móviles
 
-Este proyecto está listo para sincronizarse con aplicaciones móviles (iOS, Android, Flutter, React Native). Gracias a que utilizamos **Firebase** como backend centralizado, la integración es nativa y en tiempo real.
+Este proyecto está centralizado en **Firebase**, lo que permite una sincronización en tiempo real con aplicaciones iOS, Android y multiplataforma.
 
-### Pasos para conectar una App:
+### 1. ¿Qué herramientas usar?
 
-1. **Firebase Console:** Ve a la consola de Firebase de este proyecto.
+Dependiendo de cómo decidas construir tu App móvil, el proceso cambia:
+
+#### A. Si usas Xcode (App Nativa para iPhone)
+*   **Editor:** Xcode (Gratis en la App Store de Mac).
+*   **Conexión:** 
+    1. Descarga el archivo `GoogleService-Info.plist` de la consola de Firebase.
+    2. Arrástralo dentro de tu proyecto en Xcode.
+    3. Ve a `File > Add Package Dependencies` y pega: `https://github.com/firebase/firebase-ios-sdk`.
+    4. Selecciona `FirebaseAuth` y `FirebaseFirestore`.
+
+#### B. Si usas VS Code (Flutter o React Native)
+*   **Editor:** Visual Studio Code.
+*   **Ventaja:** Escribes un solo código que funciona en Android y iPhone.
+*   **Conexión:**
+    1. Instalas el plugin de Firebase para tu lenguaje (`firebase_core` en Flutter o `@react-native-firebase/app` en React Native).
+    2. **Importante:** Aunque uses VS Code, si quieres que la App funcione en iPhone, necesitarás tener Xcode instalado en tu Mac para realizar la compilación final.
+
+### 2. Pasos Generales en Firebase
+1. **Firebase Console:** Ve a la consola de Firebase del proyecto `semapach-report`.
 2. **Agregar Aplicación:** Haz clic en "Añadir aplicación" y selecciona la plataforma (Android o iOS).
-3. **Configuración:** Sigue los pasos para descargar el archivo de configuración (`google-services.json` para Android o `GoogleService-Info.plist` para iOS).
-4. **Mismos Datos:** Utiliza las mismas colecciones de Firestore que usa este panel:
-   - `daily_collections`
-   - `district_progress`
-   - `recovered_services`
-   - `monthly_goals`
-   - `meter_data`
-5. **Autenticación:** La App compartirá la misma base de usuarios de Firebase Auth que este panel.
+3. **Mismos Datos:** La App debe leer las mismas colecciones:
+   - `daily_collections` (Recaudación)
+   - `monthly_goals` (Metas)
+   - `recovered_services` (Suspendidos)
+   - `meter_data` (Medición)
 
-Cualquier cambio realizado en la App se reflejará instantáneamente en este panel y viceversa.
+Cualquier dato que guardes en este panel web aparecerá automáticamente en la App móvil en menos de un segundo.
 
 ---
 git remote set-url origin https://cassano9703@github.com/FrankRemuzgo/semapach.git
