@@ -11,15 +11,20 @@ Este proyecto está centralizado en **Firebase**, lo que permite una sincronizac
 Dependiendo de cómo decidas construir tu App móvil, el proceso cambia:
 
 #### A. Si usas Xcode (App Nativa para iPhone)
-*   **Instalación:** Al instalar Xcode, asegúrate de marcar la casilla **iOS** (ej. iOS 26.2). Los demás (watchOS, tvOS) son opcionales.
+*   **Instalación:** Al instalar Xcode, asegúrate de marcar la casilla **iOS 26.2**. Las demás (watchOS, tvOS) son opcionales.
 *   **Editor:** Xcode (Gratis en la App Store de Mac).
-*   **Descarga:** Descarga siempre la versión **estable** (no la beta).
-*   **Conexión:** 
-    1. Descarga el archivo `GoogleService-Info.plist` de la consola de Firebase.
-    2. Arrástralo dentro de tu proyecto en Xcode.
+*   **Conexión de Configuración:** 
+    1. Descarga el archivo `GoogleService-Info.plist` de la consola de Firebase del proyecto `semapach-report`.
+    2. Arrástralo dentro de tu proyecto en Xcode (en el navegador de archivos de la izquierda).
     3. **Muy importante:** Al arrastrarlo, asegúrate de marcar la casilla **"Add to targets"** para tu App y seleccionar **"Copy items if needed"**.
-    4. Ve a `File > Add Package Dependencies` y pega: `https://github.com/firebase/firebase-ios-sdk`.
-    5. Selecciona `FirebaseAuth` y `FirebaseFirestore`.
+*   **Agregar el "Cerebro" (Packages):**
+    1. Ve a `File > Add Package Dependencies...`.
+    2. En el buscador (arriba a la derecha), pega: `https://github.com/firebase/firebase-ios-sdk`.
+    3. Selecciona la versión por defecto y dale a **Add Package**.
+    4. En la lista de librerías, marca **obligatoriamente**:
+        - `FirebaseAuth`
+        - `FirebaseFirestore`
+    5. Dale a **Add Package** de nuevo.
 
 #### B. Si usas VS Code (Flutter o React Native)
 *   **Editor:** Visual Studio Code.
