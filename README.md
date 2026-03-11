@@ -2,34 +2,42 @@
 
 Este documento es tu mapa para conectar la App móvil de iPhone con este panel administrativo usando Firebase.
 
+## ⚠️ ¡IMPORTANTE: No confundir el Editor Web con Xcode!
+
+Lo que ves en el navegador (Firebase Studio) es para la **Web**. Para configurar la App de iPhone, debes abrir el programa **Xcode** en tu computadora Mac.
+
+---
+
 ## 1. En la Consola de Firebase (Navegador)
 
-Para obtener tus credenciales:
 1.  Ve a **Configuración (icono de engranaje)** > **Configuración del proyecto**.
 2.  En la pestaña "General", baja hasta **"Tus apps"**.
 3.  Selecciona tu App de iOS y descarga el archivo **`GoogleService-Info.plist`**.
 
-## 2. En Xcode (Tu Mac)
+---
 
-### Paso 1: Agregar el archivo de configuración
-1.  Arrastra el archivo `GoogleService-Info.plist` dentro de tu proyecto en Xcode.
-2.  **IMPORTANTE:** En la ventana que aparece, marca **"Copy items if needed"**.
-3.  Haz clic en el archivo dentro de Xcode y, en el panel derecho (**File Inspector**), verifica que en **"Target Membership"** tu App tenga el check azul marcado.
+## 2. En Xcode (Tu Mac - Programa para Apps)
+
+### Paso 1: Agregar el archivo y el "Target Membership"
+1.  Abre tu proyecto de App móvil en Xcode.
+2.  Arrastra el archivo `GoogleService-Info.plist` dentro de tu proyecto.
+3.  **¿DÓNDE ESTÁ EL FILE INSPECTOR?**
+    *   Haz un solo clic sobre el archivo `.plist` dentro de Xcode.
+    *   Mira a la **derecha de Xcode**. Verás un panel lateral.
+    *   El primer icono (una hojita de papel) es el **File Inspector**.
+    *   Abajo verás una sección llamada **Target Membership**.
+    *   **¡DEBE TENER EL CHECK AZUL MARCADO!** Si no, la App no funcionará.
 
 ### Paso 2: Instalar librerías de Firebase
-1.  Ve a **File > Add Package Dependencies...**
+1.  En Xcode, ve a **File > Add Package Dependencies...**
 2.  Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
-3.  Selecciona y agrega estos dos paquetes:
-    *   **FirebaseAuth**: Para el inicio de sesión.
-    *   **FirebaseFirestore**: Para los datos en tiempo real.
+3.  Selecciona: **FirebaseAuth** y **FirebaseFirestore**.
 
 ---
 
-## 3. Código de Conexión (Swift)
+## 3. Código de Conexión (Swift en Xcode)
 
 ### Inicialización (TuProyectoApp.swift)
-Copia esto en tu archivo principal para "encender" la conexión:
-
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -37,7 +45,7 @@ import FirebaseCore
 @main
 struct SemapachMobileApp: App {
     init() {
-        FirebaseApp.configure() // Activa la conexión
+        FirebaseApp.configure()
     }
 
     var body: some Scene {
@@ -48,9 +56,7 @@ struct SemapachMobileApp: App {
 }
 ```
 
-### Leer Datos (Ejemplo de Recaudación)
-Usa este código en tu vista para que los números cambien solos cuando los edites en la web:
-
+### Leer Datos (Ejemplo en tiempo real)
 ```swift
 import FirebaseFirestore
 
@@ -58,25 +64,15 @@ class DashboardViewModel: ObservableObject {
     @Published var dailyAmount: Double = 0.0
     private var db = Firestore.firestore()
 
-    func listenToCollection() {
-        // Escucha el documento del día de hoy
-        let today = "2025-03-05" 
-        
-        db.collection("daily_collections").document(today).addSnapshotListener { snapshot, error in
-            if let data = snapshot?.data() {
-                self.dailyAmount = data["dailyCollectionAmount"] as? Double ?? 0.0
+    func listen() {
+        db.collection("daily_collections").document("2025-03-05").addSnapshotListener { snap, _ in
+            if let d = snap?.data() {
+                self.dailyAmount = d["dailyCollectionAmount"] as? Double ?? 0.0
             }
         }
     }
 }
 ```
 
-## 4. Nombres de las Colecciones
-Para que la App "vea" lo mismo que la web, usa estos nombres exactos en tu código:
-*   `daily_collections`: Recaudación diaria.
-*   `district_progress`: Avance por distritos.
-*   `recovered_services`: Usuarios recuperados.
-*   `meter_data`: Datos de micromedición.
-
 ---
-**Tip de Seguridad:** Los usuarios que crees en el panel de administración de la web podrán entrar a la App móvil con sus mismas credenciales automáticamente.
+**Tip:** Los cambios que hagas en el panel web se verán reflejados en el iPhone al instante gracias al `addSnapshotListener`.
