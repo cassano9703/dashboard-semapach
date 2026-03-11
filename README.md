@@ -4,25 +4,25 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 
 ## 1. Preparación en Xcode (Tu Mac)
 
-### Paso 1: Instalar Firebase
-1. En Xcode, ve al menú superior: **File > Add Package Dependencies...**
-2. Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
-3. Selecciona las librerías: **FirebaseAuth** y **FirebaseFirestore**.
-4. Dale a "Add Package".
+### Paso 1: Instalar Firebase (La pantalla de tu imagen)
+1. En Xcode, en la ventana que tienes abierta (**Add Package Dependencies**):
+2. En el cuadro de búsqueda (arriba a la derecha), pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
+3. Cuando aparezca el paquete, selecciona las librerías: **FirebaseAuth** y **FirebaseFirestore**.
+4. Dale al botón azul "Add Package".
 
 ### Paso 2: El archivo de credenciales
-1. Arrastra el archivo `GoogleService-Info.plist` dentro de tu carpeta `semapach-report` en Xcode.
-2. **IMPORTANTE (File Inspector):** Para ver el panel derecho que mencionamos:
-   * En Xcode, haz clic en el botón de la **esquina superior derecha** (el que tiene una barrita lateral). Eso abrirá el panel derecho.
-   * Haz clic en el archivo `.plist` en la lista de la izquierda.
-   * En el panel derecho verás **Target Membership**. Asegúrate de que tu App esté marcada con un check azul.
+1. Asegúrate de que el archivo `GoogleService-Info.plist` esté dentro de tu carpeta de proyecto en Xcode.
+2. **IMPORTANTE (File Inspector):** 
+   * Haz clic en el archivo `.plist` en la lista de la izquierda de Xcode.
+   * Abre el panel derecho (botón de arriba a la derecha con una barrita lateral).
+   * En **Target Membership**, marca el check azul al lado del nombre de tu App.
 
 ---
 
 ## 2. Código para copiar y pegar en Xcode
 
 ### A. Inicialización (Archivo: `semapach_reportApp.swift`)
-Busca el archivo que tiene el icono de una "A" azul y pega esto:
+Busca el archivo que tiene el icono de una "A" azul y asegúrate de que se vea así:
 
 ```swift
 import SwiftUI
@@ -43,8 +43,8 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Leer datos (Archivo: `ContentView.swift`)
-Sustituye el contenido de tu archivo actual por este para ver la recaudación de hoy en tiempo real:
+### B. Leer datos en Tiempo Real (Archivo: `ContentView.swift`)
+Sustituye el contenido de tu archivo por este para ver la recaudación de la web en el iPhone:
 
 ```swift
 import SwiftUI
@@ -58,16 +58,20 @@ struct ContentView: View {
         VStack(spacing: 20) {
             Image(systemName: "drop.fill")
                 .imageScale(.large)
-                .foregroundStyle(.tint)
+                .foregroundStyle(.blue)
                 .font(.system(size: 60))
             
-            Text("Recaudación de Hoy")
+            Text("Recaudación SEMAPACH")
                 .font(.headline)
             
-            // Este número cambiará solo cuando edites el panel web
+            // Este número cambiará automáticamente cuando edites la web
             Text("S/ \(dailyAmount, specifier: "%.2f")")
-                .font(.system(size: 40, weight: .bold))
-                .foregroundColor(.blue)
+                .font(.system(size: 45, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text("Sincronizado en tiempo real")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding()
         .onAppear {
@@ -76,11 +80,11 @@ struct ContentView: View {
     }
 
     func listenToData() {
-        // Escucha el documento de hoy (asegúrate de que exista en la web)
-        // Ejemplo: si hoy es 2025-03-05, buscará ese ID
-        db.collection("daily_collections").document("2025-03-05").addSnapshotListener { snap, error in
-            if let data = snap?.data() {
-                self.dailyAmount = data["dailyCollectionAmount"] as? Double ?? 0.0
+        // Escucha el documento de hoy en la colección que usa la web
+        // Nota: Asegúrate de que el ID del documento exista (ej: "2025-03-05")
+        db.collection("daily_collections").order(by: "date", descending: true).limit(to: 1).addSnapshotListener { snap, error in
+            if let docs = snap?.documents, let lastDoc = docs.first {
+                self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
             }
         }
     }
@@ -88,4 +92,4 @@ struct ContentView: View {
 ```
 
 ---
-**Nota:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Asegúrate de que tu archivo `.plist` coincida con este ID para que la sincronización funcione.
+**Nota Técnica:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Los datos que guardes en el panel de administración aparecerán automáticamente en esta pantalla del iPhone.
