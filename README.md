@@ -2,48 +2,35 @@
 
 Este documento es tu mapa para conectar la App móvil de iPhone con este panel administrativo usando Firebase.
 
-## ⚠️ ¡IMPORTANTE: No confundir el Editor Web con Xcode!
+## 1. Preparación en Xcode (Tu Mac)
 
-Lo que ves en el navegador (Firebase Studio) es para la **Web**. Para configurar la App de iPhone, debes abrir el programa **Xcode** en tu computadora Mac.
+### Paso 1: Instalar Firebase
+1. En Xcode, ve al menú superior: **File > Add Package Dependencies...**
+2. Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
+3. Selecciona las librerías: **FirebaseAuth** y **FirebaseFirestore**.
+4. Dale a "Add Package".
 
----
-
-## 1. En la Consola de Firebase (Navegador)
-
-1.  Ve a **Configuración (icono de engranaje)** > **Configuración del proyecto**.
-2.  En la pestaña "General", baja hasta **"Tus apps"**.
-3.  Selecciona tu App de iOS y descarga el archivo **`GoogleService-Info.plist`**.
-
----
-
-## 2. En Xcode (Tu Mac - Programa para Apps)
-
-### Paso 1: Agregar el archivo y el "Target Membership"
-1.  Abre tu proyecto de App móvil en Xcode.
-2.  Arrastra el archivo `GoogleService-Info.plist` dentro de tu proyecto.
-3.  **¿DÓNDE ESTÁ EL FILE INSPECTOR?**
-    *   Haz un solo clic sobre el archivo `.plist` dentro de Xcode.
-    *   Mira a la **derecha de Xcode**. Verás un panel lateral.
-    *   El primer icono (una hojita de papel) es el **File Inspector**.
-    *   Abajo verás una sección llamada **Target Membership**.
-    *   **¡DEBE TENER EL CHECK AZUL MARCADO!** Si no, la App no funcionará.
-
-### Paso 2: Instalar librerías de Firebase
-1.  En Xcode, ve a **File > Add Package Dependencies...**
-2.  Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
-3.  Selecciona: **FirebaseAuth** y **FirebaseFirestore**.
+### Paso 2: El archivo de credenciales
+1. Arrastra el archivo `GoogleService-Info.plist` dentro de tu carpeta `semapach-report` en Xcode.
+2. **IMPORTANTE:** Para ver el **File Inspector** que mencionamos antes:
+   * En Xcode, haz clic en el botón del cuadrado pequeño que está en la **esquina superior derecha** (el que tiene una barrita lateral). Eso abrirá el panel derecho.
+   * Haz clic en el archivo `.plist`.
+   * En ese panel derecho, verás **Target Membership**. Asegúrate de que tu App esté marcada con un check azul.
 
 ---
 
-## 3. Código de Conexión (Swift en Xcode)
+## 2. Código para copiar y pegar en Xcode
 
-### Inicialización (TuProyectoApp.swift)
+### A. Inicialización (Archivo: `semapach_reportApp.swift`)
+Busca el archivo que tiene el icono de una "A" azul y pega esto:
+
 ```swift
 import SwiftUI
-import FirebaseCore
+import FirebaseCore // 1. Importar Firebase
 
 @main
-struct SemapachMobileApp: App {
+struct semapach_reportApp: App {
+    // 2. Configurar Firebase al arrancar
     init() {
         FirebaseApp.configure()
     }
@@ -56,18 +43,43 @@ struct SemapachMobileApp: App {
 }
 ```
 
-### Leer Datos (Ejemplo en tiempo real)
-```swift
-import FirebaseFirestore
+### B. Leer datos (Archivo: `ContentView.swift`)
+Sustituye el contenido de tu archivo actual por este para ver la recaudación de hoy:
 
-class DashboardViewModel: ObservableObject {
-    @Published var dailyAmount: Double = 0.0
+```swift
+import SwiftUI
+import FirebaseFirestore // 1. Importar Firestore
+
+struct ContentView: View {
+    @State private var dailyAmount: Double = 0.0
     private var db = Firestore.firestore()
 
-    func listen() {
-        db.collection("daily_collections").document("2025-03-05").addSnapshotListener { snap, _ in
-            if let d = snap?.data() {
-                self.dailyAmount = d["dailyCollectionAmount"] as? Double ?? 0.0
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "drop.fill")
+                .imageScale(.large)
+                .foregroundStyle(.tint)
+                .font(.system(size: 60))
+            
+            Text("Recaudación de Hoy")
+                .font(.headline)
+            
+            // Este número cambiará solo cuando edites el panel web
+            Text("S/ \(dailyAmount, specifier: "%.2f")")
+                .font(.system(size: 40, weight: .bold))
+                .foregroundColor(.blue)
+        }
+        .padding()
+        .onAppear {
+            listenToData()
+        }
+    }
+
+    func listenToData() {
+        // Escucha el documento de hoy (ejemplo: 2025-03-05)
+        db.collection("daily_collections").document("2025-03-05").addSnapshotListener { snap, error in
+            if let data = snap?.data() {
+                self.dailyAmount = data["dailyCollectionAmount"] as? Double ?? 0.0
             }
         }
     }
@@ -75,4 +87,4 @@ class DashboardViewModel: ObservableObject {
 ```
 
 ---
-**Tip:** Los cambios que hagas en el panel web se verán reflejados en el iPhone al instante gracias al `addSnapshotListener`.
+**Nota:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Asegúrate de que tu archivo `.plist` coincida con este ID.
