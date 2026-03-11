@@ -12,10 +12,10 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 
 ### Paso 2: El archivo de credenciales
 1. Arrastra el archivo `GoogleService-Info.plist` dentro de tu carpeta `semapach-report` en Xcode.
-2. **IMPORTANTE:** Para ver el **File Inspector** que mencionamos antes:
-   * En Xcode, haz clic en el botón del cuadrado pequeño que está en la **esquina superior derecha** (el que tiene una barrita lateral). Eso abrirá el panel derecho.
-   * Haz clic en el archivo `.plist`.
-   * En ese panel derecho, verás **Target Membership**. Asegúrate de que tu App esté marcada con un check azul.
+2. **IMPORTANTE (File Inspector):** Para ver el panel derecho que mencionamos:
+   * En Xcode, haz clic en el botón de la **esquina superior derecha** (el que tiene una barrita lateral). Eso abrirá el panel derecho.
+   * Haz clic en el archivo `.plist` en la lista de la izquierda.
+   * En el panel derecho verás **Target Membership**. Asegúrate de que tu App esté marcada con un check azul.
 
 ---
 
@@ -44,7 +44,7 @@ struct semapach_reportApp: App {
 ```
 
 ### B. Leer datos (Archivo: `ContentView.swift`)
-Sustituye el contenido de tu archivo actual por este para ver la recaudación de hoy:
+Sustituye el contenido de tu archivo actual por este para ver la recaudación de hoy en tiempo real:
 
 ```swift
 import SwiftUI
@@ -76,7 +76,8 @@ struct ContentView: View {
     }
 
     func listenToData() {
-        // Escucha el documento de hoy (ejemplo: 2025-03-05)
+        // Escucha el documento de hoy (asegúrate de que exista en la web)
+        // Ejemplo: si hoy es 2025-03-05, buscará ese ID
         db.collection("daily_collections").document("2025-03-05").addSnapshotListener { snap, error in
             if let data = snap?.data() {
                 self.dailyAmount = data["dailyCollectionAmount"] as? Double ?? 0.0
@@ -87,4 +88,4 @@ struct ContentView: View {
 ```
 
 ---
-**Nota:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Asegúrate de que tu archivo `.plist` coincida con este ID.
+**Nota:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Asegúrate de que tu archivo `.plist` coincida con este ID para que la sincronización funcione.
