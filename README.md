@@ -1,17 +1,43 @@
-# Guía de Sincronización Final: Panel SEMAPACH + iPhone
+# 🚀 Guía Definitiva: De Prototipo a la App Store (SEMAPACH)
 
-¡Estás en el último paso! Sigue estas instrucciones para activar los permisos en tu iPhone y ver los datos con la nueva interfaz dinámica.
+Esta guía te llevará paso a paso para que la App deje de ser una prueba en Xcode y se convierta en una aplicación oficial descargable.
 
-## 1. Costos de Publicación (¿Es gratis?)
-*   **Pruebas locales (GRATIS):** Puedes conectar tu iPhone a la Mac y darle a "Play" en Xcode. La App funcionará perfectamente, pero después de 7 días caducará el permiso y deberás volver a conectarla a Xcode.
-*   **App Store (PAGO):** Para que la App sea pública y eterna, debes pagar **$99 USD/año** a Apple para unirte al "Apple Developer Program".
+---
 
-## 2. Activar permisos en tu iPhone (Paso Obligatorio)
-Si te sale el error "Developer Mode disabled" o "Not Trusted":
-1.  **Developer Mode:** Ve a Ajustes > Privacidad y Seguridad > Modo de Desarrollador (activar y reiniciar).
-2.  **Confiar en la App:** Ve a Ajustes > General > Gestión de dispositivos > Toca tu Apple ID > Confiar.
+## 1. Fase de Desarrollo (Lo que tienes ahora)
+Actualmente tienes un prototipo funcional. Para verlo en tu iPhone:
+1. **Conecta tu iPhone** a la Mac vía USB.
+2. En Xcode, selecciona tu iPhone físico en la parte superior.
+3. Dale a **Play**.
+4. *Nota:* Esta versión caduca cada 7 días si usas una cuenta gratuita.
 
-## 3. Código Final de los Archivos en Xcode
+---
+
+## 2. Preparación para Producción (Paso a Paso)
+
+### Paso 1: Inscripción en Apple ($99 USD/año)
+Para que la App sea pública, la institución (SEMAPACH) debe crear una cuenta de Desarrollador:
+1. Ve a [developer.apple.com/programs](https://developer.apple.com/programs/).
+2. Inscríbete como **"Organization"** (esto permite que el desarrollador sea "SEMAPACH" y no una persona individual).
+3. Necesitarás el número **DUNS** de la empresa (un estándar internacional de identidad empresarial).
+
+### Paso 2: Configurar el Icono Oficial
+Xcode necesita el logo de SEMAPACH en varios tamaños:
+1. Ve a la carpeta **Assets** en Xcode.
+2. Busca **AppIcon**.
+3. Arrastra tu logo en formato PNG (1024x1024 px) y Xcode lo redimensionará.
+
+### Paso 3: App Store Connect
+Es el portal donde gestionas la tienda:
+1. Crea el registro de la App en [appstoreconnect.apple.com](https://appstoreconnect.apple.com).
+2. Sube capturas de pantalla del iPhone.
+3. Escribe la descripción: *"Panel de monitoreo en tiempo real para la gestión comercial de SEMAPACH"*.
+
+---
+
+## 3. Código Final de la App (Estilo Aquarium)
+
+Copia y pega estos códigos en tus archivos de Xcode para asegurar la interfaz dinámica:
 
 ### A. Archivo: `semapach_reportApp.swift`
 ```swift
@@ -32,7 +58,7 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Archivo: `ContentView.swift` (ESTILO AQUARIUM)
+### B. Archivo: `ContentView.swift` (INTERFAZ AQUARIUM)
 ```swift
 import SwiftUI
 import FirebaseFirestore
@@ -52,11 +78,13 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
+            // Fondo con degradado fluido
             LinearGradient(colors: [Color.blue.opacity(0.1), Color.white], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 25) {
+                    // Header
                     HStack {
                         VStack(alignment: .leading) {
                             Text("SEMAPACH")
@@ -74,6 +102,7 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
+                    // AQUARIUM VIEW (El tanque de agua)
                     VStack(spacing: 15) {
                         ZStack {
                             Circle()
@@ -107,6 +136,7 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 20)
                     
+                    // Card Principal: Recaudación de Hoy
                     VStack(spacing: 10) {
                         Text("RECAUDACIÓN DE HOY")
                             .font(.caption)
@@ -129,6 +159,7 @@ struct ContentView: View {
                     .shadow(color: .black.opacity(0.05), radius: 15, x: 0, y: 10)
                     .padding(.horizontal)
                     
+                    // Stats Secundarios
                     HStack(spacing: 15) {
                         StatCardView(title: "ACUMULADO", value: monthlyAccumulated, icon: "chart.line.uptrend.xyaxis", color: .green)
                         StatCardView(title: "META TOTAL", value: monthlyGoal, icon: "target", color: .orange)
@@ -165,6 +196,7 @@ struct ContentView: View {
     }
 }
 
+// Componente para las olas
 struct LiquidWaveView: View {
     var progress: Double
     var waveOffset: Angle
@@ -173,7 +205,6 @@ struct LiquidWaveView: View {
         ZStack {
             WaveShape(offset: waveOffset, percent: progress)
                 .fill(LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .top, endPoint: .bottom))
-                .offset(y: 0)
             WaveShape(offset: waveOffset + Angle(degrees: 90), percent: progress)
                 .fill(Color.blue.opacity(0.4))
                 .offset(y: 10)
@@ -242,8 +273,11 @@ struct StatCardView: View {
 }
 ```
 
-## 4. Solución de Cierre Inesperado (Error SIGABRT)
-Si la App se cierra al abrir:
-1. Borra el archivo `GoogleService-Info.plist` de Xcode (Move to Trash).
-2. Arrástralo de nuevo desde tu carpeta de Descargas a Xcode.
-3. Asegúrate de marcar la casilla **"semapach-report"** en la ventana que sale.
+---
+
+## 4. Publicación (El Paso Final)
+Cuando la App esté lista:
+1. En Xcode, ve al menú **Product > Archive**.
+2. Dale al botón **Distribute App**.
+3. Sigue los pasos para subirla a **App Store Connect**.
+4. Apple revisará la App (tardan de 24 a 48 horas) y ¡listo! Aparecerá en la tienda oficial.
