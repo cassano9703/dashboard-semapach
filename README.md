@@ -6,16 +6,23 @@
 Este error impide que la App se instale.
 1. En la ventana **Signing & Capabilities**, haz clic en el selector de **Team**.
 2. Elige tu nombre. Si no aparece, haz clic en **"Add Account..."** y pon tu correo de Apple (iCloud).
-3. **Contraseña del Llavero:** Si te sale una ventana pidiendo una contraseña para "codesign", ingresa la **contraseña de inicio de sesión de tu Mac** y haz clic en **"Permitir siempre"**.
+3. **Contraseña del Llavero (Keychain):** Cuando te salga la ventana pidiendo permiso para "codesign" o "Apple Development":
+   - Ingresa la **contraseña con la que inicias sesión en tu Mac**.
+   - Haz clic en **"Permitir siempre" (Always Allow)**. *Es posible que la ventana salga 2 o 3 veces, repite el proceso hasta que desaparezca.*
 
-## 2. Evitar el cierre de la App (Error SIGABRT)
+## 2. Cambiar de iPad a iPhone (Opcional)
+En tu pantalla dice que se va a abrir en un "iPad Air". Si quieres que se vea como un iPhone:
+1. Arriba en el centro de Xcode, haz clic donde dice **"iPad Air..."**.
+2. En la lista que se despliega, busca la sección **iOS Simulators** y elige **iPhone 15** o **iPhone 16**.
+
+## 3. Evitar el cierre de la App (Error SIGABRT)
 Si la App se cierra apenas abre (línea roja en Xcode), es porque el archivo de Google no está bien vinculado.
 1. Busca el archivo `GoogleService-Info.plist` en el panel izquierdo de Xcode.
 2. **Bórralo** (clic derecho -> Delete -> Move to Trash).
 3. **Arrástralo de nuevo** desde tu carpeta de descargas directamente al panel izquierdo de Xcode.
 4. **MUY IMPORTANTE:** En la ventana que sale al soltarlo, asegúrate de que esté marcada la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
 
-## 3. Código Final de los Archivos
+## 4. Código Final de los Archivos
 
 ### A. Archivo: `semapach_reportApp.swift`
 ```swift
@@ -105,6 +112,6 @@ struct ContentView: View {
 }
 ```
 
-## 4. Cómo correr la App
-1. Selecciona tu **iPhone** (o un simulador) en la barra superior.
+## 5. Cómo correr la App
+1. Selecciona tu **iPhone** en la barra superior.
 2. Presiona el botón de **Play** (el triángulo arriba a la izquierda).
