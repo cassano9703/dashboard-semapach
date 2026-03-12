@@ -6,11 +6,6 @@ Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos reales d
 
 Este archivo es el corazón de tu App. Aquí es donde le decimos al iPhone que use Firebase al arrancar.
 
-**¿Qué hace este código?**
-1. `import FirebaseCore`: Trae las herramientas necesarias para hablar con Google.
-2. `FirebaseApp.configure()`: Busca tu archivo `GoogleService-Info.plist` y activa la conexión.
-3. `ContentView()`: Le dice a la App que la primera pantalla que debe mostrar es la de los resultados.
-
 **CÓDIGO A PEGAR:**
 ```swift
 import SwiftUI
@@ -37,10 +32,7 @@ struct semapach_reportApp: App {
 
 ## 2. Archivo: `ContentView.swift` (La Interfaz Visual)
 
-Este archivo dibuja lo que ves en el iPhone: el logo de SEMAPACH y el número de recaudación.
-
-**¿Qué hace este código?**
-- Escucha la base de datos en **tiempo real**. Si cambias un número en esta web, el iPhone se actualiza solo sin que el usuario haga nada.
+Este archivo dibuja lo que ves en el iPhone: el logo de SEMAPACH y el número de recaudación. Escucha la base de datos en **tiempo real**.
 
 **CÓDIGO A PEGAR:**
 ```swift
@@ -153,9 +145,15 @@ struct ContentView: View {
 
 ---
 
-## 3. ¿Cómo probarlo?
-1. En **Xcode**, pega el código arriba mencionado en sus respectivos archivos.
-2. Presiona el botón **Play** (el triángulo arriba a la izquierda).
-3. Abre el simulador de iPhone que aparecerá.
-4. Entra a la sección **Administración > Admin Cobranza** en este panel web.
-5. Cambia el monto de hoy y ¡mira tu iPhone! El número cambiará al instante.
+## 3. ¿Cómo correr y probar la App?
+
+1. **Selecciona el Simulador:** Arriba en el centro de Xcode, haz clic donde dice el nombre de tu App y selecciona un iPhone (ej: iPhone 15).
+2. **Botón Play:** Presiona el triángulo de "Run" arriba a la izquierda.
+3. **Sincronización:** Una vez abierta la App en el simulador:
+   - Ve a la web de administración en este panel.
+   - Cambia el monto de "Recaudación Diaria".
+   - ¡Mira cómo el número en el iPhone cambia solo!
+
+## Solución de Problemas (Errors)
+- **Error "absl.zip":** Ve a `File > Packages > Reset Package Caches`.
+- **Error de conexión:** Asegúrate de que el archivo `GoogleService-Info.plist` tenga el check azul marcado en el panel derecho (File Inspector) bajo **Target Membership**.
