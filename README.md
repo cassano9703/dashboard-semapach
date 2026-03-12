@@ -1,35 +1,11 @@
 # Guía de Sincronización: Panel Web SEMAPACH + App iOS
 
-Este documento es tu mapa para conectar la App móvil de iPhone con este panel administrativo usando Firebase.
+Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos de este panel.
 
-## 1. Preparación en Xcode (Tu Mac)
-
-### Paso 1: Agregar el archivo de credenciales (¡MUY IMPORTANTE!)
-1. Descarga el archivo `GoogleService-Info.plist` desde tu consola de Firebase.
-2. Abre tu proyecto en **Xcode**.
-3. **Arrastra el archivo** desde tu carpeta de Descargas directamente al panel izquierdo de Xcode.
-4. Se abrirá una ventana llamada **"Choose options for adding these files"**.
-5. **CONFIGURACIÓN CORRECTA:**
-   *   Asegúrate de que el checkbox **"semapach-report"** esté marcado.
-   *   Haz clic en el botón azul **Finish**.
-
-### Paso 2: Seleccionar las librerías
-1. En Xcode, ve al menú **File > Add Package Dependencies...**
-2. Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
-3. En la lista de productos, marca:
-   *   **FirebaseCore** (selecciona tu target `semapach-report`)
-   *   **FirebaseAuth** (selecciona tu target `semapach-report`)
-   *   **FirebaseFirestore** (selecciona tu target `semapach-report`)
-4. Dale al botón azul **"Add Package"**.
-
----
-
-## 2. Código para copiar y pegar en Xcode
-
-Sigue estos dos pasos dentro de Xcode para terminar la App:
+## 1. Configuración de Archivos en Xcode
 
 ### A. Inicialización (Archivo: `semapach_reportApp.swift`)
-Busca el archivo con el icono de la "A" azul en Xcode. Borra todo lo que tiene y pega esto:
+Haz clic en este archivo en tu Xcode, borra lo que tiene y pega esto:
 
 ```swift
 import SwiftUI
@@ -37,7 +13,7 @@ import FirebaseCore
 
 @main
 struct semapach_reportApp: App {
-    // Esto conecta la App con el servidor al iniciar
+    // Esto conecta la App con el servidor de Firebase al iniciar
     init() {
         FirebaseApp.configure()
     }
@@ -50,8 +26,8 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Ver la Recaudación (Archivo: `ContentView.swift`)
-Borra todo el contenido de tu `ContentView.swift` y pega este código. Está diseñado para mostrar los datos de SEMAPACH con un diseño profesional:
+### B. Interfaz Principal (Archivo: `ContentView.swift`)
+Haz clic en este archivo en tu Xcode, borra todo y pega este código:
 
 ```swift
 import SwiftUI
@@ -143,13 +119,16 @@ struct ContentView: View {
 
     // Esta función lee los datos de la web automáticamente
     func startListening() {
+        // Buscamos en la colección 'daily_collections' el registro más reciente
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
             .addSnapshotListener { snap, error in
                 self.isLoading = false
                 if let docs = snap?.documents, let lastDoc = docs.first {
+                    // Obtenemos el monto
                     self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
+                    // Obtenemos la fecha
                     if let dateStr = lastDoc.data()["date"] as? String {
                         self.lastUpdate = dateStr
                     }
@@ -160,9 +139,9 @@ struct ContentView: View {
 ```
 
 ---
-**¿Qué hacer ahora?**
-1. Copia el código del **Punto A** en tu archivo `App.swift`.
-2. Copia el código del **Punto B** en tu archivo `ContentView.swift`.
-3. Presiona el botón **Play** (el triángulo arriba a la izquierda) en Xcode.
-
-¡Tu iPhone ya debería estar mostrando los datos de SEMAPACH!
+## 2. ¡Listo para probar!
+Una vez pegado el código:
+1. Presiona el botón **Play** (triángulo arriba a la izquierda) en Xcode.
+2. Abre tu panel web SEMAPACH.
+3. Cambia un dato de recaudación en la web.
+4. **¡Mira tu iPhone!** El número cambiará automáticamente.
