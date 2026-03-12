@@ -2,16 +2,14 @@
 
 ¡Ya casi terminas! Sigue estos pasos para solucionar los errores de Xcode y ver los datos reales.
 
-## 1. Solucionar error de "Signing / Team" (Lo que ves en tu imagen)
+## 1. Solucionar error de "Signing / Team"
 Este error impide que la App se instale.
-1. En la ventana que tienes abierta (**Signing & Capabilities**), haz clic en el selector de **Team** donde dice **"None"**.
-2. Haz clic en **"Add Account..."**.
-3. Pon tu correo de Apple (iCloud) y contraseña.
-4. Cuando termine, haz clic de nuevo en el selector de **Team** y **elige tu nombre**.
-5. El mensaje rojo con la "X" debería desaparecer y ponerse en azul o gris.
+1. En la ventana **Signing & Capabilities**, haz clic en el selector de **Team**.
+2. Elige tu nombre. Si no aparece, haz clic en **"Add Account..."** y pon tu correo de Apple (iCloud).
+3. **Contraseña del Llavero:** Si te sale una ventana pidiendo una contraseña para "codesign", ingresa la **contraseña de inicio de sesión de tu Mac** y haz clic en **"Permitir siempre"**.
 
-## 2. Evitar el cierre de la App (Error SIGABRT / Línea Roja)
-Si la App se cierra apenas abre (el error que salía abajo en tu consola), es porque Xcode no está vinculando bien el archivo de Google.
+## 2. Evitar el cierre de la App (Error SIGABRT)
+Si la App se cierra apenas abre (línea roja en Xcode), es porque el archivo de Google no está bien vinculado.
 1. Busca el archivo `GoogleService-Info.plist` en el panel izquierdo de Xcode.
 2. **Bórralo** (clic derecho -> Delete -> Move to Trash).
 3. **Arrástralo de nuevo** desde tu carpeta de descargas directamente al panel izquierdo de Xcode.
@@ -19,7 +17,7 @@ Si la App se cierra apenas abre (el error que salía abajo en tu consola), es po
 
 ## 3. Código Final de los Archivos
 
-### A. Archivo: `semapach_reportApp.swift` (Icono A azul)
+### A. Archivo: `semapach_reportApp.swift`
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -108,5 +106,5 @@ struct ContentView: View {
 ```
 
 ## 4. Cómo correr la App
-1. Selecciona un **iPhone** en la barra superior.
+1. Selecciona tu **iPhone** (o un simulador) en la barra superior.
 2. Presiona el botón de **Play** (el triángulo arriba a la izquierda).
