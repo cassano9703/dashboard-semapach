@@ -40,7 +40,7 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Archivo: `ContentView.swift` (NUEVA INTERFAZ DINÁMICA)
+### B. Archivo: `ContentView.swift` (NUEVA INTERFAZ DINÁMICA - AQUARIUM)
 (Borra todo el contenido de este archivo en Xcode y pega este código profesional)
 ```swift
 import SwiftUI
@@ -49,7 +49,7 @@ import FirebaseFirestore
 struct ContentView: View {
     @State private var dailyAmount: Double = 0.0
     @State private var monthlyAccumulated: Double = 0.0
-    @State private var monthlyGoal: Double = 1.0 // Evitar división por cero
+    @State private var monthlyGoal: Double = 1.0 
     @State private var isLoading = true
     @State private var waveOffset = Angle(degrees: 0)
     
@@ -61,13 +61,11 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Fondo con degradado suave
             LinearGradient(colors: [Color.blue.opacity(0.1), Color.white], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 25) {
-                    // Cabecera Profesional
                     HStack {
                         VStack(alignment: .leading) {
                             Text("SEMAPACH")
@@ -85,14 +83,12 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
-                    // El "Aquarium" - Progreso de la Meta con Olas
                     VStack(spacing: 15) {
                         ZStack {
                             Circle()
                                 .stroke(Color.blue.opacity(0.1), lineWidth: 15)
                                 .frame(width: 240, height: 240)
                             
-                            // Relleno de Agua con Animación
                             LiquidWaveView(progress: progress, waveOffset: waveOffset)
                                 .clipShape(Circle())
                                 .frame(width: 220, height: 220)
@@ -120,7 +116,6 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 20)
                     
-                    // Dato Principal: Recaudación Diaria
                     VStack(spacing: 10) {
                         Text("RECAUDACIÓN DE HOY")
                             .font(.caption)
@@ -143,7 +138,6 @@ struct ContentView: View {
                     .shadow(color: .black.opacity(0.05), radius: 15, x: 0, y: 10)
                     .padding(.horizontal)
                     
-                    // Rejilla de Estadísticas Secundarias
                     HStack(spacing: 15) {
                         StatCardView(title: "ACUMULADO", value: monthlyAccumulated, icon: "chart.line.uptrend.xyaxis", color: .green)
                         StatCardView(title: "META TOTAL", value: monthlyGoal, icon: "target", color: .orange)
@@ -165,7 +159,6 @@ struct ContentView: View {
     }
 
     func startListening() {
-        // Escucha en tiempo real la última recaudación guardada
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
@@ -181,7 +174,6 @@ struct ContentView: View {
     }
 }
 
-// Subcomponente: Vista de Ola de Agua
 struct LiquidWaveView: View {
     var progress: Double
     var waveOffset: Angle
@@ -198,7 +190,6 @@ struct LiquidWaveView: View {
     }
 }
 
-// Subcomponente: Forma de la Ola
 struct WaveShape: Shape {
     var offset: Angle
     var percent: Double
@@ -230,7 +221,6 @@ struct WaveShape: Shape {
     }
 }
 
-// Subcomponente: Tarjeta de Estadística
 struct StatCardView: View {
     var title: String
     var value: Double
@@ -261,7 +251,33 @@ struct StatCardView: View {
 }
 ```
 
-## 4. Solución de Cierre Inesperado (Error SIGABRT)
+## 4. Guía de Lanzamiento a Producción
+
+Para que la App de SEMAPACH esté disponible para descarga pública:
+
+### Paso 1: Apple Developer Program
+1. Crea un Apple ID institucional si no tienes uno.
+2. Inscríbete en [developer.apple.com](https://developer.apple.com/programs/).
+3. Una vez aprobada la cuenta (tarda 24-48h), podrás crear certificados oficiales.
+
+### Paso 2: Icono y Nombre
+1. En Xcode, ve a `Assets.xcassets`.
+2. Busca la sección **AppIcon**. Arrastra una imagen de 1024x1024 píxeles (el logo de SEMAPACH).
+3. Cambia el nombre de la App en el panel de configuración del proyecto (General > Display Name).
+
+### Paso 3: Subida a TestFlight (Pruebas Reales)
+1. En la barra superior de tu Mac, ve a **Product > Archive**.
+2. Xcode empaquetará la app para producción.
+3. Al finalizar, dale a **"Distribute App"** y selecciona **"App Store Connect"**.
+4. Sigue los pasos para subirla a la nube de Apple.
+5. Entra en [appstoreconnect.apple.com](https://appstoreconnect.apple.com/), ve a la pestaña **TestFlight** e invita a los usuarios con su email.
+
+### Paso 4: Publicación Final
+1. Completa la ficha de la App Store (Capturas, política de privacidad, descripción).
+2. Envía a revisión. Apple revisará la app en 24-72h.
+3. ¡Una vez aprobada, aparecerá en la App Store para buscarla como "SEMAPACH Report"!
+
+## 5. Solución de Cierre Inesperado (Error SIGABRT)
 Si la App se cierra al abrir:
 1. Borra el archivo `GoogleService-Info.plist` de Xcode (Move to Trash).
 2. Arrástralo de nuevo desde tu carpeta de Descargas a Xcode.
