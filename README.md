@@ -4,9 +4,8 @@ Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos reales d
 
 ## 1. Archivo: `semapach_reportApp.swift` (El "Interruptor")
 
-Este archivo es el corazón de tu App. Aquí es donde le decimos al iPhone que use Firebase al arrancar.
+Este archivo inicializa Firebase. Borra todo y pega esto:
 
-**CÓDIGO A PEGAR:**
 ```swift
 import SwiftUI
 import FirebaseCore 
@@ -32,9 +31,8 @@ struct semapach_reportApp: App {
 
 ## 2. Archivo: `ContentView.swift` (La Interfaz Visual)
 
-Este archivo dibuja lo que ves en el iPhone: el logo de SEMAPACH y el número de recaudación. Escucha la base de datos en **tiempo real**.
+Este archivo dibuja la pantalla. Borra todo y pega esto:
 
-**CÓDIGO A PEGAR:**
 ```swift
 import SwiftUI
 import FirebaseFirestore 
@@ -145,15 +143,12 @@ struct ContentView: View {
 
 ---
 
-## 3. ¿Cómo correr y probar la App?
+## 3. Cómo correr la App (Simulador)
 
-1. **Selecciona el Simulador:** Arriba en el centro de Xcode, haz clic donde dice el nombre de tu App y selecciona un iPhone (ej: iPhone 15).
-2. **Botón Play:** Presiona el triángulo de "Run" arriba a la izquierda.
-3. **Sincronización:** Una vez abierta la App en el simulador:
-   - Ve a la web de administración en este panel.
-   - Cambia el monto de "Recaudación Diaria".
-   - ¡Mira cómo el número en el iPhone cambia solo!
+1. **Espera la descarga:** En tu imagen se ve que Xcode está descargando el simulador (8.39 GB). Debes esperar a que termine.
+2. **Selecciona el modelo:** Haz clic arriba en el centro (donde dice "semapach-report > ...") y elige un iPhone (ej: iPhone 16).
+3. **Botón Play:** Presiona el triángulo arriba a la izquierda.
+4. **Prueba:** Cambia un dato en la web y verás el cambio en el iPhone.
 
-## Solución de Problemas (Errors)
-- **Error "absl.zip":** Ve a `File > Packages > Reset Package Caches`.
-- **Error de conexión:** Asegúrate de que el archivo `GoogleService-Info.plist` tenga el check azul marcado en el panel derecho (File Inspector) bajo **Target Membership**.
+## Solución de Problemas
+- **Error de conexión:** Asegúrate de que el archivo `GoogleService-Info.plist` esté dentro de Xcode y tenga el check marcado en el panel derecho (File Inspector).
