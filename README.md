@@ -2,26 +2,18 @@
 
 ¡Estás en el último paso! Sigue estas instrucciones para activar los permisos en tu iPhone y ver los datos con la nueva interfaz dinámica.
 
-## 1. Activar el "Developer Mode" (Modo Desarrollador)
-Si te sale el error "Developer Mode disabled", haz esto en tu **iPhone/Simulador**:
-1. Abre **Ajustes** (Settings).
-2. Ve a **Privacidad y Seguridad** (Privacy & Security).
-3. Baja hasta el fondo y entra en **Modo de Desarrollador** (Developer Mode).
-4. Activa el interruptor y dale a **Reiniciar** (Restart).
-5. Al prender, presiona **Activar** (Turn On).
+## 1. Costos de Publicación (¿Es gratis?)
+*   **Pruebas locales (GRATIS):** Puedes conectar tu iPhone a la Mac y darle a "Play" en Xcode. La App funcionará perfectamente, pero después de 7 días caducará el permiso y deberás volver a conectarla a Xcode.
+*   **App Store (PAGO):** Para que la App sea pública y eterna, debes pagar **$99 USD/año** a Apple para unirte al "Apple Developer Program".
 
-## 2. Confiar en el Certificado (Error: Not Trusted)
-Si te sale el mensaje "Developer App Certificate is not trusted", haz esto:
-1. Abre **Ajustes** (Settings) en el iPhone.
-2. Ve a **General** > **Gestión de dispositivos y VPN**.
-3. Toca en tu **Apple ID** (debajo de App de desarrollador).
-4. Toca en **"Confiar en..."** (el texto azul).
-5. Dale a **Confiar** (botón rojo).
+## 2. Activar permisos en tu iPhone (Paso Obligatorio)
+Si te sale el error "Developer Mode disabled" o "Not Trusted":
+1.  **Developer Mode:** Ve a Ajustes > Privacidad y Seguridad > Modo de Desarrollador (activar y reiniciar).
+2.  **Confiar en la App:** Ve a Ajustes > General > Gestión de dispositivos > Toca tu Apple ID > Confiar.
 
 ## 3. Código Final de los Archivos en Xcode
 
 ### A. Archivo: `semapach_reportApp.swift`
-(Este archivo inicializa la conexión con Firebase)
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -40,8 +32,7 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Archivo: `ContentView.swift` (NUEVA INTERFAZ DINÁMICA - AQUARIUM)
-(Borra todo el contenido de este archivo en Xcode y pega este código profesional)
+### B. Archivo: `ContentView.swift` (ESTILO AQUARIUM)
 ```swift
 import SwiftUI
 import FirebaseFirestore
@@ -251,33 +242,7 @@ struct StatCardView: View {
 }
 ```
 
-## 4. Guía de Lanzamiento a Producción
-
-Para que la App de SEMAPACH esté disponible para descarga pública:
-
-### Paso 1: Apple Developer Program
-1. Crea un Apple ID institucional si no tienes uno.
-2. Inscríbete en [developer.apple.com](https://developer.apple.com/programs/).
-3. Una vez aprobada la cuenta (tarda 24-48h), podrás crear certificados oficiales.
-
-### Paso 2: Icono y Nombre
-1. En Xcode, ve a `Assets.xcassets`.
-2. Busca la sección **AppIcon**. Arrastra una imagen de 1024x1024 píxeles (el logo de SEMAPACH).
-3. Cambia el nombre de la App en el panel de configuración del proyecto (General > Display Name).
-
-### Paso 3: Subida a TestFlight (Pruebas Reales)
-1. En la barra superior de tu Mac, ve a **Product > Archive**.
-2. Xcode empaquetará la app para producción.
-3. Al finalizar, dale a **"Distribute App"** y selecciona **"App Store Connect"**.
-4. Sigue los pasos para subirla a la nube de Apple.
-5. Entra en [appstoreconnect.apple.com](https://appstoreconnect.apple.com/), ve a la pestaña **TestFlight** e invita a los usuarios con su email.
-
-### Paso 4: Publicación Final
-1. Completa la ficha de la App Store (Capturas, política de privacidad, descripción).
-2. Envía a revisión. Apple revisará la app en 24-72h.
-3. ¡Una vez aprobada, aparecerá en la App Store para buscarla como "SEMAPACH Report"!
-
-## 5. Solución de Cierre Inesperado (Error SIGABRT)
+## 4. Solución de Cierre Inesperado (Error SIGABRT)
 Si la App se cierra al abrir:
 1. Borra el archivo `GoogleService-Info.plist` de Xcode (Move to Trash).
 2. Arrástralo de nuevo desde tu carpeta de Descargas a Xcode.
