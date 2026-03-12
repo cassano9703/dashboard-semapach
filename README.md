@@ -8,11 +8,11 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 1. Descarga el archivo `GoogleService-Info.plist` desde tu consola de Firebase.
 2. Abre tu proyecto en **Xcode**.
 3. **Arrastra el archivo** desde tu carpeta de Descargas directamente al panel izquierdo de Xcode (donde están tus archivos `.swift`).
-4. Se abrirá una ventana. Asegúrate de que:
-   *   Esté marcado **"Copy items if needed"**.
-   *   Esté marcado **"Create groups"**.
-   *   **CRÍTICO:** En "Add to targets", el nombre de tu App (`semapach-report`) debe tener el check azul.
-5. Haz clic en **Finish**.
+4. Se abrirá una ventana llamada **"Choose options for adding these files"**.
+5. **CONFIGURACIÓN CORRECTA:**
+   *   Asegúrate de que el checkbox **"semapach-report"** en la sección **Targets** esté marcado con el check azul.
+   *   Haz clic en el botón azul **Finish**.
+6. Haz clic en **Finish**.
 
 ### Paso 2: Seleccionar las librerías
 1. En Xcode, ve al menú **File > Add Package Dependencies...**
@@ -88,7 +88,7 @@ struct ContentView: View {
                     .textCase(.uppercase)
                 
                 Text("S/ \(dailyAmount, specifier: "%.2f")")
-                    .font(.system(size: 54, weight: .black, design: .rounded))
+                    .font(.system(size: 54, weight: .black, size: .rounded))
                     .foregroundColor(.primary)
                 
                 Text("Actualizado: \(lastUpdate)")
