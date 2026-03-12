@@ -2,19 +2,20 @@
 
 ¡Ya casi terminas! Sigue estos pasos para solucionar los errores de Xcode y ver los datos reales.
 
-## 1. Solucionar error de "Signing / Team"
+## 1. Solucionar error de "Signing / Team" (Lo que ves en tu imagen)
 Este error impide que la App se instale.
-1. En la ventana que tienes abierta (**Signing & Capabilities**), haz clic en **"Add Account..."**.
-2. Pon tu correo de Apple (iCloud) y contraseña.
-3. Cuando termine, haz clic de nuevo en el selector de **Team** y elige tu nombre.
-4. El mensaje rojo debería desaparecer.
+1. En la ventana que tienes abierta (**Signing & Capabilities**), haz clic en el selector de **Team** donde dice **"None"**.
+2. Haz clic en **"Add Account..."**.
+3. Pon tu correo de Apple (iCloud) y contraseña.
+4. Cuando termine, haz clic de nuevo en el selector de **Team** y **elige tu nombre**.
+5. El mensaje rojo con la "X" debería desaparecer y ponerse en azul o gris.
 
 ## 2. Evitar el cierre de la App (Error SIGABRT / Línea Roja)
-Si la App se cierra apenas abre (como se ve en tu debugger abajo), es porque Xcode no está encontrando el archivo de Google.
-1. Busca el archivo `GoogleService-Info.plist` en tu Mac.
-2. **Bórralo** de la lista de archivos de Xcode (clic derecho -> Delete -> Remove Reference).
+Si la App se cierra apenas abre (el error que salía abajo en tu consola), es porque Xcode no está vinculando bien el archivo de Google.
+1. Busca el archivo `GoogleService-Info.plist` en el panel izquierdo de Xcode.
+2. **Bórralo** (clic derecho -> Delete -> Move to Trash).
 3. **Arrástralo de nuevo** desde tu carpeta de descargas directamente al panel izquierdo de Xcode.
-4. **MUY IMPORTANTE:** En la ventana que sale al soltarlo, asegúrate de marcar la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
+4. **MUY IMPORTANTE:** En la ventana que sale al soltarlo, asegúrate de que esté marcada la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
 
 ## 3. Código Final de los Archivos
 
