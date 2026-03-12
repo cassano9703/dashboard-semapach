@@ -1,30 +1,19 @@
 # Guía de Sincronización Final: Panel SEMAPACH + iPhone
 
-¡Ya casi terminas! Sigue estos pasos para solucionar los errores de Xcode y ver los datos reales.
+¡Estás en el último paso! Sigue estas instrucciones para activar los permisos en tu iPhone y ver los datos.
 
-## 1. Solucionar error de "Signing / Team"
-Este error impide que la App se instale.
-1. En la ventana **Signing & Capabilities**, haz clic en el selector de **Team**.
-2. Elige tu nombre. Si no aparece, haz clic en **"Add Account..."** y pon tu correo de Apple (iCloud).
-3. **Contraseña del Llavero (Keychain):** Cuando te salga la ventana pidiendo permiso para "codesign" o "Apple Development":
-   - Ingresa la **contraseña con la que inicias sesión en tu Mac**.
-   - Haz clic en **"Permitir siempre" (Always Allow)**. *Es normal que la ventana salga 2 o 3 veces seguidas, repite el proceso hasta que desaparezca.*
+## 1. Activar el "Developer Mode" (Modo Desarrollador)
+Si te sale el error "Developer Mode disabled", haz esto en tu **iPhone/Simulador**:
+1. Abre **Ajustes** (Settings).
+2. Ve a **Privacidad y Seguridad** (Privacy & Security).
+3. Baja hasta el fondo y entra en **Modo de Desarrollador** (Developer Mode).
+4. Activa el interruptor y dale a **Reiniciar** (Restart).
+5. Al prender, presiona **Activar** (Turn On).
 
-## 2. Cambiar de iPad a iPhone (Opcional)
-En tu pantalla dice que se va a abrir en un "iPad Air". Si quieres que se vea como un iPhone:
-1. Arriba en el centro de Xcode, haz clic donde dice **"iPad Air..."**.
-2. En la lista que se despliega, busca la sección **iOS Simulators** y elige **iPhone 15** o **iPhone 16**.
-
-## 3. Evitar el cierre de la App (Error SIGABRT)
-Si la App se cierra apenas abre (línea roja en Xcode), es porque el archivo de Google no está bien vinculado.
-1. Busca el archivo `GoogleService-Info.plist` en el panel izquierdo de Xcode.
-2. **Bórralo** (clic derecho -> Delete -> Move to Trash).
-3. **Arrástralo de nuevo** desde tu carpeta de descargas directamente al panel izquierdo de Xcode.
-4. **MUY IMPORTANTE:** En la ventana que sale al soltarlo, asegúrate de que esté marcada la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
-
-## 4. Código Final de los Archivos
+## 2. Código Final de los Archivos en Xcode
 
 ### A. Archivo: `semapach_reportApp.swift`
+*Este código "enciende" la conexión con Google.*
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -44,6 +33,7 @@ struct semapach_reportApp: App {
 ```
 
 ### B. Archivo: `ContentView.swift`
+*Este código crea la pantalla azul con los montos de dinero.*
 ```swift
 import SwiftUI
 import FirebaseFirestore 
@@ -112,6 +102,8 @@ struct ContentView: View {
 }
 ```
 
-## 5. Cómo correr la App
-1. Selecciona tu **iPhone** en la barra superior.
-2. Presiona el botón de **Play** (el triángulo arriba a la izquierda).
+## 3. Solución de Cierre Inesperado (Error SIGABRT)
+Si la App se cierra al abrir:
+1. Borra el archivo `GoogleService-Info.plist` de Xcode (Move to Trash).
+2. Arrástralo de nuevo desde tu carpeta de Descargas a Xcode.
+3. Asegúrate de marcar la casilla **"semapach-report"** en la ventana que sale.
