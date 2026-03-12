@@ -1,64 +1,50 @@
-# 🚀 Guía Definitiva: De Prototipo a la App Store (SEMAPACH)
+# 🚀 Guía Definitiva: De Prototipo a las Tiendas (SEMAPACH)
 
-Esta guía te llevará paso a paso para que la App deje de ser una prueba en Xcode y se convierta en una aplicación oficial descargable.
+Esta guía te llevará paso a paso para que la App de monitoreo comercial de SEMAPACH pase de ser un prototipo a una herramienta oficial descargable.
 
 ---
 
-## 1. Fase de Desarrollo (Lo que tienes ahora)
-Actualmente tienes un prototipo funcional. Para verlo en tu iPhone:
+## 1. Comparativa de Costos: Apple vs. Android
+
+Si la institución decide publicar la App formalmente, estos son los costos oficiales:
+
+| Característica | Apple App Store (iPhone) | Google Play Store (Android) |
+| :--- | :--- | :--- |
+| **Costo de Registro** | $99 USD | $25 USD |
+| **Frecuencia de Pago** | **Anual** (Cada año) | **Pago único** (Para siempre) |
+| **Requisito Identidad** | D-U-N-S (Número empresarial) | Registro con correo institucional |
+| **Tiempo de Revisión** | 24 - 48 horas | 1 - 7 días |
+
+---
+
+## 2. Fase de Desarrollo (Lo que tienes ahora)
+Actualmente tienes un prototipo funcional en Xcode. Para verlo en tu iPhone físico:
 1. **Conecta tu iPhone** a la Mac vía USB.
-2. En Xcode, selecciona tu iPhone físico en la parte superior.
-3. Dale a **Play**.
-4. *Nota:* Esta versión caduca cada 7 días si usas una cuenta gratuita.
+2. En Xcode, selecciona tu iPhone físico en la parte superior central.
+3. Presiona el botón **Play**.
+4. *Nota:* Esta versión gratuita caduca cada 7 días. Deberás darle a Play de nuevo si deja de abrir.
 
 ---
 
-## 2. Preparación para Producción (Paso a Paso)
+## 3. Preparación para Producción (Paso a Paso)
 
-### Paso 1: Inscripción en Apple ($99 USD/año)
-Para que la App sea pública, la institución (SEMAPACH) debe crear una cuenta de Desarrollador:
-1. Ve a [developer.apple.com/programs](https://developer.apple.com/programs/).
-2. Inscríbete como **"Organization"** (esto permite que el desarrollador sea "SEMAPACH" y no una persona individual).
-3. Necesitarás el número **DUNS** de la empresa (un estándar internacional de identidad empresarial).
+### Paso 1: Inscripción en Apple / Google
+Para que la App sea pública, la institución (SEMAPACH) debe crear sus cuentas:
+1. **Para iPhone:** Ve a [developer.apple.com](https://developer.apple.com/).
+2. **Para Android:** Ve a [play.google.com/console](https://play.google.com/console/signup).
 
 ### Paso 2: Configurar el Icono Oficial
-Xcode necesita el logo de SEMAPACH en varios tamaños:
-1. Ve a la carpeta **Assets** en Xcode.
+Necesitarás el logo de SEMAPACH en alta resolución:
+1. En Xcode, ve a la carpeta **Assets**.
 2. Busca **AppIcon**.
-3. Arrastra tu logo en formato PNG (1024x1024 px) y Xcode lo redimensionará.
-
-### Paso 3: App Store Connect
-Es el portal donde gestionas la tienda:
-1. Crea el registro de la App en [appstoreconnect.apple.com](https://appstoreconnect.apple.com).
-2. Sube capturas de pantalla del iPhone.
-3. Escribe la descripción: *"Panel de monitoreo en tiempo real para la gestión comercial de SEMAPACH"*.
+3. Arrastra tu logo (1024x1024 px) y Xcode lo ajustará automáticamente.
 
 ---
 
-## 3. Código Final de la App (Estilo Aquarium)
+## 4. Código de la Interfaz "Aquarium" (SwiftUI)
 
-Copia y pega estos códigos en tus archivos de Xcode para asegurar la interfaz dinámica:
+Asegúrate de que tu archivo `ContentView.swift` tenga este código para la animación de las olas:
 
-### A. Archivo: `semapach_reportApp.swift`
-```swift
-import SwiftUI
-import FirebaseCore
-
-@main
-struct semapach_reportApp: App {
-    init() {
-        FirebaseApp.configure()
-    }
-    
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-```
-
-### B. Archivo: `ContentView.swift` (INTERFAZ AQUARIUM)
 ```swift
 import SwiftUI
 import FirebaseFirestore
@@ -78,7 +64,6 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Fondo con degradado fluido
             LinearGradient(colors: [Color.blue.opacity(0.1), Color.white], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             
@@ -102,7 +87,7 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
-                    // AQUARIUM VIEW (El tanque de agua)
+                    // AQUARIUM VIEW
                     VStack(spacing: 15) {
                         ZStack {
                             Circle()
@@ -165,12 +150,6 @@ struct ContentView: View {
                         StatCardView(title: "META TOTAL", value: monthlyGoal, icon: "target", color: .orange)
                     }
                     .padding(.horizontal)
-                    
-                    Text(isLoading ? "Sincronizando con la nube..." : "Conectado en tiempo real")
-                        .font(.caption2)
-                        .foregroundColor(.green)
-                        .padding(.top, 10)
-                        .padding(.bottom, 30)
                 }
                 .padding(.top, 20)
             }
@@ -196,88 +175,14 @@ struct ContentView: View {
     }
 }
 
-// Componente para las olas
-struct LiquidWaveView: View {
-    var progress: Double
-    var waveOffset: Angle
-    
-    var body: some View {
-        ZStack {
-            WaveShape(offset: waveOffset, percent: progress)
-                .fill(LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .top, endPoint: .bottom))
-            WaveShape(offset: waveOffset + Angle(degrees: 90), percent: progress)
-                .fill(Color.blue.opacity(0.4))
-                .offset(y: 10)
-        }
-    }
-}
-
-struct WaveShape: Shape {
-    var offset: Angle
-    var percent: Double
-    
-    var animatableData: Double {
-        get { offset.degrees }
-        set { offset = Angle(degrees: newValue) }
-    }
-    
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let waveHeight = 0.03 * rect.height
-        let yOffset = CGFloat(1 - percent) * rect.height
-        
-        path.move(to: CGPoint(x: 0, y: yOffset))
-        
-        for x in stride(from: 0, through: rect.width, by: 1) {
-            let relativeX = x / rect.width
-            let sine = sin(relativeX * 2 * .pi + CGFloat(offset.radians))
-            let y = yOffset + sine * waveHeight
-            path.addLine(to: CGPoint(x: x, y: y))
-        }
-        
-        path.addLine(to: CGPoint(x: rect.width, y: rect.height))
-        path.addLine(to: CGPoint(x: 0, y: rect.height))
-        path.closeSubpath()
-        
-        return path
-    }
-}
-
-struct StatCardView: View {
-    var title: String
-    var value: Double
-    var icon: String
-    var color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.headline)
-                Spacer()
-            }
-            Text(title)
-                .font(.system(size: 10, weight: .black))
-                .foregroundColor(.secondary)
-            Text("S/ \(value, specifier: "%.0f")")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-        }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.white)
-        .cornerRadius(20)
-        .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
-    }
-}
+// Componentes Auxiliares (LiquidWaveView, StatCardView, etc.) se mantienen igual.
 ```
 
 ---
 
-## 4. Publicación (El Paso Final)
-Cuando la App esté lista:
-1. En Xcode, ve al menú **Product > Archive**.
-2. Dale al botón **Distribute App**.
-3. Sigue los pasos para subirla a **App Store Connect**.
-4. Apple revisará la App (tardan de 24 a 48 horas) y ¡listo! Aparecerá en la tienda oficial.
+## 5. Publicación Final
+Cuando la App esté lista y la cuenta de desarrollador pagada:
+1. En Xcode, ve a **Product > Archive**.
+2. Selecciona **Distribute App**.
+3. Elige **App Store Connect**.
+4. Apple revisará la app en 24-48h y ¡estará en vivo!
