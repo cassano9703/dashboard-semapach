@@ -1,37 +1,12 @@
-# Guía de Sincronización: Panel Web SEMAPACH + App iOS
+# Guía de Sincronización Final: Panel SEMAPACH + iPhone
 
-Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos reales de este panel web.
+¡Ya casi terminas! Sigue estos pasos para ver los datos en tu iPhone.
 
-## 1. Archivo: `semapach_reportApp.swift` (El "Interruptor")
+## 1. Archivo: `semapach_reportApp.swift`
+Este ya lo tienes listo (según tu captura). Es el que "enciende" la conexión.
 
-Este archivo inicializa Firebase. Borra todo y pega esto:
-
-```swift
-import SwiftUI
-import FirebaseCore 
-
-@main
-struct semapach_reportApp: App {
-    // La función init corre apenas abres la App en el iPhone
-    init() {
-        // Esto busca tu archivo .plist y conecta la App a internet
-        FirebaseApp.configure()
-    }
-
-    var body: some Scene {
-        WindowGroup {
-            // Aquí le decimos que empiece mostrando el panel de resultados
-            ContentView()
-        }
-    }
-}
-```
-
----
-
-## 2. Archivo: `ContentView.swift` (La Interfaz Visual)
-
-Este archivo dibuja la pantalla. Borra todo y pega esto:
+## 2. Archivo: `ContentView.swift` (La Pantalla)
+Haz clic en este archivo en Xcode, borra TODO y pega este código:
 
 ```swift
 import SwiftUI
@@ -45,7 +20,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            // Cabecera: Logo y Título
+            // Cabecera
             VStack(spacing: 10) {
                 Image(systemName: "drop.fill")
                     .font(.system(size: 70))
@@ -56,21 +31,21 @@ struct ContentView: View {
                     .font(.system(size: 32, weight: .black, design: .rounded))
                     .tracking(2)
                 
-                Text("PANEL DE CONTROL COMERCIAL")
+                Text("PANEL DE CONTROL")
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(.secondary)
             }
             .padding(.top, 40)
             
-            // Tarjeta de Datos
+            // Tarjeta de Recaudación
             VStack(spacing: 20) {
                 Text("Recaudación Diaria")
                     .font(.headline)
                     .foregroundStyle(.secondary)
                 
                 if isLoading {
-                    ProgressView() // Ruedita de carga
+                    ProgressView()
                         .scaleEffect(1.5)
                 } else {
                     Text("S/ \(dailyAmount, specifier: "%.2f")")
@@ -100,7 +75,7 @@ struct ContentView: View {
             
             // Pie de página
             VStack(spacing: 5) {
-                Text("ÚLTIMA ACTUALIZACIÓN")
+                Text("ÚLTIMA FECHA REGISTRADA")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.gray)
                 Text(lastUpdate)
@@ -109,29 +84,21 @@ struct ContentView: View {
             }
             
             Spacer()
-            
-            Text("© 2025 SEMAPACH")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 20)
         }
         .onAppear {
             startListening()
         }
     }
 
-    // Función que lee los datos de la web automáticamente
     func startListening() {
-        // Buscamos el registro más reciente en la colección 'daily_collections'
+        // Escucha cambios en tiempo real del panel web
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
             .addSnapshotListener { snap, error in
                 self.isLoading = false
                 if let docs = snap?.documents, let lastDoc = docs.first {
-                    // Actualizamos el monto
                     self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
-                    // Actualizamos la fecha
                     if let dateStr = lastDoc.data()["date"] as? String {
                         self.lastUpdate = dateStr
                     }
@@ -141,14 +108,9 @@ struct ContentView: View {
 }
 ```
 
----
+## 3. Cómo correr la App
+1. En la parte de arriba de Xcode, haz clic donde dice **"iPad Air..."** y cámbialo por un **iPhone** (ej: iPhone 16).
+2. Presiona el botón de **Play** (el triángulo arriba a la izquierda).
+3. ¡Listo! Verás el simulador abrirse con el diseño azul de SEMAPACH.
 
-## 3. Cómo correr la App (Simulador)
-
-1. **Espera la descarga:** En tu imagen se ve que Xcode está descargando el simulador (8.39 GB). Debes esperar a que termine.
-2. **Selecciona el modelo:** Haz clic arriba en el centro (donde dice "semapach-report > ...") y elige un iPhone (ej: iPhone 16).
-3. **Botón Play:** Presiona el triángulo arriba a la izquierda.
-4. **Prueba:** Cambia un dato en la web y verás el cambio en el iPhone.
-
-## Solución de Problemas
-- **Error de conexión:** Asegúrate de que el archivo `GoogleService-Info.plist` esté dentro de Xcode y tenga el check marcado en el panel derecho (File Inspector).
+*Nota: Si cambias un monto en la web, verás que el iPhone se actualiza solo.*
