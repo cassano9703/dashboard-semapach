@@ -18,15 +18,23 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 1. En Xcode, ve al menú **File > Add Package Dependencies...**
 2. Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
 3. En la lista de productos, marca:
-   *   **FirebaseCore**
-   *   **FirebaseAuth**
-   *   **FirebaseFirestore**
-4. En la columna **"Add to Target"**, asegúrate de que los tres digan `semapach-report`.
-5. Dale al botón azul **"Add Package"**.
+   *   **FirebaseCore** (selecciona tu target `semapach-report`)
+   *   **FirebaseAuth** (selecciona tu target `semapach-report`)
+   *   **FirebaseFirestore** (selecciona tu target `semapach-report`)
+4. Dale al botón azul **"Add Package"**.
 
 ---
 
-## 2. Código para copiar y pegar en Xcode
+## 2. Solución de Errores Comunes (Xcode)
+
+Si ves un error que dice **"invalid archive"** o **"Adding Package Failed"**:
+1. Ve al menú superior de Xcode: **File > Packages > Reset Package Caches**.
+2. Espera a que la barra de progreso arriba termine de descargar todo de nuevo.
+3. Si el error persiste, usa **Product > Clean Build Folder**.
+
+---
+
+## 3. Código para copiar y pegar en Xcode
 
 ### A. Inicialización (Archivo: `semapach_reportApp.swift`)
 Busca el archivo con el icono de la "A" azul y asegúrate de que tenga esto:
