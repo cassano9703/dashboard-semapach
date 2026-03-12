@@ -10,10 +10,17 @@ Si te sale el error "Developer Mode disabled", haz esto en tu **iPhone/Simulador
 4. Activa el interruptor y dale a **Reiniciar** (Restart).
 5. Al prender, presiona **Activar** (Turn On).
 
-## 2. Código Final de los Archivos en Xcode
+## 2. Confiar en el Certificado (Error: Not Trusted)
+Si te sale el mensaje "Developer App Certificate is not trusted", haz esto:
+1. Abre **Ajustes** (Settings) en el iPhone.
+2. Ve a **General** > **Gestión de dispositivos y VPN**.
+3. Toca en tu **Apple ID** (debajo de App de desarrollador).
+4. Toca en **"Confiar en..."** (el texto azul).
+5. Dale a **Confiar** (botón rojo).
+
+## 3. Código Final de los Archivos en Xcode
 
 ### A. Archivo: `semapach_reportApp.swift`
-*Este código "enciende" la conexión con Google.*
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -33,7 +40,6 @@ struct semapach_reportApp: App {
 ```
 
 ### B. Archivo: `ContentView.swift`
-*Este código crea la pantalla azul con los montos de dinero.*
 ```swift
 import SwiftUI
 import FirebaseFirestore 
@@ -102,7 +108,7 @@ struct ContentView: View {
 }
 ```
 
-## 3. Solución de Cierre Inesperado (Error SIGABRT)
+## 4. Solución de Cierre Inesperado (Error SIGABRT)
 Si la App se cierra al abrir:
 1. Borra el archivo `GoogleService-Info.plist` de Xcode (Move to Trash).
 2. Arrástralo de nuevo desde tu carpeta de Descargas a Xcode.
