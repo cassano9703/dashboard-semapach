@@ -4,21 +4,25 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 
 ## 1. Preparación en Xcode (Tu Mac)
 
-### Paso 1: Seleccionar las librerías (La pantalla de tu imagen)
-1. En la ventana que tienes abierta en Xcode (**Choose Package Products**):
-2. Busca en la lista y marca los checks de:
-   *   **FirebaseCore** (¡Obligatorio!)
+### Paso 1: Agregar el archivo de credenciales (¡MUY IMPORTANTE!)
+1. Descarga el archivo `GoogleService-Info.plist` desde tu consola de Firebase.
+2. Abre tu proyecto en **Xcode**.
+3. **Arrastra el archivo** desde tu carpeta de Descargas directamente al panel izquierdo de Xcode (donde están tus archivos `.swift`).
+4. Se abrirá una ventana. Asegúrate de que:
+   *   Esté marcado **"Copy items if needed"**.
+   *   Esté marcado **"Create groups"**.
+   *   **CRÍTICO:** En "Add to targets", el nombre de tu App (`semapach-report`) debe tener el check azul.
+5. Haz clic en **Finish**.
+
+### Paso 2: Seleccionar las librerías
+1. En Xcode, ve al menú **File > Add Package Dependencies...**
+2. Pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
+3. En la lista de productos, marca:
+   *   **FirebaseCore**
    *   **FirebaseAuth**
    *   **FirebaseFirestore**
-3. **CRÍTICO:** En la columna **"Add to Target"**, asegúrate de que esos tres digan `semapach-report` (haz clic donde dice `None` para cambiarlo). Los demás pueden quedarse en `None`.
-4. Dale al botón azul **"Add Package"**.
-
-### Paso 2: El archivo de credenciales
-1. Asegúrate de que el archivo `GoogleService-Info.plist` esté dentro de tu carpeta de proyecto en Xcode.
-2. **Revisar el Target Membership:** 
-   * Haz clic en el archivo `.plist` en la lista de la izquierda de Xcode.
-   * Abre el panel derecho (File Inspector).
-   * Asegúrate de que tu App (`semapach-report`) esté marcada con un check azul.
+4. En la columna **"Add to Target"**, asegúrate de que los tres digan `semapach-report`.
+5. Dale al botón azul **"Add Package"**.
 
 ---
 
@@ -75,7 +79,6 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
                 
-                // Este número se actualiza solo cuando guardas en la web
                 Text("S/ \(dailyAmount, specifier: "%.2f")")
                     .font(.system(size: 54, weight: .black, design: .rounded))
                     .foregroundColor(.primary)
@@ -107,16 +110,12 @@ struct ContentView: View {
     }
 
     func startListening() {
-        // Escucha la colección 'daily_collections' que usa este panel
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
             .addSnapshotListener { snap, error in
                 if let docs = snap?.documents, let lastDoc = docs.first {
-                    // Extrae el monto diario
                     self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
-                    
-                    // Extrae la fecha del registro
                     if let dateStr = lastDoc.data()["date"] as? String {
                         self.lastUpdate = dateStr
                     }
@@ -127,4 +126,4 @@ struct ContentView: View {
 ```
 
 ---
-**Nota Final:** El ID de tu proyecto es `studio-5698097440-ab57f`. Cualquier dato que guardes en la sección **"Administración"** de esta web aparecerá automáticamente en tu iPhone en menos de 2 segundos.
+**Nota Final:** Tu App ahora está vinculada al proyecto `studio-5698097440-ab57f`. Si cambias un dato en el panel web, lo verás en tu iPhone al instante.
