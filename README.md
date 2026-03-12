@@ -8,7 +8,7 @@ Este error impide que la App se instale.
 2. Elige tu nombre. Si no aparece, haz clic en **"Add Account..."** y pon tu correo de Apple (iCloud).
 3. **Contraseña del Llavero (Keychain):** Cuando te salga la ventana pidiendo permiso para "codesign" o "Apple Development":
    - Ingresa la **contraseña con la que inicias sesión en tu Mac**.
-   - Haz clic en **"Permitir siempre" (Always Allow)**. *Es posible que la ventana salga 2 o 3 veces, repite el proceso hasta que desaparezca.*
+   - Haz clic en **"Permitir siempre" (Always Allow)**. *Es normal que la ventana salga 2 o 3 veces seguidas, repite el proceso hasta que desaparezca.*
 
 ## 2. Cambiar de iPad a iPhone (Opcional)
 En tu pantalla dice que se va a abrir en un "iPad Air". Si quieres que se vea como un iPhone:
