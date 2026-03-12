@@ -4,35 +4,36 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 
 ## 1. Preparación en Xcode (Tu Mac)
 
-### Paso 1: Instalar Firebase (La pantalla de tu imagen)
-1. En Xcode, en la ventana que tienes abierta (**Add Package Dependencies**):
-2. En el cuadro de búsqueda (arriba a la derecha), pega esta URL: `https://github.com/firebase/firebase-ios-sdk`
-3. Cuando aparezca el paquete, selecciona las librerías: **FirebaseAuth** y **FirebaseFirestore**.
-4. Dale al botón azul "Add Package".
+### Paso 1: Seleccionar las librerías (La pantalla de tu imagen)
+1. En la ventana que tienes abierta en Xcode (**Choose Package Products**):
+2. Busca en la lista y marca los checks de:
+   *   **FirebaseAuth**
+   *   **FirebaseFirestore**
+3. **CRÍTICO:** En la columna **"Add to Target"**, haz clic donde dice `None` y selecciona tu App (ej: `semapach_report`).
+4. Dale al botón azul **"Add Package"**.
 
 ### Paso 2: El archivo de credenciales
 1. Asegúrate de que el archivo `GoogleService-Info.plist` esté dentro de tu carpeta de proyecto en Xcode.
-2. **IMPORTANTE (File Inspector):** 
+2. **Revisar el Target Membership:** 
    * Haz clic en el archivo `.plist` en la lista de la izquierda de Xcode.
-   * Abre el panel derecho (botón de arriba a la derecha con una barrita lateral).
-   * En **Target Membership**, marca el check azul al lado del nombre de tu App.
+   * Abre el panel derecho (File Inspector).
+   * Asegúrate de que tu App esté marcada con un check azul.
 
 ---
 
 ## 2. Código para copiar y pegar en Xcode
 
 ### A. Inicialización (Archivo: `semapach_reportApp.swift`)
-Busca el archivo que tiene el icono de una "A" azul y asegúrate de que se vea así:
+Busca el archivo con el icono de la "A" azul y asegúrate de que tenga esto:
 
 ```swift
 import SwiftUI
-import FirebaseCore // 1. Importar Firebase
+import FirebaseCore 
 
 @main
 struct semapach_reportApp: App {
-    // 2. Configurar Firebase al arrancar
     init() {
-        FirebaseApp.configure()
+        FirebaseApp.configure() // Esto enciende la conexión
     }
 
     var body: some Scene {
@@ -43,12 +44,12 @@ struct semapach_reportApp: App {
 }
 ```
 
-### B. Leer datos en Tiempo Real (Archivo: `ContentView.swift`)
-Sustituye el contenido de tu archivo por este para ver la recaudación de la web en el iPhone:
+### B. Ver la Recaudación (Archivo: `ContentView.swift`)
+Borra todo el contenido de tu `ContentView.swift` y pega este código. Está configurado para leer los datos exactos de esta web:
 
 ```swift
 import SwiftUI
-import FirebaseFirestore // 1. Importar Firestore
+import FirebaseFirestore 
 
 struct ContentView: View {
     @State private var dailyAmount: Double = 0.0
@@ -57,39 +58,51 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "drop.fill")
-                .imageScale(.large)
+                .font(.system(size: 80))
                 .foregroundStyle(.blue)
-                .font(.system(size: 60))
             
-            Text("Recaudación SEMAPACH")
-                .font(.headline)
+            Text("Panel SEMAPACH")
+                .font(.title2)
+                .fontWeight(.bold)
             
-            // Este número cambiará automáticamente cuando edites la web
-            Text("S/ \(dailyAmount, specifier: "%.2f")")
-                .font(.system(size: 45, weight: .bold))
-                .foregroundColor(.primary)
+            VStack {
+                Text("Última Recaudación Diaria")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                // Este número se actualiza solo cuando editas la web
+                Text("S/ \(dailyAmount, specifier: "%.2f")")
+                    .font(.system(size: 50, weight: .black, design: .rounded))
+                    .foregroundColor(.primary)
+            }
+            .padding(30)
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(20)
             
             Text("Sincronizado en tiempo real")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.green)
         }
         .padding()
         .onAppear {
-            listenToData()
+            startListening()
         }
     }
 
-    func listenToData() {
-        // Escucha el documento de hoy en la colección que usa la web
-        // Nota: Asegúrate de que el ID del documento exista (ej: "2025-03-05")
-        db.collection("daily_collections").order(by: "date", descending: true).limit(to: 1).addSnapshotListener { snap, error in
-            if let docs = snap?.documents, let lastDoc = docs.first {
-                self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
+    func startListening() {
+        // Busca en la colección 'daily_collections' que usa la web
+        db.collection("daily_collections")
+            .order(by: "date", descending: true)
+            .limit(to: 1)
+            .addSnapshotListener { snap, error in
+                if let docs = snap?.documents, let lastDoc = docs.first {
+                    // Extrae el campo 'dailyCollectionAmount'
+                    self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
+                }
             }
-        }
     }
 }
 ```
 
 ---
-**Nota Técnica:** El ID de tu proyecto actual es `studio-5698097440-ab57f`. Los datos que guardes en el panel de administración aparecerán automáticamente en esta pantalla del iPhone.
+**Nota:** El ID de tu proyecto es `studio-5698097440-ab57f`. Cualquier dato que guardes en la sección "Administración" de esta web aparecerá en segundos en tu iPhone.
