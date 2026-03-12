@@ -7,9 +7,10 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 ### Paso 1: Seleccionar las librerías (La pantalla de tu imagen)
 1. En la ventana que tienes abierta en Xcode (**Choose Package Products**):
 2. Busca en la lista y marca los checks de:
+   *   **FirebaseCore** (¡Obligatorio!)
    *   **FirebaseAuth**
    *   **FirebaseFirestore**
-3. **CRÍTICO:** En la columna **"Add to Target"**, haz clic donde dice `None` y selecciona tu App (ej: `semapach_report`).
+3. **CRÍTICO:** En la columna **"Add to Target"**, asegúrate de que esos tres digan `semapach-report` (haz clic donde dice `None` para cambiarlo). Los demás pueden quedarse en `None`.
 4. Dale al botón azul **"Add Package"**.
 
 ### Paso 2: El archivo de credenciales
@@ -17,7 +18,7 @@ Este documento es tu mapa para conectar la App móvil de iPhone con este panel a
 2. **Revisar el Target Membership:** 
    * Haz clic en el archivo `.plist` en la lista de la izquierda de Xcode.
    * Abre el panel derecho (File Inspector).
-   * Asegúrate de que tu App esté marcada con un check azul.
+   * Asegúrate de que tu App (`semapach-report`) esté marcada con un check azul.
 
 ---
 
@@ -33,7 +34,7 @@ import FirebaseCore
 @main
 struct semapach_reportApp: App {
     init() {
-        FirebaseApp.configure() // Esto enciende la conexión
+        FirebaseApp.configure() // Esto enciende la conexión con el panel web
     }
 
     var body: some Scene {
@@ -53,35 +54,51 @@ import FirebaseFirestore
 
 struct ContentView: View {
     @State private var dailyAmount: Double = 0.0
+    @State private var lastUpdate: String = "Cargando..."
     private var db = Firestore.firestore()
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 25) {
+            // Icono de SEMAPACH
             Image(systemName: "drop.fill")
                 .font(.system(size: 80))
-                .foregroundStyle(.blue)
+                .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom))
+                .shadow(radius: 10)
             
             Text("Panel SEMAPACH")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
             
-            VStack {
+            // Tarjeta de Recaudación
+            VStack(spacing: 15) {
                 Text("Última Recaudación Diaria")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
                 
-                // Este número se actualiza solo cuando editas la web
+                // Este número se actualiza solo cuando guardas en la web
                 Text("S/ \(dailyAmount, specifier: "%.2f")")
-                    .font(.system(size: 50, weight: .black, design: .rounded))
+                    .font(.system(size: 54, weight: .black, design: .rounded))
                     .foregroundColor(.primary)
+                
+                Text("Actualizado: \(lastUpdate)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
-            .padding(30)
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(20)
+            .padding(40)
+            .background(Color.blue.opacity(0.05))
+            .cornerRadius(25)
+            .overlay(
+                RoundedRectangle(cornerRadius: 25)
+                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+            )
             
-            Text("Sincronizado en tiempo real")
-                .font(.caption)
-                .foregroundColor(.green)
+            HStack {
+                Circle().fill(.green).frame(width: 8, height: 8)
+                Text("Sincronizado en tiempo real")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.green)
+            }
         }
         .padding()
         .onAppear {
@@ -90,14 +107,19 @@ struct ContentView: View {
     }
 
     func startListening() {
-        // Busca en la colección 'daily_collections' que usa la web
+        // Escucha la colección 'daily_collections' que usa este panel
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
             .addSnapshotListener { snap, error in
                 if let docs = snap?.documents, let lastDoc = docs.first {
-                    // Extrae el campo 'dailyCollectionAmount'
+                    // Extrae el monto diario
                     self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
+                    
+                    // Extrae la fecha del registro
+                    if let dateStr = lastDoc.data()["date"] as? String {
+                        self.lastUpdate = dateStr
+                    }
                 }
             }
     }
@@ -105,4 +127,4 @@ struct ContentView: View {
 ```
 
 ---
-**Nota:** El ID de tu proyecto es `studio-5698097440-ab57f`. Cualquier dato que guardes en la sección "Administración" de esta web aparecerá en segundos en tu iPhone.
+**Nota Final:** El ID de tu proyecto es `studio-5698097440-ab57f`. Cualquier dato que guardes en la sección **"Administración"** de esta web aparecerá automáticamente en tu iPhone en menos de 2 segundos.
