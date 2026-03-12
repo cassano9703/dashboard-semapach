@@ -4,21 +4,21 @@
 
 ## 1. Solucionar error de "Signing / Team"
 Este error impide que la App se ejecute.
-1. Haz clic en el icono azul del proyecto (**semapach-report**) arriba a la izquierda.
-2. En la ventana principal, haz clic en la pestaña **Signing & Capabilities**.
-3. En la sección **Team**, selecciona tu nombre o haz clic en "Add Account" para poner tu Apple ID.
-4. Asegúrate de que el **Bundle Identifier** sea algo como `com.tuusuario.semapach-report`.
+1. En la ventana que tienes abierta, mira la columna de la izquierda bajo el título **TARGETS**.
+2. Haz clic en **semapach-report** (el que tiene el icono de la App).
+3. En las pestañas que aparecen arriba (General, Signing & Capabilities, Resource Tags...), haz clic en **Signing & Capabilities**.
+4. En la sección **Team**, selecciona tu nombre o haz clic en "Add Account" para poner tu Apple ID.
 
 ## 2. Evitar el error de la "Línea Roja" (Crash)
-Si la App se cierra apenas abre, es porque no encuentra el archivo de configuración.
-1. Busca tu archivo `GoogleService-Info.plist` en Xcode.
+Si la App se cierra apenas abre o sale una línea roja en el código, es porque no encuentra el archivo de configuración.
+1. Busca tu archivo `GoogleService-Info.plist` en el panel izquierdo de Xcode.
 2. Haz clic derecho sobre él y selecciona **"Delete"** -> **"Remove Reference"** (No lo borres del disco).
-3. Arrástralo de nuevo desde tu carpeta a Xcode.
-4. **IMPORTANTE:** En la ventana que sale, asegúrate de marcar la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
+3. Arrástralo de nuevo desde tu carpeta de descargas a la carpeta de Xcode.
+4. **IMPORTANTE:** En la ventana que sale al soltarlo, asegúrate de marcar la casilla que dice **"semapach-report"** bajo la sección "Add to targets".
 
 ## 3. Código Final de los Archivos
 
-### A. Archivo: `semapach_reportApp.swift`
+### A. Archivo: `semapach_reportApp.swift` (Icono A azul)
 ```swift
 import SwiftUI
 import FirebaseCore
@@ -45,7 +45,6 @@ import FirebaseFirestore
 
 struct ContentView: View {
     @State private var dailyAmount: Double = 0.0
-    @State private var lastUpdate: String = "Cargando..."
     @State private var isLoading = true
     private var db = Firestore.firestore()
 
@@ -95,6 +94,7 @@ struct ContentView: View {
     }
 
     func startListening() {
+        // Escucha cambios en tiempo real del último registro ingresado
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
@@ -109,5 +109,5 @@ struct ContentView: View {
 ```
 
 ## 4. Cómo correr la App
-1. Selecciona un **iPhone** en la barra superior.
-2. Presiona el botón de **Play**.
+1. Selecciona un **iPhone** en la barra superior (donde dice iPad Air ahora mismo).
+2. Presiona el botón de **Play** (el triángulo arriba a la izquierda).
