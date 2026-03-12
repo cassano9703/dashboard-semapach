@@ -1,34 +1,48 @@
 # Guía de Sincronización: Panel Web SEMAPACH + App iOS
 
-Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos de este panel.
+Sigue estos pasos dentro de Xcode para conectar tu iPhone con los datos reales de este panel web.
 
-## 1. Configuración de Archivos en Xcode
+## 1. Archivo: `semapach_reportApp.swift` (El "Interruptor")
 
-### A. Inicialización (Archivo: `semapach_reportApp.swift`)
-Haz clic en este archivo en tu Xcode, borra lo que tiene y pega esto:
+Este archivo es el corazón de tu App. Aquí es donde le decimos al iPhone que use Firebase al arrancar.
 
+**¿Qué hace este código?**
+1. `import FirebaseCore`: Trae las herramientas necesarias para hablar con Google.
+2. `FirebaseApp.configure()`: Busca tu archivo `GoogleService-Info.plist` y activa la conexión.
+3. `ContentView()`: Le dice a la App que la primera pantalla que debe mostrar es la de los resultados.
+
+**CÓDIGO A PEGAR:**
 ```swift
 import SwiftUI
 import FirebaseCore 
 
 @main
 struct semapach_reportApp: App {
-    // Esto conecta la App con el servidor de Firebase al iniciar
+    // La función init corre apenas abres la App en el iPhone
     init() {
+        // Esto busca tu archivo .plist y conecta la App a internet
         FirebaseApp.configure()
     }
 
     var body: some Scene {
         WindowGroup {
+            // Aquí le decimos que empiece mostrando el panel de resultados
             ContentView()
         }
     }
 }
 ```
 
-### B. Interfaz Principal (Archivo: `ContentView.swift`)
-Haz clic en este archivo en tu Xcode, borra todo y pega este código:
+---
 
+## 2. Archivo: `ContentView.swift` (La Interfaz Visual)
+
+Este archivo dibuja lo que ves en el iPhone: el logo de SEMAPACH y el número de recaudación.
+
+**¿Qué hace este código?**
+- Escucha la base de datos en **tiempo real**. Si cambias un número en esta web, el iPhone se actualiza solo sin que el usuario haga nada.
+
+**CÓDIGO A PEGAR:**
 ```swift
 import SwiftUI
 import FirebaseFirestore 
@@ -41,7 +55,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            // Cabecera con Logo
+            // Cabecera: Logo y Título
             VStack(spacing: 10) {
                 Image(systemName: "drop.fill")
                     .font(.system(size: 70))
@@ -59,27 +73,26 @@ struct ContentView: View {
             }
             .padding(.top, 40)
             
-            // Tarjeta de Recaudación Principal
+            // Tarjeta de Datos
             VStack(spacing: 20) {
                 Text("Recaudación Diaria")
                     .font(.headline)
                     .foregroundStyle(.secondary)
                 
                 if isLoading {
-                    ProgressView()
+                    ProgressView() // Ruedita de carga
                         .scaleEffect(1.5)
                 } else {
                     Text("S/ \(dailyAmount, specifier: "%.2f")")
                         .font(.system(size: 50, weight: .black, design: .rounded))
                         .foregroundColor(.primary)
-                        .transition(.opacity)
                 }
                 
                 HStack {
                     Circle()
                         .fill(isLoading ? .orange : .green)
                         .frame(width: 8, height: 8)
-                    Text(isLoading ? "Sincronizando..." : "Sincronizado en tiempo real")
+                    Text(isLoading ? "Sincronizando..." : "Conectado en tiempo real")
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(isLoading ? .orange : .green)
@@ -95,7 +108,7 @@ struct ContentView: View {
             )
             .padding(.horizontal)
             
-            // Info adicional
+            // Pie de página
             VStack(spacing: 5) {
                 Text("ÚLTIMA ACTUALIZACIÓN")
                     .font(.system(size: 10, weight: .bold))
@@ -117,18 +130,18 @@ struct ContentView: View {
         }
     }
 
-    // Esta función lee los datos de la web automáticamente
+    // Función que lee los datos de la web automáticamente
     func startListening() {
-        // Buscamos en la colección 'daily_collections' el registro más reciente
+        // Buscamos el registro más reciente en la colección 'daily_collections'
         db.collection("daily_collections")
             .order(by: "date", descending: true)
             .limit(to: 1)
             .addSnapshotListener { snap, error in
                 self.isLoading = false
                 if let docs = snap?.documents, let lastDoc = docs.first {
-                    // Obtenemos el monto
+                    // Actualizamos el monto
                     self.dailyAmount = lastDoc.data()["dailyCollectionAmount"] as? Double ?? 0.0
-                    // Obtenemos la fecha
+                    // Actualizamos la fecha
                     if let dateStr = lastDoc.data()["date"] as? String {
                         self.lastUpdate = dateStr
                     }
@@ -139,9 +152,10 @@ struct ContentView: View {
 ```
 
 ---
-## 2. ¡Listo para probar!
-Una vez pegado el código:
-1. Presiona el botón **Play** (triángulo arriba a la izquierda) en Xcode.
-2. Abre tu panel web SEMAPACH.
-3. Cambia un dato de recaudación en la web.
-4. **¡Mira tu iPhone!** El número cambiará automáticamente.
+
+## 3. ¿Cómo probarlo?
+1. En **Xcode**, pega el código arriba mencionado en sus respectivos archivos.
+2. Presiona el botón **Play** (el triángulo arriba a la izquierda).
+3. Abre el simulador de iPhone que aparecerá.
+4. Entra a la sección **Administración > Admin Cobranza** en este panel web.
+5. Cambia el monto de hoy y ¡mira tu iPhone! El número cambiará al instante.
