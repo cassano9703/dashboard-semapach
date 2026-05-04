@@ -4,6 +4,13 @@ Esta guía te llevará paso a paso para que la App de monitoreo comercial de SEM
 
 ---
 
+## ⚠️ IMPORTANTE: No mezclar lenguajes
+*   **Xcode:** Solo acepta código **Swift** (para la App de iPhone).
+*   **Terminal/VS Code:** Se usan para código **Python** (como el Agente seguidor de líneas).
+*   **Error Común:** Si pegas el código de Python en Xcode, verás muchos errores rojos porque Xcode no entiende Python.
+
+---
+
 ## 1. Comparativa de Costos: Apple vs. Android
 
 Si la institución decide publicar la App formalmente, estos son los costos oficiales:
@@ -12,38 +19,24 @@ Si la institución decide publicar la App formalmente, estos son los costos ofic
 | :--- | :--- | :--- |
 | **Costo de Registro** | $99 USD | $25 USD |
 | **Frecuencia de Pago** | **Anual** (Cada año) | **Pago único** (Para siempre) |
-| **Requisito Identidad** | D-U-N-S (Número empresarial) | Registro con correo institucional |
-| **Tiempo de Revisión** | 24 - 48 horas | 1 - 7 días |
 
 ---
 
-## 2. Fase de Desarrollo (Lo que tienes ahora)
-Actualmente tienes un prototipo funcional en Xcode. Para verlo en tu iPhone físico:
-1. **Conecta tu iPhone** a la Mac vía USB.
-2. En Xcode, selecciona tu iPhone físico en la parte superior central.
-3. Presiona el botón **Play**.
-4. *Nota:* Esta versión gratuita caduca cada 7 días. Deberás darle a Play de nuevo si deja de abrir.
+## 2. Cómo ejecutar el Agente de Python (agent_follower.py)
+
+Este es un proyecto independiente de la App de iPhone. Para verlo funcionar en tu Mac:
+
+1.  **Instalar Pygame:** Abre la "Terminal" de tu Mac y escribe:
+    `pip3 install pygame`
+2.  **Crear el archivo:** Crea un archivo llamado `agente.py` en tu carpeta de documentos.
+3.  **Ejecutar:** En la terminal, navega a la carpeta y escribe:
+    `python3 agente.py`
 
 ---
 
-## 3. Preparación para Producción (Paso a Paso)
+## 3. Código de la Interfaz "Aquarium" (SwiftUI para Xcode)
 
-### Paso 1: Inscripción en Apple / Google
-Para que la App sea pública, la institución (SEMAPACH) debe crear sus cuentas:
-1. **Para iPhone:** Ve a [developer.apple.com](https://developer.apple.com/).
-2. **Para Android:** Ve a [play.google.com/console](https://play.google.com/console/signup).
-
-### Paso 2: Configurar el Icono Oficial
-Necesitarás el logo de SEMAPACH en alta resolución:
-1. En Xcode, ve a la carpeta **Assets**.
-2. Busca **AppIcon**.
-3. Arrastra tu logo (1024x1024 px) y Xcode lo ajustará automáticamente.
-
----
-
-## 4. Código de la Interfaz "Aquarium" (SwiftUI)
-
-Asegúrate de que tu archivo `ContentView.swift` tenga este código para la animación de las olas:
+Copia este código y pégalo en el archivo `ContentView.swift` de tu proyecto en Xcode:
 
 ```swift
 import SwiftUI
@@ -87,17 +80,17 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
-                    // AQUARIUM VIEW
+                    // AQUARIUM VIEW (El tanque de agua)
                     VStack(spacing: 15) {
                         ZStack {
                             Circle()
                                 .stroke(Color.blue.opacity(0.1), lineWidth: 15)
                                 .frame(width: 240, height: 240)
                             
+                            // Aquí va la lógica de las olas
                             LiquidWaveView(progress: progress, waveOffset: waveOffset)
                                 .clipShape(Circle())
                                 .frame(width: 220, height: 220)
-                                .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 5)
                             
                             VStack {
                                 Text("\(Int(progress * 100))%")
@@ -110,79 +103,23 @@ struct ContentView: View {
                             }
                         }
                         .onAppear {
-                            withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
+                            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
                                 waveOffset = Angle(degrees: 360)
                             }
                         }
-                        
-                        Text("Avance del Mes Actual")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 20)
                     
-                    // Card Principal: Recaudación de Hoy
-                    VStack(spacing: 10) {
-                        Text("RECAUDACIÓN DE HOY")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .tracking(2)
-                        
-                        if isLoading {
-                            ProgressView()
-                        } else {
-                            Text("S/ \(dailyAmount, specifier: "%.2f")")
-                                .font(.system(size: 42, weight: .black, design: .rounded))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(30)
-                    .background(Color.white)
-                    .cornerRadius(30)
-                    .shadow(color: .black.opacity(0.05), radius: 15, x: 0, y: 10)
-                    .padding(.horizontal)
-                    
-                    // Stats Secundarios
-                    HStack(spacing: 15) {
-                        StatCardView(title: "ACUMULADO", value: monthlyAccumulated, icon: "chart.line.uptrend.xyaxis", color: .green)
-                        StatCardView(title: "META TOTAL", value: monthlyGoal, icon: "target", color: .orange)
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.top, 20)
-            }
-        }
-        .onAppear {
-            startListening()
-        }
-    }
-
-    func startListening() {
-        db.collection("daily_collections")
-            .order(by: "date", descending: true)
-            .limit(to: 1)
-            .addSnapshotListener { snap, error in
-                self.isLoading = false
-                if let docs = snap?.documents, let lastDoc = docs.first {
-                    let data = lastDoc.data()
-                    self.dailyAmount = data["dailyCollectionAmount"] as? Double ?? 0.0
-                    self.monthlyAccumulated = data["accumulatedMonthlyTotal"] as? Double ?? 0.0
-                    self.monthlyGoal = data["monthlyGoal"] as? Double ?? 1.0
+                    // Info Cards...
                 }
             }
+        }
     }
 }
-
-// Componentes Auxiliares (LiquidWaveView, StatCardView, etc.) se mantienen igual.
 ```
 
 ---
 
-## 5. Publicación Final
-Cuando la App esté lista y la cuenta de desarrollador pagada:
-1. En Xcode, ve a **Product > Archive**.
-2. Selecciona **Distribute App**.
-3. Elige **App Store Connect**.
-4. Apple revisará la app en 24-48h y ¡estará en vivo!
+## 4. Publicación en Tiendas
+1. **Cuenta Developer:** Registrarse en Apple Developer.
+2. **Xcode:** Configurar el "Team" en Signing & Capabilities.
+3. **Archive:** Crear el paquete final y enviarlo a revisión.
