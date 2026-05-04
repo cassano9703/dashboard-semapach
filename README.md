@@ -5,42 +5,14 @@ Este proyecto contiene dos partes independientes. Es **CRÍTICO** no mezclar los
 ---
 
 ## 🛠️ PARTE 1: La App de iPhone (Xcode / Swift)
-Esta es la interfaz "Aquarium" con las olas dinámicas.
+Esta es la interfaz "Aquarium" con las olas dinámicas. **Solo funciona en Xcode.**
 
-**Instrucciones:**
+**Instrucciones para borrar los errores rojos:**
 1. Abre **Xcode**.
 2. Abre el archivo `ContentView.swift`.
-3. **BORRA TODO** lo que haya y pega el código Swift (el que empieza con `import SwiftUI`).
-4. Si pegas código de Python aquí, verás errores rojos.
-
----
-
-## 🐍 PARTE 2: El Agente Seguidor de Líneas (Python / Pygame)
-Este es un simulador de IA que corre en tu computadora.
-
-**Cómo ejecutarlo:**
-1. Abre la **Terminal** de tu Mac.
-2. Instala la librería Pygame:
-   `pip3 install pygame`
-3. Ve a la carpeta de este proyecto:
-   `cd [ruta_de_tu_carpeta]`
-4. Ejecuta el agente:
-   `python3 agent_follower.py`
-
----
-
-## 💰 Comparativa de Lanzamiento (Tiendas)
-
-| Característica | Apple App Store (iPhone) | Google Play Store (Android) |
-| :--- | :--- | :--- |
-| **Costo** | $99 USD Anuales | $25 USD (Pago único) |
-| **Dificultad** | Alta (Revisión estricta) | Media |
-| **Uso en SEMAPACH** | Ideal para directivos | Ideal para técnicos en campo |
-
----
-
-## 🌊 Código de la Interfaz "Aquarium" (Para Xcode)
-Copia esto si borraste accidentalmente el código de la App:
+3. **BORRA TODO** (Selecciona todo y borra).
+4. Copia y pega el código de abajo (el que empieza con `import SwiftUI`).
+5. Si pegas código de Python aquí, verás errores rojos como en tu imagen.
 
 ```swift
 import SwiftUI
@@ -141,3 +113,25 @@ struct StatCard: View {
     }
 }
 ```
+
+---
+
+## 🐍 PARTE 2: El Agente Seguidor de Líneas (Python / Pygame)
+Este es un simulador de IA que corre en tu computadora, **fuera de Xcode**.
+
+**Cómo ejecutarlo:**
+1. Abre la **Terminal** de tu Mac.
+2. Instala la librería Pygame (si no la tienes):
+   `pip3 install pygame`
+3. Ejecuta el agente que está en esta carpeta:
+   `python3 agent_follower.py`
+
+---
+
+## 💰 Comparativa de Lanzamiento (Tiendas)
+
+| Característica | Apple App Store (iPhone) | Google Play Store (Android) |
+| :--- | :--- | :--- |
+| **Costo** | $99 USD Anuales | $25 USD (Pago único) |
+| **Dificultad** | Alta (Revisión estricta) | Media |
+| **Uso en SEMAPACH** | Ideal para directivos | Ideal para técnicos en campo |
