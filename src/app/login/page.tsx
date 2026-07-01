@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -26,7 +27,8 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Droplets } from "lucide-react"
+import { Droplets, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor ingrese un correo válido." }),
@@ -39,6 +41,7 @@ export default function LoginPage() {
   const auth = useAuth()
   const router = useRouter()
   const { toast } = useToast()
+  const [debugError, setDebugError] = React.useState<string | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,11 +54,12 @@ export default function LoginPage() {
   const { isSubmitting } = form.formState
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setDebugError(null);
     if (!auth) {
       toast({
         variant: "destructive",
-        title: "Error de autenticación",
-        description: "El servicio de autenticación no está disponible.",
+        title: "Error de configuración",
+        description: "El servicio de Firebase Auth no se ha inicializado correctamente.",
       })
       return
     }
@@ -69,88 +73,101 @@ export default function LoginPage() {
       })
       router.push("/")
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Login error detail:", error);
+      const errorCode = error.code;
+      const errorMessage = error.message;
       
-      // Mapeo de errores comunes de Firebase para el usuario
-      let errorMessage = "Las credenciales son incorrectas. Por favor, intente de nuevo.";
+      setDebugError(`${errorCode}: ${errorMessage}`);
+
+      let userFriendlyMessage = "Las credenciales son incorrectas o el usuario no existe.";
       
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = "El usuario no existe en la base de datos.";
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "La contraseña es incorrecta.";
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMessage = "Error de conexión. Verifique su internet.";
-      } else if (error.code === 'auth/invalid-credential') {
-        errorMessage = "Credenciales inválidas o el usuario no ha sido creado.";
+      if (errorCode === 'auth/network-request-failed') {
+        userFriendlyMessage = "Error de conexión. Verifique su internet o si el dominio está autorizado.";
+      } else if (errorCode === 'auth/too-many-requests') {
+        userFriendlyMessage = "Demasiados intentos fallidos. Intente más tarde.";
+      } else if (errorCode === 'auth/unauthorized-domain') {
+        userFriendlyMessage = "Este dominio no está autorizado en la consola de Firebase.";
       }
 
       toast({
         variant: "destructive",
         title: "Error al iniciar sesión",
-        description: errorMessage,
+        description: userFriendlyMessage,
       })
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-            <div className="flex justify-center items-center gap-2 mb-4">
-                <Droplets className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold">SEMAPACH</h1>
-            </div>
-          <CardTitle>Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingrese sus credenciales para acceder al panel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="admin@semapach.com"
-                        {...field}
-                        type="email"
-                        autoComplete="email"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="••••••••"
-                        {...field}
-                        type="password"
-                        autoComplete="current-password"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Ingresando..." : "Ingresar"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-sm space-y-4">
+        <Card>
+          <CardHeader className="text-center">
+              <div className="flex justify-center items-center gap-2 mb-4">
+                  <Droplets className="h-8 w-8 text-primary" />
+                  <h1 className="text-2xl font-bold">SEMAPACH</h1>
+              </div>
+            <CardTitle>Iniciar Sesión</CardTitle>
+            <CardDescription>
+              Ingrese sus credenciales para acceder al panel.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="admin@semapach.com"
+                          {...field}
+                          type="email"
+                          autoComplete="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="••••••••"
+                          {...field}
+                          type="password"
+                          autoComplete="current-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Ingresando..." : "Ingresar"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        {debugError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error Técnico (Debug)</AlertTitle>
+            <AlertDescription className="text-xs break-all">
+              {debugError}
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -9,17 +10,12 @@ import { getStorage } from 'firebase/storage';
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
-  if (!getApps().length) {
-    try {
-      firebaseApp = initializeApp();
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-  } else {
+  
+  if (getApps().length > 0) {
     firebaseApp = getApp();
+  } else {
+    // Priorizamos siempre la configuración explícita para evitar fallos en entornos de preview
+    firebaseApp = initializeApp(firebaseConfig);
   }
 
   let storage = null;
