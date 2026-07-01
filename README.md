@@ -12,7 +12,6 @@ Esta es la interfaz "Aquarium" con las olas dinámicas. **Solo funciona en Xcode
 2. Abre el archivo `ContentView.swift`.
 3. **BORRA TODO** (Selecciona todo y borra).
 4. Copia y pega el código de abajo (el que empieza con `import SwiftUI`).
-5. Si pegas código de Python aquí, verás errores rojos como en tu imagen.
 
 ```swift
 import SwiftUI
@@ -125,6 +124,14 @@ Este es un simulador de IA que corre en tu computadora, **fuera de Xcode**.
    `pip3 install pygame`
 3. Ejecuta el agente que está en esta carpeta:
    `python3 agent_follower.py`
+
+---
+
+## ⚠️ SOLUCIÓN DE PROBLEMAS (LOGIN)
+Si al intentar ingresar desde este panel recibes un error de "Dominio no autorizado", debes agregar el siguiente dominio en tu Consola de Firebase (Authentication > Configuración > Dominios autorizados):
+
+**Dominio a agregar:**
+`9002-firebase-studio-1761162758029.cluster-dwvm25yncracsxpd26rcd5ja3m.cloudworkstations.dev`
 
 ---
 
