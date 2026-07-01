@@ -69,10 +69,25 @@ export default function LoginPage() {
       })
       router.push("/")
     } catch (error: any) {
+      console.error("Login error:", error);
+      
+      // Mapeo de errores comunes de Firebase para el usuario
+      let errorMessage = "Las credenciales son incorrectas. Por favor, intente de nuevo.";
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = "El usuario no existe en la base de datos.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "La contraseña es incorrecta.";
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "Error de conexión. Verifique su internet.";
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = "Credenciales inválidas o el usuario no ha sido creado.";
+      }
+
       toast({
         variant: "destructive",
         title: "Error al iniciar sesión",
-        description: "Las credenciales son incorrectas. Por favor, intente de nuevo.",
+        description: errorMessage,
       })
     }
   }
