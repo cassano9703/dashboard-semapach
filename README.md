@@ -1,3 +1,4 @@
+
 # 🚀 Guía Definitiva: SEMAPACH (App + Agente AI)
 
 Este proyecto contiene dos partes independientes. Es **CRÍTICO** no mezclar los lenguajes.
@@ -82,7 +83,7 @@ struct WaveShape: Shape {
         path.move(to: CGPoint(x: 0, y: yOffset))
         
         for x in stride(from: 0, through: waveWidth, by: 1) {
-            let relativeX = x / waveWidth
+            relativeX = x / waveWidth
             let sine = sin(relativeX * .pi * 2 + offset.radians)
             let y = yOffset + sine * lowAmplitudeHeight
             path.addLine(to: CGPoint(x: x, y: y))
@@ -128,10 +129,16 @@ Este es un simulador de IA que corre en tu computadora, **fuera de Xcode**.
 ---
 
 ## ⚠️ SOLUCIÓN DE PROBLEMAS (LOGIN)
-Si al intentar ingresar desde este panel recibes un error de "Dominio no autorizado", debes agregar el siguiente dominio en tu Consola de Firebase (Authentication > Configuración > Dominios autorizados):
+Si al intentar ingresar desde este panel recibes un error, verifica lo siguiente:
 
-**Dominio a agregar:**
-`9002-firebase-studio-1761162758029.cluster-dwvm25yncracsxpd26rcd5ja3m.cloudworkstations.dev`
+### 1. Dominio no autorizado (Error `auth/unauthorized-domain`)
+Debes agregar el dominio de este entorno en tu Consola de Firebase:
+- **Consola:** [console.firebase.google.com](https://console.firebase.google.com/)
+- **Ruta:** Authentication > Settings > Authorized domains > Add domain
+- **Dominio a copiar:** `9002-firebase-studio-1761162758029.cluster-dwvm25yncracsxpd26rcd5ja3m.cloudworkstations.dev`
+
+### 2. Usuario no existe en el proyecto
+Verifica que el usuario que intentas usar esté creado en la pestaña **"Users"** del proyecto `studio-5698097440-ab57f`. Si la web oficial usa otro proyecto, las cuentas no se comparten automáticamente.
 
 ---
 
