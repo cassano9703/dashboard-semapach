@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
@@ -20,14 +21,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { format } from 'date-fns';
+import { format, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CheckCircle, Download } from 'lucide-react';
+import { CheckCircle, Download, CalendarIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { RadialBarChart, RadialBar, Legend, ResponsiveContainer, Tooltip, PolarAngleAxis, TooltipProps } from 'recharts';
 import { ChartConfig, ChartContainer } from '../ui/chart';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
 
 const formatCurrency = (value: number) =>
   `${value.toLocaleString('es-PE', {
@@ -58,6 +61,7 @@ const chartConfig = {
 
 
 export function DistrictProgress() {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const firestore = useFirestore();
   const tableRef = useRef(null);
 
@@ -68,12 +72,12 @@ export function DistrictProgress() {
   const { data: districtProgressData, isLoading } =
     useCollection(districtProgressRef);
 
-  const dataForCurrentMonth = useMemo(() => {
+  const dataForSelectedMonth = useMemo(() => {
     if (!districtProgressData) return [];
 
-    const currentMonthStr = format(new Date(), 'yyyy-MM');
+    const monthStr = format(selectedDate, 'yyyy-MM');
     const filteredData = districtProgressData.filter(
-      (item: any) => item.month === currentMonthStr
+      (item: any) => item.month === monthStr
     );
 
     const dataMap = new Map(
@@ -96,12 +100,12 @@ export function DistrictProgress() {
         fill: `hsl(var(--chart-${(index % 5) + 1}))`,
       };
     }).filter(item => item.recovered > 0 || item.monthlyGoal > 0);
-  }, [districtProgressData]);
+  }, [districtProgressData, selectedDate]);
 
   const lastUpdated = useMemo(() => {
     if (!districtProgressData || districtProgressData.length === 0) return null;
-    const currentMonthStr = format(new Date(), 'yyyy-MM');
-    const dataForMonth = districtProgressData.filter((item: any) => item.month === currentMonthStr);
+    const monthStr = format(selectedDate, 'yyyy-MM');
+    const dataForMonth = districtProgressData.filter((item: any) => item.month === monthStr);
     
     if (dataForMonth.length === 0) return null;
 
@@ -112,11 +116,11 @@ export function DistrictProgress() {
     }, null as Date | null);
     
     return latestTimestamp;
-  }, [districtProgressData]);
+  }, [districtProgressData, selectedDate]);
 
   const lastUpdatedText = lastUpdated
     ? `Última actualización: ${format(lastUpdated, "d 'de' LLLL 'a las' hh:mm a", { locale: es })}`
-    : 'Datos para el mes actual.';
+    : `Datos para ${format(selectedDate, 'MMMM yyyy', { locale: es })}`;
     
   const handleDownloadPdf = () => {
     const elementToCapture = tableRef.current;
@@ -152,28 +156,50 @@ export function DistrictProgress() {
 
         pdf.addImage(imgData, 'PNG', 10, pdfHeightPosition, pdfWidth - 20, imgHeight);
 
-        const monthYear = format(new Date(), 'yyyy-MM');
+        const monthYear = format(selectedDate, 'yyyy-MM');
         pdf.save(`avance-distritos-${monthYear}.pdf`);
     });
   };
   
-  const sortedChartData = [...dataForCurrentMonth].sort((a, b) => b.progress - a.progress);
+  const sortedChartData = [...dataForSelectedMonth].sort((a, b) => b.progress - a.progress);
 
 
   return (
     <>
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight uppercase">Avance de Meta Mensual por Distrito</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground capitalize">
             {lastUpdatedText}
           </p>
         </div>
-        <Button variant="outline" onClick={handleDownloadPdf}>
-          <Download className="mr-2 h-4 w-4" />
-          Descargar PDF
-        </Button>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={"outline"} className="w-full md:w-[240px] justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+                locale={es}
+                defaultMonth={selectedDate}
+                disabled={{ after: new Date() }}
+              />
+            </PopoverContent>
+          </Popover>
+          <Button variant="outline" onClick={handleDownloadPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Descargar PDF
+          </Button>
+        </div>
       </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-1">
           <CardContent className="p-0">
@@ -195,14 +221,14 @@ export function DistrictProgress() {
                           Cargando datos...
                         </TableCell>
                       </TableRow>
-                    ) : dataForCurrentMonth.length === 0 ? (
+                    ) : dataForSelectedMonth.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center h-24">
-                          No hay datos de avance para el mes actual.
+                          No hay datos de avance para el mes seleccionado.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      dataForCurrentMonth.map((item) => (
+                      dataForSelectedMonth.map((item) => (
                         <TableRow
                           key={item.district}
                           className={item.progress >= 100 ? 'bg-green-100/70 dark:bg-green-900/20' : ''}
@@ -247,8 +273,8 @@ export function DistrictProgress() {
         </Card>
         <Card className="lg:col-span-1">
             <CardHeader>
-                <CardTitle>Avance por Distrito</CardTitle>
-                <CardDescription>Visualización del progreso por distrito.</CardDescription>
+                <CardTitle>Gráfico de Avance</CardTitle>
+                <CardDescription>Visualización del progreso para {format(selectedDate, 'MMMM yyyy', {locale: es})}.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
